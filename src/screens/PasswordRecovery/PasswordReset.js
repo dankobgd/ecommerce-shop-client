@@ -3,16 +3,17 @@ import { Button, Avatar, TextField, Typography, Grid, Container, CircularProgres
 import { makeStyles } from '@material-ui/styles';
 import { LockOutlined } from '@material-ui/icons';
 import { useForm } from 'react-hook-form';
-import { useSelector, useDispatch, shallowEqual } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { yupResolver } from '@hookform/resolvers';
 import { Link, useLocation } from '@reach/router';
 import * as Yup from 'yup';
 import { parse } from 'query-string';
 
 import { rules } from '../../utils/validation';
-import { userResetPassword, selectUser } from '../../store/user/userSlice';
+import { userResetPassword } from '../../store/user/userSlice';
 import ErrorMessage from '../../components/Message/ErrorMessage';
 import { useFormServerErrors } from '../../hooks/useFormServerErrors';
+import { selectUIState } from '../../store/ui/ui';
 
 const useStyles = makeStyles(theme => ({
   paper: {
@@ -35,7 +36,7 @@ const useStyles = makeStyles(theme => ({
 
 const schema = Yup.object({
   password: rules.passwordRule,
-  confirmPassword: rules.confirmPasswordRule,
+  confirmPassword: rules.confirmPasswordRule('password'),
 });
 
 const formOpts = {
@@ -53,7 +54,7 @@ function PasswordResetForm() {
   const dispatch = useDispatch();
   const { register, handleSubmit, errors, formState, setError, clearErrors } = useForm(formOpts);
   const { isSubmitting } = formState;
-  const { loading, error } = useSelector(selectUser, shallowEqual);
+  const { loading, error } = useSelector(selectUIState(userResetPassword));
   const { token } = parse(useLocation().search);
 
   const onSubmit = async data => {
@@ -103,7 +104,7 @@ function PasswordResetForm() {
             type='submit'
             color='primary'
             variant='contained'
-            disabled={!!isSubmitting}
+            disabled={isSubmitting}
             className={classes.submit}
             fullWidth
           >

@@ -2,13 +2,20 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { navigate } from '@reach/router';
 
 import toastsSlice, { successToast } from '../toasts/toastsSlice';
-import api from '../../api/api';
+import api from '../../api';
 
 export const sliceName = 'user';
 
-export const getCurrentUser = createAsyncThunk(`${sliceName}/getCurrentUser`, () => {
-  api.users.getCurrent().then(user => user);
-  // i dont consider this to be an error when user is not authenticated...
+export const getCurrentUser = createAsyncThunk(`${sliceName}/getCurrentUser`, async () => {
+  // eslint-disable-next-line no-useless-catch
+  try {
+    const user = await api.users.getCurrent();
+    localStorage.setItem('ecommerce/logged_in', true);
+    return user;
+  } catch (error) {
+    localStorage.setItem('ecommerce/logged_in', false);
+    throw error;
+  }
 });
 
 export const userSignup = createAsyncThunk(
@@ -18,6 +25,7 @@ export const userSignup = createAsyncThunk(
       const user = await api.users.signup(credentials);
       navigate('/');
       dispatch(toastsSlice.actions.addToast(successToast('You signed up successfully')));
+      localStorage.setItem('ecommerce/logged_in', true);
       return user;
     } catch (error) {
       return rejectWithValue(error);
@@ -32,6 +40,7 @@ export const userLogin = createAsyncThunk(
       const user = await api.users.login(credentials);
       navigate('/');
       dispatch(toastsSlice.actions.addToast(successToast(`Welcome ${user.username || user.firstName || user.email}`)));
+      localStorage.setItem('ecommerce/logged_in', true);
       return user;
     } catch (error) {
       return rejectWithValue(error);
@@ -46,6 +55,7 @@ export const userLogout = createAsyncThunk(
       await api.users.logout(credentials);
       navigate('/');
       dispatch(toastsSlice.actions.addToast(successToast('Goodbye friend')));
+      localStorage.setItem('logged_in', false);
     } catch (error) {
       return rejectWithValue(error);
     }
@@ -70,7 +80,44 @@ export const userResetPassword = createAsyncThunk(
     try {
       await api.users.resetPassword(credentials);
       navigate('/');
-      dispatch(toastsSlice.actions.addToast(successToast('Password updated sucessfully')));
+      dispatch(toastsSlice.actions.addToast(successToast('Password updated')));
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const userChangePassword = createAsyncThunk(
+  `${sliceName}/userChangePassword`,
+  async (credentials, { dispatch, rejectWithValue }) => {
+    try {
+      await api.users.changePassword(credentials);
+      dispatch(toastsSlice.actions.addToast(successToast('Password updated')));
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const userUploadAvatar = createAsyncThunk(
+  `${sliceName}/uploadUserAvatar`,
+  async (formData, { dispatch, rejectWithValue }) => {
+    try {
+      const imgData = await api.users.uploadAvatar(formData);
+      dispatch(toastsSlice.actions.addToast(successToast('Avatar uploaded')));
+      return imgData;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const userDeleteAvatar = createAsyncThunk(
+  `${sliceName}/deleteUserAvatar`,
+  async (_, { dispatch, rejectWithValue }) => {
+    try {
+      await api.users.deleteAvatar();
+      dispatch(toastsSlice.actions.addToast(successToast('Avatar deleted')));
     } catch (error) {
       return rejectWithValue(error);
     }
@@ -82,8 +129,6 @@ const userSlice = createSlice({
   initialState: {
     profile: null,
     isAuthenticated: false,
-    error: null,
-    loading: false,
   },
   reducers: {
     clearErrors: state => {
@@ -91,75 +136,43 @@ const userSlice = createSlice({
     },
   },
   extraReducers: {
-    [getCurrentUser.pending]: state => {
-      state.error = null;
-      state.loading = true;
-    },
-    [getCurrentUser.fulfilled]: (state, { payload }) => {
-      if (payload) {
-        state.error = null;
-        state.loading = false;
-        state.profile = payload;
-        state.isAuthenticated = true;
-      } else {
-        state.error = null;
-        state.loading = false;
-        state.profile = null;
-        state.isAuthenticated = false;
-      }
-    },
-
-    [userSignup.pending]: state => {
-      state.error = null;
-      state.loading = true;
-    },
-    [userSignup.rejected]: (state, { payload }) => {
-      state.error = payload;
-      state.loading = false;
-    },
-    [userSignup.fulfilled]: (state, { payload }) => {
-      state.error = null;
-      state.loading = false;
-      state.profile = payload;
-      state.isAuthenticated = true;
-    },
-
-    [userLogin.pending]: state => {
-      state.error = null;
-      state.loading = true;
-    },
-    [userLogin.rejected]: (state, { payload }) => {
-      state.error = payload;
-      state.loading = false;
-    },
-    [userLogin.fulfilled]: (state, { payload }) => {
-      state.error = null;
-      state.loading = false;
-      state.profile = payload;
-      state.isAuthenticated = true;
-    },
-
-    [userLogout.pending]: state => {
-      state.error = null;
-      state.loading = true;
-    },
-    [userLogout.rejected]: (state, { payload }) => {
-      state.error = payload;
-      state.loading = false;
-    },
-    [userLogout.fulfilled]: state => {
-      state.error = null;
-      state.loading = false;
+    [getCurrentUser.rejected]: state => {
       state.profile = null;
       state.isAuthenticated = false;
+    },
+    [getCurrentUser.fulfilled]: (state, { payload }) => {
+      state.profile = payload;
+      state.isAuthenticated = true;
+    },
+
+    [userSignup.fulfilled]: (state, { payload }) => {
+      state.profile = payload;
+      state.isAuthenticated = true;
+    },
+
+    [userLogin.fulfilled]: (state, { payload }) => {
+      state.profile = payload;
+      state.isAuthenticated = true;
+    },
+
+    [userLogout.fulfilled]: state => {
+      state.profile = null;
+      state.isAuthenticated = false;
+    },
+
+    [userUploadAvatar.fulfilled]: (state, { payload }) => {
+      state.profile.avatarUrl = payload.avatarUrl;
+      state.profile.publicId = payload.publicId;
+    },
+
+    [userDeleteAvatar.fulfilled]: state => {
+      state.profile.avatarUrl = null;
+      state.profile.publicId = null;
     },
   },
 });
 
-export const selectUser = state => state.user;
 export const selectUserProfile = state => state.user.profile;
 export const selectIsUserAuthenticated = state => state.user.isAuthenticated;
-export const selectIsUserLoading = state => state.user.loading;
-export const selectUserError = state => state.user.error;
 
 export default userSlice;

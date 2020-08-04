@@ -1,120 +1,115 @@
-// import React from 'react';
-// import PropTypes from 'prop-types';
-// import clsx from 'clsx';
-// import {
-//   Button,
-//   TextField,
-//   CircularProgress,
-//   Card,
-//   CardHeader,
-//   CardContent,
-//   CardActions,
-//   Divider,
-// } from '@material-ui/core';
-// import { makeStyles } from '@material-ui/styles';
-// import { Formik, Form } from 'formik';
-// import { useSelector, useDispatch } from 'react-redux';
+import React from 'react';
+import clsx from 'clsx';
+import {
+  Button,
+  TextField,
+  CircularProgress,
+  Card,
+  CardHeader,
+  CardContent,
+  CardActions,
+  Divider,
+} from '@material-ui/core';
+import { makeStyles } from '@material-ui/styles';
+import { useSelector, useDispatch } from 'react-redux';
+import { useForm } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers';
+import * as Yup from 'yup';
 
-// import { identityActions, identitySelectors } from '../../../../redux/identity';
-// import { changePasswordSchema } from './validation';
-// import ErrorMessage from '../../../../components/message/ErrorMessage';
-// import { useClearErrors } from '../../../../hooks';
+import { userChangePassword } from '../../../store/user/userSlice';
+import { rules } from '../../../utils/validation';
+import ErrorMessage from '../../../components/Message/ErrorMessage';
+import { useFormServerErrors } from '../../../hooks/useFormServerErrors';
+import { selectUIState } from '../../../store/ui/ui';
 
-// const useStyles = makeStyles(theme => ({
-//   root: {},
-// }));
+const useStyles = makeStyles(() => ({
+  root: {},
+}));
 
-// const initialValues = {
-//   currentPassword: '',
-//   password: '',
-//   confirmPassword: '',
-// };
+const schema = Yup.object({
+  oldPassword: rules.passwordRule,
+  newPassword: rules.passwordRule,
+  confirmPassword: rules.confirmPasswordRule('newPassword'),
+});
 
-// function AccountPassword(props) {
-//   const { className, ...rest } = props;
-//   const classes = useStyles();
-//   const dispatch = useDispatch();
+const formOpts = {
+  mode: 'onChange',
+  reValidateMode: 'onChange',
+  defaultValues: {
+    oldPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  },
+  resolver: yupResolver(schema),
+};
 
-//   const [loading, error] = useSelector(identitySelectors.getChangePasswordUI);
-//   useClearErrors();
+function AccountPassword(props) {
+  const { className, ...rest } = props;
+  const classes = useStyles();
+  const dispatch = useDispatch();
+  const { register, handleSubmit, errors, formState, setError, clearErrors } = useForm(formOpts);
+  const { isSubmitting } = formState;
+  const { loading, error } = useSelector(selectUIState(userChangePassword));
 
-//   return (
-//     <Formik
-//       initialValues={initialValues}
-//       validationSchema={changePasswordSchema}
-//       onSubmit={(values, actions) => {
-//         dispatch(identityActions.changePassword(values));
-//         actions.setSubmitting(false);
-//       }}
-//     >
-//       {({ values, errors, touched, handleChange, handleBlur, handleSubmit, isSubmitting }) => (
-//         <Card {...rest} className={clsx(classes.root, className)}>
-//           <CardHeader subheader='Change password' title='Password' />
+  const onSubmit = async data => {
+    dispatch(userChangePassword(data));
+  };
 
-//           {loading && <CircularProgress />}
-//           {error && <ErrorMessage message={error.message} />}
+  useFormServerErrors(error, setError, clearErrors, dispatch);
 
-//           <Form>
-//             <Divider />
-//             <CardContent>
-//               <TextField
-//                 id='currentPassword'
-//                 name='currentPassword'
-//                 label='Current Password'
-//                 type='password'
-//                 margin='normal'
-//                 variant='outlined'
-//                 value={values.currentPassword}
-//                 error={touched.currentPassword && Boolean(errors.currentPassword)}
-//                 helperText={touched.currentPassword ? errors.currentPassword : ''}
-//                 onChange={handleChange}
-//                 onBlur={handleBlur}
-//                 fullWidth
-//               />
-//               <TextField
-//                 id='password'
-//                 name='password'
-//                 label='Password'
-//                 type='password'
-//                 margin='normal'
-//                 variant='outlined'
-//                 value={values.password}
-//                 error={touched.password && Boolean(errors.password)}
-//                 helperText={touched.password ? errors.password : ''}
-//                 onChange={handleChange}
-//                 onBlur={handleBlur}
-//                 fullWidth
-//               />
-//               <TextField
-//                 id='confirmPassword'
-//                 name='confirmPassword'
-//                 label='Confirm Password'
-//                 type='password'
-//                 margin='normal'
-//                 variant='outlined'
-//                 value={values.confirmPassword}
-//                 error={touched.confirmPassword && Boolean(errors.confirmPassword)}
-//                 helperText={touched.confirmPassword ? errors.confirmPassword : ''}
-//                 onChange={handleChange}
-//                 onBlur={handleBlur}
-//                 fullWidth
-//               />
-//             </CardContent>
-//             <Divider />
-//             <CardActions>
-//               <Button type='submit' color='primary' variant='contained' disabled={isSubmitting} onSubmit={handleSubmit}>
-//                 Change Password
-//               </Button>
-//             </CardActions>
-//           </Form>
-//         </Card>
-//       )}
-//     </Formik>
-//   );
-// }
+  return (
+    <Card {...rest} className={clsx(classes.root, className)}>
+      <CardHeader title='Password' />
 
-// AccountPassword.propTypes = {
-//   className: PropTypes.string,
-// };
+      {loading && <CircularProgress />}
+      {error && <ErrorMessage message={error.message} />}
 
-// export default AccountPassword;
+      <form onSubmit={handleSubmit(onSubmit)} noValidate>
+        <Divider />
+        <CardContent>
+          <TextField
+            name='oldPassword'
+            label='Current Password'
+            type='password'
+            margin='normal'
+            variant='outlined'
+            error={!!errors.oldPassword}
+            helperText={errors?.oldPassword?.message}
+            fullWidth
+            inputRef={register}
+          />
+          <TextField
+            name='newPassword'
+            label='New Password'
+            type='password'
+            margin='normal'
+            variant='outlined'
+            error={!!errors.newPassword}
+            helperText={errors?.newPassword?.message}
+            fullWidth
+            inputRef={register}
+          />
+          <TextField
+            name='confirmPassword'
+            label='Confirm New Password'
+            type='password'
+            margin='normal'
+            variant='outlined'
+            error={!!errors.confirmPassword}
+            helperText={errors?.confirmPassword?.message}
+            fullWidth
+            inputRef={register}
+          />
+        </CardContent>
+        <Divider />
+        <CardActions>
+          <Button type='submit' color='primary' variant='contained' disabled={isSubmitting}>
+            Update Password
+          </Button>
+        </CardActions>
+      </form>
+    </Card>
+  );
+}
+
+export default AccountPassword;

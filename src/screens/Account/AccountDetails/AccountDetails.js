@@ -7,7 +7,7 @@ const useStyles = makeStyles(() => ({
   root: {},
 }));
 
-const AccountDetails = props => {
+function AccountDetails(props) {
   const { className, ...rest } = props;
 
   const classes = useStyles();
@@ -46,7 +46,7 @@ const AccountDetails = props => {
   return (
     <Card {...rest} className={clsx(classes.root, className)}>
       <form autoComplete='off' noValidate>
-        <CardHeader subheader='The information can be edited' title='Profile' />
+        <CardHeader title='Details' />
         <Divider />
         <CardContent>
           <Grid container spacing={3}>
@@ -143,6 +143,6 @@ const AccountDetails = props => {
       </form>
     </Card>
   );
-};
+}
 
 export default AccountDetails;

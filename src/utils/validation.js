@@ -20,5 +20,5 @@ export const rules = {
     .matches(regexes.symbol, 'one symbol required')
     .required('Password is required'),
 
-  confirmPasswordRule: Yup.string().oneOf([Yup.ref('password'), null], 'Passwords must match'),
+  confirmPasswordRule: fieldName => Yup.string().oneOf([Yup.ref(fieldName), null], 'Passwords must match'),
 };

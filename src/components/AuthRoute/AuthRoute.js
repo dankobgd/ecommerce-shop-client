@@ -2,7 +2,8 @@ import React from 'react';
 import { Redirect } from '@reach/router';
 import { useSelector } from 'react-redux';
 
-import { selectUserProfile, selectIsUserAuthenticated, selectIsUserLoading } from '../../store/user/userSlice';
+import { selectUserProfile, getCurrentUser } from '../../store/user/userSlice';
+import { selectUIState } from '../../store/ui/ui';
 
 function AuthRoute(props) {
   const {
@@ -16,12 +17,14 @@ function AuthRoute(props) {
   } = props;
 
   const user = useSelector(selectUserProfile);
-  const isAuthenticated = useSelector(selectIsUserAuthenticated);
-  const loading = useSelector(selectIsUserLoading);
+  const isAuthenticated = JSON.parse(localStorage.getItem('ecommerce/logged_in'));
+  const { loading } = useSelector(selectUIState(getCurrentUser));
 
   if (access === 'private') {
     return (
       <>
+        {loading && <div>Loading...</div>}
+
         {!loading && isAuthenticated && (
           <Layout>
             <Component {...rest} />
@@ -38,6 +41,8 @@ function AuthRoute(props) {
   if (access === 'guest') {
     return (
       <>
+        {loading && <div>Loading...</div>}
+
         {!loading && !isAuthenticated && (
           <Layout>
             <Component {...rest} />

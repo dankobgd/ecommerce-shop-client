@@ -1,4 +1,4 @@
-import apiClient from './client';
+import apiClient from './apiClient';
 
 export default {
   async getCurrent() {
@@ -18,5 +18,14 @@ export default {
   },
   async resetPassword(credentials) {
     return apiClient.post('v1/users/password/reset', { data: credentials });
+  },
+  async changePassword(credentials) {
+    return apiClient.put('v1/users/password', { data: credentials });
+  },
+  async uploadAvatar(formData) {
+    return apiClient.post('v1/users/avatar', { data: formData, headers: { 'Content-Type': 'multipart/form-data' } });
+  },
+  async deleteAvatar() {
+    return apiClient.patch('v1/users/avatar');
   },
 };

@@ -3,15 +3,16 @@ import { Button, Avatar, TextField, Typography, Grid, Container, CircularProgres
 import { makeStyles } from '@material-ui/styles';
 import { LockOutlined } from '@material-ui/icons';
 import { useForm } from 'react-hook-form';
-import { useSelector, useDispatch, shallowEqual } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { yupResolver } from '@hookform/resolvers';
 import { Link } from '@reach/router';
 import * as Yup from 'yup';
 
 import { rules } from '../../utils/validation';
-import { userForgotPassword, selectUser } from '../../store/user/userSlice';
+import { userForgotPassword } from '../../store/user/userSlice';
 import ErrorMessage from '../../components/Message/ErrorMessage';
 import { useFormServerErrors } from '../../hooks/useFormServerErrors';
+import { selectUIState } from '../../store/ui/ui';
 
 const useStyles = makeStyles(theme => ({
   paper: {
@@ -48,7 +49,7 @@ function PasswordForgotForm() {
   const dispatch = useDispatch();
   const { register, handleSubmit, errors, formState, setError, clearErrors } = useForm(formOpts);
   const { isSubmitting } = formState;
-  const { loading, error } = useSelector(selectUser, shallowEqual);
+  const { loading, error } = useSelector(selectUIState(userForgotPassword));
 
   const onSubmit = async data => {
     dispatch(userForgotPassword(data));
@@ -86,7 +87,7 @@ function PasswordForgotForm() {
             type='submit'
             color='primary'
             variant='contained'
-            disabled={!!isSubmitting}
+            disabled={isSubmitting}
             className={classes.submit}
             fullWidth
           >

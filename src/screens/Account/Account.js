@@ -25,7 +25,6 @@ const Account = () => {
           <AccountPassword />
         </Grid>
       </Grid>
-
       <Grid container spacing={4}>
         <Grid item>
           <AccountDetails />
