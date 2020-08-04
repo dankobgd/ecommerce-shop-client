@@ -13,7 +13,7 @@ import { rules } from '../../utils/validation';
 import { userResetPassword } from '../../store/user/userSlice';
 import ErrorMessage from '../../components/Message/ErrorMessage';
 import { useFormServerErrors } from '../../hooks/useFormServerErrors';
-import { selectUIState } from '../../store/ui/ui';
+import { selectUIState } from '../../store/ui';
 
 const useStyles = makeStyles(theme => ({
   paper: {

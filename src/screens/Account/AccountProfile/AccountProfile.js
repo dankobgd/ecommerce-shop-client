@@ -18,7 +18,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import ErrorMessage from '../../../components/Message/ErrorMessage';
 import AvatarInitials from './AvatarInitials';
 import { userUploadAvatar, userDeleteAvatar, selectUserProfile } from '../../../store/user/userSlice';
-import { selectUIState } from '../../../store/ui/ui';
+import { selectUIState } from '../../../store/ui';
 
 const useStyles = makeStyles(theme => ({
   root: {},

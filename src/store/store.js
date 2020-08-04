@@ -1,6 +1,6 @@
 import { configureStore } from '@reduxjs/toolkit';
 
-import uiReducer from './ui/ui';
+import uiReducer from './ui';
 import toastsSlice from './toasts/toastsSlice';
 import userSlice from './user/userSlice';
 

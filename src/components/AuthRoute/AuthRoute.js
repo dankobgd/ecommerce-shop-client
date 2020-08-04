@@ -3,7 +3,7 @@ import { Redirect } from '@reach/router';
 import { useSelector } from 'react-redux';
 
 import { selectUserProfile, getCurrentUser } from '../../store/user/userSlice';
-import { selectUIState } from '../../store/ui/ui';
+import { selectUIState } from '../../store/ui';
 
 function AuthRoute(props) {
   const {
