@@ -41,16 +41,9 @@ const colors = [
 ];
 const randColor = colors[Math.floor(Math.random() * colors.length)];
 
-function AvatarInitials({ user, avatarUrl, previewUrl }) {
+function AvatarFallback({ user, url }) {
   const classes = useStyles();
   const [color] = React.useState(randColor);
-  const [url, setUrl] = React.useState(avatarUrl);
-
-  React.useEffect(() => {
-    if (previewUrl) {
-      setUrl(previewUrl);
-    }
-  }, [previewUrl]);
 
   let initials;
   if (user?.firstName && user?.lastName) {
@@ -73,4 +66,4 @@ function AvatarInitials({ user, avatarUrl, previewUrl }) {
   );
 }
 
-export default AvatarInitials;
+export default AvatarFallback;
