@@ -34,6 +34,7 @@ const formOpts = user => ({
     lastName: user?.lastName || '',
     username: user?.username || '',
     email: user?.email || '',
+    gender: user?.gender || '',
     locale: user?.locale || '',
   },
   resolver: yupResolver(schema),
@@ -49,9 +50,7 @@ function AccountDetails(props) {
   const { handleSubmit, setError } = methods;
 
   const onSubmit = async data => {
-    await new Promise(res => setTimeout(res, 1000));
-    // dispatch(userUpdateProfileDetails(data));
-    console.log(data);
+    dispatch(userUpdateProfileDetails(data));
   };
 
   useFormServerErrors(error, setError);
@@ -80,7 +79,16 @@ function AccountDetails(props) {
               <Grid item md={6} xs={12}>
                 <Input name='email' type='email' />
               </Grid>
-              <Grid item md={6} xs={12}>
+              <Grid item md={6} xs={6}>
+                <Select
+                  name='gender'
+                  options={[
+                    { value: 'm', label: 'Male' },
+                    { value: 'f', label: 'Female' },
+                  ]}
+                />
+              </Grid>
+              <Grid item md={6} xs={6}>
                 <Select
                   name='locale'
                   options={[

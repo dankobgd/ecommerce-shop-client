@@ -126,10 +126,11 @@ export const userDeleteAvatar = createAsyncThunk(
 
 export const userUpdateProfileDetails = createAsyncThunk(
   `${sliceName}/userUpdateProfileDetails`,
-  async (_, { dispatch, rejectWithValue }) => {
+  async (details, { dispatch, rejectWithValue }) => {
     try {
-      await api.users.update();
+      const user = await api.users.update(details);
       dispatch(toastsSlice.actions.addToast(successToast('Profile details updated')));
+      return user;
     } catch (error) {
       return rejectWithValue(error);
     }
@@ -166,6 +167,12 @@ const userSlice = createSlice({
     [userLogout.fulfilled]: state => {
       state.profile = null;
       state.isAuthenticated = false;
+    },
+
+    [userUpdateProfileDetails.fulfilled]: (state, { payload }) => {
+      Object.keys(payload).forEach(key => {
+        state.profile[key] = payload[key];
+      });
     },
 
     [userUploadAvatar.fulfilled]: (state, { payload }) => {

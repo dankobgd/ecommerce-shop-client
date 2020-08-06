@@ -54,7 +54,7 @@ function PasswordResetForm() {
   const classes = useStyles();
   const dispatch = useDispatch();
   const methods = useForm(formOpts);
-  const { handleSubmit, setError } = useForm(formOpts);
+  const { handleSubmit, setError } = methods;
   const { loading, error } = useSelector(selectUIState(userResetPassword));
   const { token } = parse(useLocation().search);
 
