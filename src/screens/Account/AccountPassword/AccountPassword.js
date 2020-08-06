@@ -1,18 +1,9 @@
 import React from 'react';
 import clsx from 'clsx';
-import {
-  Button,
-  TextField,
-  CircularProgress,
-  Card,
-  CardHeader,
-  CardContent,
-  CardActions,
-  Divider,
-} from '@material-ui/core';
+import { CircularProgress, Card, CardHeader, CardContent, CardActions, Divider } from '@material-ui/core';
 import { makeStyles } from '@material-ui/styles';
 import { useSelector, useDispatch } from 'react-redux';
-import { useForm } from 'react-hook-form';
+import { useForm, FormProvider } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers';
 import * as Yup from 'yup';
 
@@ -21,6 +12,7 @@ import { rules } from '../../../utils/validation';
 import ErrorMessage from '../../../components/Message/ErrorMessage';
 import { useFormServerErrors } from '../../../hooks/useFormServerErrors';
 import { selectUIState } from '../../../store/ui';
+import { SubmitButton, Input } from '../../../components/Form';
 
 const useStyles = makeStyles(() => ({
   root: {},
@@ -47,15 +39,15 @@ function AccountPassword(props) {
   const { className, ...rest } = props;
   const classes = useStyles();
   const dispatch = useDispatch();
-  const { register, handleSubmit, errors, formState, setError, clearErrors } = useForm(formOpts);
-  const { isSubmitting } = formState;
+  const methods = useForm(formOpts);
+  const { handleSubmit, setError } = methods;
   const { loading, error } = useSelector(selectUIState(userChangePassword));
 
   const onSubmit = async data => {
     dispatch(userChangePassword(data));
   };
 
-  useFormServerErrors(error, setError, clearErrors, dispatch);
+  useFormServerErrors(error, setError);
 
   return (
     <Card {...rest} className={clsx(classes.root, className)}>
@@ -64,50 +56,20 @@ function AccountPassword(props) {
       {loading && <CircularProgress />}
       {error && <ErrorMessage message={error.message} />}
 
-      <form onSubmit={handleSubmit(onSubmit)} noValidate>
-        <Divider />
-        <CardContent>
-          <TextField
-            name='oldPassword'
-            label='Current Password'
-            type='password'
-            margin='normal'
-            variant='outlined'
-            error={!!errors.oldPassword}
-            helperText={errors?.oldPassword?.message}
-            fullWidth
-            inputRef={register}
-          />
-          <TextField
-            name='newPassword'
-            label='New Password'
-            type='password'
-            margin='normal'
-            variant='outlined'
-            error={!!errors.newPassword}
-            helperText={errors?.newPassword?.message}
-            fullWidth
-            inputRef={register}
-          />
-          <TextField
-            name='confirmPassword'
-            label='Confirm New Password'
-            type='password'
-            margin='normal'
-            variant='outlined'
-            error={!!errors.confirmPassword}
-            helperText={errors?.confirmPassword?.message}
-            fullWidth
-            inputRef={register}
-          />
-        </CardContent>
-        <Divider />
-        <CardActions>
-          <Button type='submit' color='primary' variant='contained' disabled={isSubmitting}>
-            Update Password
-          </Button>
-        </CardActions>
-      </form>
+      <FormProvider {...methods}>
+        <form onSubmit={handleSubmit(onSubmit)} noValidate>
+          <Divider />
+          <CardContent>
+            <Input name='oldPassword' type='password' />
+            <Input name='newPassword' type='password' />
+            <Input name='confirmPassword' type='password' />
+          </CardContent>
+          <Divider />
+          <CardActions>
+            <SubmitButton>Update Password</SubmitButton>
+          </CardActions>
+        </form>
+      </FormProvider>
     </Card>
   );
 }

@@ -1,146 +1,102 @@
-import React, { useState } from 'react';
+import React from 'react';
 import clsx from 'clsx';
 import { makeStyles } from '@material-ui/styles';
-import { Card, CardHeader, CardContent, CardActions, Divider, Grid, Button, TextField } from '@material-ui/core';
+import { Card, CardHeader, CardContent, CardActions, Divider, Grid, CircularProgress } from '@material-ui/core';
+import { yupResolver } from '@hookform/resolvers';
+import * as Yup from 'yup';
+import { useSelector, useDispatch } from 'react-redux';
+import { useForm, FormProvider } from 'react-hook-form';
+
+import { userUpdateProfileDetails, selectUserProfile } from '../../../store/user/userSlice';
+import { rules } from '../../../utils/validation';
+import ErrorMessage from '../../../components/Message/ErrorMessage';
+import { Input, Select, SubmitButton } from '../../../components/Form';
+import { useFormServerErrors } from '../../../hooks/useFormServerErrors';
+import { selectUIState } from '../../../store/ui';
 
 const useStyles = makeStyles(() => ({
   root: {},
 }));
 
+const schema = Yup.object({
+  firstName: Yup.string().required(),
+  lastName: Yup.string().required(),
+  username: Yup.string().required(),
+  email: rules.emailRule,
+  locale: Yup.string().required(),
+});
+
+const formOpts = user => ({
+  mode: 'onChange',
+  reValidateMode: 'onChange',
+  defaultValues: {
+    firstName: user?.firstName || '',
+    lastName: user?.lastName || '',
+    username: user?.username || '',
+    email: user?.email || '',
+    locale: user?.locale || '',
+  },
+  resolver: yupResolver(schema),
+});
+
 function AccountDetails(props) {
   const { className, ...rest } = props;
-
   const classes = useStyles();
+  const dispatch = useDispatch();
+  const user = useSelector(selectUserProfile);
+  const { loading, error } = useSelector(selectUIState(userUpdateProfileDetails));
+  const methods = useForm(formOpts(user));
+  const { handleSubmit, setError } = methods;
 
-  const [values, setValues] = useState({
-    firstName: 'Shen',
-    lastName: 'Zhi',
-    email: 'shen.zhi@devias.io',
-    phone: '',
-    state: 'Alabama',
-    country: 'USA',
-  });
-
-  const handleChange = event => {
-    setValues({
-      ...values,
-      [event.target.name]: event.target.value,
-    });
+  const onSubmit = async data => {
+    await new Promise(res => setTimeout(res, 1000));
+    // dispatch(userUpdateProfileDetails(data));
+    console.log(data);
   };
 
-  const states = [
-    {
-      value: 'alabama',
-      label: 'Alabama',
-    },
-    {
-      value: 'new-york',
-      label: 'New York',
-    },
-    {
-      value: 'san-francisco',
-      label: 'San Francisco',
-    },
-  ];
+  useFormServerErrors(error, setError);
 
   return (
     <Card {...rest} className={clsx(classes.root, className)}>
-      <form autoComplete='off' noValidate>
-        <CardHeader title='Details' />
-        <Divider />
-        <CardContent>
-          <Grid container spacing={3}>
-            <Grid item md={6} xs={12}>
-              <TextField
-                fullWidth
-                helperText='Please specify the first name'
-                label='First name'
-                margin='dense'
-                name='firstName'
-                onChange={handleChange}
-                required
-                value={values.firstName}
-                variant='outlined'
-              />
+      <FormProvider {...methods}>
+        <form onSubmit={handleSubmit(onSubmit)} noValidate>
+          <CardHeader title='Details' />
+
+          {loading && <CircularProgress />}
+          {error && <ErrorMessage message={error.message} />}
+
+          <Divider />
+          <CardContent>
+            <Grid container spacing={3}>
+              <Grid item md={6} xs={12}>
+                <Input name='firstName' />
+              </Grid>
+              <Grid item md={6} xs={12}>
+                <Input name='lastName' />
+              </Grid>
+              <Grid item md={6} xs={12}>
+                <Input name='username' />
+              </Grid>
+              <Grid item md={6} xs={12}>
+                <Input name='email' type='email' />
+              </Grid>
+              <Grid item md={6} xs={12}>
+                <Select
+                  name='locale'
+                  options={[
+                    { value: 'en', label: 'EN' },
+                    { value: 'sr', label: 'SR' },
+                  ]}
+                />
+              </Grid>
             </Grid>
-            <Grid item md={6} xs={12}>
-              <TextField
-                fullWidth
-                label='Last name'
-                margin='dense'
-                name='lastName'
-                onChange={handleChange}
-                required
-                value={values.lastName}
-                variant='outlined'
-              />
-            </Grid>
-            <Grid item md={6} xs={12}>
-              <TextField
-                fullWidth
-                label='Email Address'
-                margin='dense'
-                name='email'
-                onChange={handleChange}
-                required
-                value={values.email}
-                variant='outlined'
-              />
-            </Grid>
-            <Grid item md={6} xs={12}>
-              <TextField
-                fullWidth
-                label='Phone Number'
-                margin='dense'
-                name='phone'
-                onChange={handleChange}
-                type='number'
-                value={values.phone}
-                variant='outlined'
-              />
-            </Grid>
-            <Grid item md={6} xs={12}>
-              <TextField
-                fullWidth
-                label='Select State'
-                margin='dense'
-                name='state'
-                onChange={handleChange}
-                required
-                select
-                // eslint-disable-next-line react/jsx-sort-props
-                SelectProps={{ native: true }}
-                value={values.state}
-                variant='outlined'
-              >
-                {states.map(option => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </TextField>
-            </Grid>
-            <Grid item md={6} xs={12}>
-              <TextField
-                fullWidth
-                label='Country'
-                margin='dense'
-                name='country'
-                onChange={handleChange}
-                required
-                value={values.country}
-                variant='outlined'
-              />
-            </Grid>
-          </Grid>
-        </CardContent>
-        <Divider />
-        <CardActions>
-          <Button color='primary' variant='contained'>
-            Save details
-          </Button>
-        </CardActions>
-      </form>
+          </CardContent>
+          <Divider />
+          <CardActions>
+            <SubmitButton>Save Details</SubmitButton>
+          </CardActions>
+        </form>
+      </FormProvider>
     </Card>
   );
 }

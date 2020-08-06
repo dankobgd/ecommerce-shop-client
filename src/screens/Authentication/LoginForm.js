@@ -1,8 +1,8 @@
 import React from 'react';
-import { Button, Avatar, TextField, Typography, Grid, Container, CircularProgress } from '@material-ui/core';
+import { Avatar, Typography, Grid, Container, CircularProgress } from '@material-ui/core';
 import { makeStyles } from '@material-ui/styles';
 import { LockOutlined } from '@material-ui/icons';
-import { useForm } from 'react-hook-form';
+import { useForm, FormProvider } from 'react-hook-form';
 import { useSelector, useDispatch } from 'react-redux';
 import { yupResolver } from '@hookform/resolvers';
 import { Link } from '@reach/router';
@@ -11,6 +11,7 @@ import * as Yup from 'yup';
 import { userLogin } from '../../store/user/userSlice';
 import ErrorMessage from '../../components/Message/ErrorMessage';
 import { useFormServerErrors } from '../../hooks/useFormServerErrors';
+import { SubmitButton, Input } from '../../components/Form';
 import { rules } from '../../utils/validation';
 import { selectUIState } from '../../store/ui';
 
@@ -51,15 +52,15 @@ const formOpts = {
 function LoginForm() {
   const classes = useStyles();
   const dispatch = useDispatch();
-  const { register, handleSubmit, errors, formState, setError, clearErrors } = useForm(formOpts);
-  const { isSubmitting } = formState;
+  const methods = useForm(formOpts);
+  const { handleSubmit, setError } = methods;
   const { loading, error } = useSelector(selectUIState(userLogin));
 
   const onSubmit = async data => {
     dispatch(userLogin(data));
   };
 
-  useFormServerErrors(error, setError, clearErrors, dispatch);
+  useFormServerErrors(error, setError);
 
   return (
     <Container component='main' maxWidth='xs'>
@@ -74,53 +75,26 @@ function LoginForm() {
         {loading && <CircularProgress />}
         {error && <ErrorMessage message={error.message} />}
 
-        <form onSubmit={handleSubmit(onSubmit)} noValidate>
-          <TextField
-            name='email'
-            label='Email'
-            type='email'
-            margin='normal'
-            variant='outlined'
-            error={!!errors.email}
-            helperText={errors?.email?.message}
-            fullWidth
-            inputRef={register}
-          />
-          <TextField
-            name='password'
-            label='Password'
-            type='password'
-            margin='normal'
-            variant='outlined'
-            error={!!errors.password}
-            helperText={errors?.password?.message}
-            fullWidth
-            inputRef={register}
-          />
-          <Button
-            type='submit'
-            color='primary'
-            variant='contained'
-            disabled={isSubmitting}
-            className={classes.submit}
-            fullWidth
-          >
-            Login
-          </Button>
+        <FormProvider {...methods}>
+          <form onSubmit={handleSubmit(onSubmit)} noValidate>
+            <Input name='email' type='email' />
+            <Input name='password' type='password' />
+            <SubmitButton className={classes.submit}>Login</SubmitButton>
 
-          <Grid container>
-            <Grid item xs>
-              <Link to='/password/forgot'>
-                <Typography variant='body2'>Forgot password?</Typography>
-              </Link>
+            <Grid container>
+              <Grid item xs>
+                <Link to='/password/forgot'>
+                  <Typography variant='body2'>Forgot password?</Typography>
+                </Link>
+              </Grid>
+              <Grid item xs>
+                <Link to='/signup'>
+                  <Typography variant='body2'>Don't have an account? Create one</Typography>
+                </Link>
+              </Grid>
             </Grid>
-            <Grid item xs>
-              <Link to='/signup'>
-                <Typography variant='body2'>Don't have an account? Create one</Typography>
-              </Link>
-            </Grid>
-          </Grid>
-        </form>
+          </form>
+        </FormProvider>
       </div>
     </Container>
   );

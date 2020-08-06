@@ -1,8 +1,8 @@
 import React from 'react';
-import { Button, Avatar, TextField, Typography, Grid, Container, CircularProgress } from '@material-ui/core';
+import { Avatar, Typography, Grid, Container, CircularProgress } from '@material-ui/core';
 import { makeStyles } from '@material-ui/styles';
 import { LockOutlined } from '@material-ui/icons';
-import { useForm } from 'react-hook-form';
+import { useForm, FormProvider } from 'react-hook-form';
 import { useSelector, useDispatch } from 'react-redux';
 import { yupResolver } from '@hookform/resolvers';
 import { Link } from '@reach/router';
@@ -11,6 +11,7 @@ import * as Yup from 'yup';
 import { rules } from '../../utils/validation';
 import { userForgotPassword } from '../../store/user/userSlice';
 import ErrorMessage from '../../components/Message/ErrorMessage';
+import { SubmitButton, Input } from '../../components/Form';
 import { useFormServerErrors } from '../../hooks/useFormServerErrors';
 import { selectUIState } from '../../store/ui';
 
@@ -47,15 +48,15 @@ const formOpts = {
 function PasswordForgotForm() {
   const classes = useStyles();
   const dispatch = useDispatch();
-  const { register, handleSubmit, errors, formState, setError, clearErrors } = useForm(formOpts);
-  const { isSubmitting } = formState;
+  const methods = useForm(formOpts);
+  const { handleSubmit, setError } = methods;
   const { loading, error } = useSelector(selectUIState(userForgotPassword));
 
   const onSubmit = async data => {
     dispatch(userForgotPassword(data));
   };
 
-  useFormServerErrors(error, setError, clearErrors, dispatch);
+  useFormServerErrors(error, setError);
 
   return (
     <Container component='main' maxWidth='xs'>
@@ -70,38 +71,20 @@ function PasswordForgotForm() {
         {loading && <CircularProgress />}
         {error && <ErrorMessage message={error.message} />}
 
-        <form onSubmit={handleSubmit(onSubmit)} noValidate>
-          <TextField
-            name='email'
-            label='Email'
-            type='email'
-            margin='normal'
-            variant='outlined'
-            error={!!errors.email}
-            helperText={errors?.email?.message}
-            fullWidth
-            inputRef={register}
-          />
+        <FormProvider {...methods}>
+          <form onSubmit={handleSubmit(onSubmit)} noValidate>
+            <Input name='email' type='email' />
+            <SubmitButton className={classes.submit}>Send Password Reset Email</SubmitButton>
 
-          <Button
-            type='submit'
-            color='primary'
-            variant='contained'
-            disabled={isSubmitting}
-            className={classes.submit}
-            fullWidth
-          >
-            Send Password Reset Email
-          </Button>
-
-          <Grid container>
-            <Grid item xs>
-              <Link to='/'>
-                <Typography variant='body2'>Back to Homepage</Typography>
-              </Link>
+            <Grid container>
+              <Grid item xs>
+                <Link to='/'>
+                  <Typography variant='body2'>Back to Homepage</Typography>
+                </Link>
+              </Grid>
             </Grid>
-          </Grid>
-        </form>
+          </form>
+        </FormProvider>
       </div>
     </Container>
   );

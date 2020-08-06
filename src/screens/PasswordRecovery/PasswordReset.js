@@ -1,8 +1,8 @@
 import React from 'react';
-import { Button, Avatar, TextField, Typography, Grid, Container, CircularProgress } from '@material-ui/core';
+import { Avatar, Typography, Grid, Container, CircularProgress } from '@material-ui/core';
 import { makeStyles } from '@material-ui/styles';
 import { LockOutlined } from '@material-ui/icons';
-import { useForm } from 'react-hook-form';
+import { useForm, FormProvider } from 'react-hook-form';
 import { useSelector, useDispatch } from 'react-redux';
 import { yupResolver } from '@hookform/resolvers';
 import { Link, useLocation } from '@reach/router';
@@ -12,6 +12,7 @@ import { parse } from 'query-string';
 import { rules } from '../../utils/validation';
 import { userResetPassword } from '../../store/user/userSlice';
 import ErrorMessage from '../../components/Message/ErrorMessage';
+import { Input, SubmitButton } from '../../components/Form';
 import { useFormServerErrors } from '../../hooks/useFormServerErrors';
 import { selectUIState } from '../../store/ui';
 
@@ -52,8 +53,8 @@ const formOpts = {
 function PasswordResetForm() {
   const classes = useStyles();
   const dispatch = useDispatch();
-  const { register, handleSubmit, errors, formState, setError, clearErrors } = useForm(formOpts);
-  const { isSubmitting } = formState;
+  const methods = useForm(formOpts);
+  const { handleSubmit, setError } = useForm(formOpts);
   const { loading, error } = useSelector(selectUIState(userResetPassword));
   const { token } = parse(useLocation().search);
 
@@ -61,7 +62,7 @@ function PasswordResetForm() {
     dispatch(userResetPassword({ ...data, token }));
   };
 
-  useFormServerErrors(error, setError, clearErrors, dispatch);
+  useFormServerErrors(error, setError);
 
   return (
     <Container component='main' maxWidth='xs'>
@@ -76,49 +77,21 @@ function PasswordResetForm() {
         {loading && <CircularProgress />}
         {error && <ErrorMessage message={error.message} />}
 
-        <form onSubmit={handleSubmit(onSubmit)} noValidate>
-          <TextField
-            name='password'
-            label='Password'
-            type='password'
-            margin='normal'
-            variant='outlined'
-            error={!!errors.password}
-            helperText={errors?.password?.message}
-            fullWidth
-            inputRef={register}
-          />
-          <TextField
-            name='confirmPassword'
-            label='Confirm Password'
-            type='password'
-            margin='normal'
-            variant='outlined'
-            error={!!errors.confirmPassword}
-            helperText={errors?.confirmPassword?.message}
-            fullWidth
-            inputRef={register}
-          />
+        <FormProvider {...methods}>
+          <form onSubmit={handleSubmit(onSubmit)} noValidate>
+            <Input name='password' type='password' />
+            <Input name='confirmPassword' type='password' />
+            <SubmitButton className={classes.submit}>Update Password</SubmitButton>
 
-          <Button
-            type='submit'
-            color='primary'
-            variant='contained'
-            disabled={isSubmitting}
-            className={classes.submit}
-            fullWidth
-          >
-            Update Password
-          </Button>
-
-          <Grid container>
-            <Grid item xs>
-              <Link to='/'>
-                <Typography variant='body2'>Back to Homepage</Typography>
-              </Link>
+            <Grid container>
+              <Grid item xs>
+                <Link to='/'>
+                  <Typography variant='body2'>Back to Homepage</Typography>
+                </Link>
+              </Grid>
             </Grid>
-          </Grid>
-        </form>
+          </form>
+        </FormProvider>
       </div>
     </Container>
   );

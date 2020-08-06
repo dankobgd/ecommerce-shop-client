@@ -22,6 +22,15 @@ export default {
   async changePassword(credentials) {
     return apiClient.put('v1/users/password', { data: credentials });
   },
+  async update(details) {
+    return apiClient.patch('v1/users', { data: details });
+  },
+  async updateAddress(details) {
+    return apiClient.patch('v1/users/address', { data: details });
+  },
+  async deleteAddress() {
+    return apiClient.patch('v1/users/address');
+  },
   async uploadAvatar(formData) {
     return apiClient.post('v1/users/avatar', { data: formData, headers: { 'Content-Type': 'multipart/form-data' } });
   },

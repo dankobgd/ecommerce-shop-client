@@ -1,5 +1,4 @@
 import React from 'react';
-import userSlice from '../store/user/userSlice';
 
 // because same key can appear multiple times
 // it converts from [{field: '', message: ''}] to [{field: '', message: []}]
@@ -15,7 +14,7 @@ function convertErrorsFormat(arr) {
   return [...map.entries()].map(([k, v]) => ({ field: k, message: v }));
 }
 
-export function useFormServerErrors(error, setError, clearErrors, dispatch) {
+export function useFormServerErrors(error, setError) {
   React.useEffect(() => {
     if (error?.statusCode === 422 && error?.code === 'Invalid') {
       const validationErrors = error?.details?.validation?.errors;
@@ -31,14 +30,6 @@ export function useFormServerErrors(error, setError, clearErrors, dispatch) {
       }
     }
   }, [error, setError]);
-
-  React.useEffect(
-    () => () => {
-      clearErrors();
-      dispatch(userSlice.actions.clearErrors());
-    },
-    [clearErrors, dispatch]
-  );
 
   return null;
 }
