@@ -2,7 +2,11 @@ import React from 'react';
 import clsx from 'clsx';
 import { Link } from '@reach/router';
 import { makeStyles } from '@material-ui/styles';
-import { Avatar, Typography } from '@material-ui/core';
+import { Typography } from '@material-ui/core';
+import { useSelector } from 'react-redux';
+
+import { selectUserProfile } from '../../../../store/user/userSlice';
+import AvatarFallback from '../../../../components/AvatarFallback/AvatarFallback';
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -23,22 +27,19 @@ const useStyles = makeStyles(theme => ({
 function Profile(props) {
   const { className, ...rest } = props;
   const classes = useStyles();
-  // const user = useSelector(identitySelectors.getUser);
-  const user = {};
+  const user = useSelector(selectUserProfile);
+
+  const avatarName = user ? `${user.firstName} ${user.lastName}` : '';
 
   return (
     <div className={clsx(classes.root, className)} {...rest}>
-      <Avatar
-        alt='Person'
-        className={classes.avatar}
-        component={Link}
-        src={user.avatar || 'https://i.pravatar.cc/200?img=19'}
-        to='/account'
-      />
+      <Link to='/dashboard' style={{ textDecoration: 'none' }}>
+        <AvatarFallback name={avatarName} url={user?.avatarUrl} size={75} />
+      </Link>
       <Typography className={classes.name} variant='h4'>
-        {user.username}
+        {user?.username}
       </Typography>
-      <Typography variant='body2'>{user.email}</Typography>
+      <Typography variant='body2'>{user?.email}</Typography>
     </div>
   );
 }

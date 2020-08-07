@@ -16,7 +16,7 @@ import CloudUploadIcon from '@material-ui/icons/CloudUpload';
 import { useSelector, useDispatch } from 'react-redux';
 
 import ErrorMessage from '../../../components/Message/ErrorMessage';
-import AvatarFallback from './AvatarFallback';
+import AvatarFallback from '../../../components/AvatarFallback/AvatarFallback';
 import { userUploadAvatar, userDeleteAvatar, selectUserProfile } from '../../../store/user/userSlice';
 import { selectUIState } from '../../../store/ui';
 
@@ -111,6 +111,8 @@ function AccountAvatar(props) {
     url = previewUrl;
   }
 
+  const avatarName = user ? `${user.firstName} ${user.lastName}` : '';
+
   return (
     <Card {...rest} className={clsx(classes.root, className)}>
       <CardHeader title='Avatar' />
@@ -121,7 +123,7 @@ function AccountAvatar(props) {
 
         <div className={classes.details}>
           <div className={classes.pictureSection}>
-            <AvatarFallback user={user} url={url} />
+            <AvatarFallback name={avatarName} url={url} size={125} />
           </div>
           <div className={classes.infoSection}>
             <Typography gutterBottom variant='h2'>

@@ -4,19 +4,18 @@ import { makeStyles } from '@material-ui/styles';
 
 const useStyles = makeStyles(() => ({
   circle: {
-    display: 'flex',
-    height: 125,
-    width: 125,
-    flexShrink: 0,
-    flexGrow: 0,
-    justifyContent: 'center',
-    alignItems: 'center',
     borderRadius: '50%',
+    textAlign: 'center',
+    fontSize: '100%',
+    width: props => `${props.size}px`,
+    height: props => `${props.size}px`,
   },
   initials: {
-    fontSize: 24,
-    lineHeight: 1,
+    top: props => `calc(${props.size}px * 0.25)`,
+    fontSize: props => `calc(${props.size}px * 0.35)`,
+    lineHeight: props => `calc(${props.size}px * 0.5)`,
     color: '#fff',
+    position: 'relative',
   },
 }));
 
@@ -41,19 +40,14 @@ const colors = [
 ];
 const randColor = colors[Math.floor(Math.random() * colors.length)];
 
-function AvatarFallback({ user, url }) {
-  const classes = useStyles();
+function AvatarFallback({ name, url, size }) {
+  const classes = useStyles({ size });
   const [color] = React.useState(randColor);
 
-  let initials;
-  if (user?.firstName && user?.lastName) {
-    initials = `${user.firstName} ${user.lastName}`
-      .split(' ')
-      .map(n => n[0])
-      .join('.');
-  } else {
-    initials = user?.username[0]; // eslint-disable-line
-  }
+  const initials = name
+    .split(' ')
+    .map(n => n[0])
+    .join('');
 
   if (url) {
     return <Avatar className={classes.circle} src={url} />;
