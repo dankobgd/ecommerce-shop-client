@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { TextField } from '@material-ui/core';
+import { TextField, FormControl, FormHelperText } from '@material-ui/core';
 import { Autocomplete } from '@material-ui/lab';
 import { Controller, useFormContext } from 'react-hook-form';
 
@@ -14,22 +14,25 @@ export default function AutoComplete({
   options,
   ...rest
 }) {
-  const { control } = useFormContext();
+  const { control, errors } = useFormContext();
 
   return (
-    <Controller
-      render={props => (
-        <Autocomplete
-          {...rest}
-          {...props}
-          options={options}
-          autoHighlight
-          renderInput={params => <TextField {...params} label={label} margin={margin} variant={variant} />}
-          onChange={(_, data) => props.onChange(data)}
-        />
-      )}
-      name={name}
-      control={control}
-    />
+    <FormControl>
+      <Controller
+        render={props => (
+          <Autocomplete
+            {...rest}
+            {...props}
+            options={options}
+            autoHighlight
+            renderInput={params => <TextField {...params} label={label} margin={margin} variant={variant} />}
+            onChange={(_, data) => props.onChange(data)}
+          />
+        )}
+        name={name}
+        control={control}
+      />
+      <FormHelperText error={!!errors[name]}>{errors && errors[name] && errors[name].message}</FormHelperText>
+    </FormControl>
   );
 }

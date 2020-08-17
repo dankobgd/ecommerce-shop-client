@@ -13,7 +13,6 @@ export default function FormSlider({ name }) {
       defaultValue={[0, 10]}
       render={props => (
         <Slider
-          fullWidth
           {...props}
           onChange={(_, value) => {
             props.onChange(value);

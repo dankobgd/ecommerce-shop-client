@@ -24,7 +24,6 @@ export default function FormTextField({
       variant={variant}
       error={!!errors[name]}
       helperText={errors && errors[name] && errors[name].message}
-      fullWidth
       inputRef={register}
       {...rest}
     />

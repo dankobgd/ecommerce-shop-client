@@ -23,7 +23,7 @@ export default function MySelect({
   }, [labelRef]);
 
   return (
-    <FormControl margin={margin} variant={variant} style={{ minWidth: 100 }} fullWidth>
+    <FormControl margin={margin} variant={variant} style={{ minWidth: 100 }}>
       <InputLabel ref={labelRef} htmlFor={`${name}-outlined-select-label`}>
         {label}
       </InputLabel>
@@ -31,7 +31,6 @@ export default function MySelect({
         as={
           <Select
             {...rest}
-            fullWidth
             label={label}
             input={<OutlinedInput labelWidth={labelWidth} name={name} id={`${name}-outlined-select-label`} />}
           >

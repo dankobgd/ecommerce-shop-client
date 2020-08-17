@@ -43,23 +43,34 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
-const schema = Yup.object({});
+const schema = Yup.object({
+  name: Yup.string().required(),
+  gender: Yup.string().required(),
+  locale: Yup.string().required(),
+  isFeatured: Yup.boolean().test('test', 'lol', v => v !== false),
+  isPublished: Yup.boolean().test('test', 'lol', v => v === false),
+  priceRange: Yup.array().min(1).required(),
+  colors: Yup.array().min(1).required(),
+  tags: Yup.array().min(1).required(),
+  multi: Yup.array().min(1).required(),
+  country: Yup.object()
+    .test('test', 'lol', v => Object.keys(v) !== 0)
+    .required(),
+});
 
 const formOpts = {
   mode: 'onChange',
   reValidateMode: 'onChange',
   defaultValues: {
-    name: 'bob',
-    gender: 'm',
-    locale: 'en',
-    isFeatured: true,
-    isPublished: true,
+    name: '',
+    gender: '',
+    locale: '',
+    isFeatured: false,
+    isPublished: false,
     priceRange: [0, 5],
-    colors: ['red', 'blue', 'purple'],
-    country: { code: 'RS', label: 'Serbia', phone: '381' },
-    items: ['one'],
-    tags: ['winter', 'sports'],
-    basic: '',
+    colors: [],
+    country: null,
+    tags: [],
     multi: [],
   },
   resolver: yupResolver(schema),
@@ -69,7 +80,7 @@ function CreateProductForm() {
   const classes = useStyles();
   const dispatch = useDispatch();
   const methods = useForm(formOpts);
-  const { handleSubmit, setError } = methods;
+  const { handleSubmit, setError, errors } = methods;
   const { loading, error } = useSelector(selectUIState(productCreate));
 
   const onSubmit = async data => {
@@ -127,7 +138,7 @@ function CreateProductForm() {
             </section>
 
             <section>
-              <FormSlider name='priceRange' fullWidth />
+              <FormSlider name='priceRange' />
             </section>
 
             <section>
@@ -143,14 +154,12 @@ function CreateProductForm() {
             </section>
 
             <section>
-              <section>
-                <FormAutoComplete name='tags' multiple options={['winter', 'sports', 'men', 'women']} />
-              </section>
+              <FormAutoComplete name='tags' multiple options={['winter', 'sports', 'men', 'women']} />
             </section>
 
             <section>
               <FormSelect
-                name='items'
+                name='multi'
                 multiple
                 options={[
                   { value: 'one', label: 'one' },

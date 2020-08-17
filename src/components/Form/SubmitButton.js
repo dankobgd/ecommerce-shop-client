@@ -22,7 +22,6 @@ export default function SubmitButton({
         variant={variant}
         disabled={formState.isSubmitting}
         className={className}
-        fullWidth
         {...rest}
       >
         {children}
