@@ -1,20 +1,21 @@
 import React, { useState } from 'react';
-import clsx from 'clsx';
-import { makeStyles } from '@material-ui/styles';
+
 import {
+  Avatar,
   Card,
   CardActions,
   CardContent,
-  Avatar,
   Checkbox,
   Table,
   TableBody,
   TableCell,
   TableHead,
+  TablePagination,
   TableRow,
   Typography,
-  TablePagination,
 } from '@material-ui/core';
+import { makeStyles } from '@material-ui/styles';
+import clsx from 'clsx';
 
 const useStyles = makeStyles(theme => ({
   root: {},

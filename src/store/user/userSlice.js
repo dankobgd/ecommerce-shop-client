@@ -1,8 +1,8 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { navigate } from '@reach/router';
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 
-import toastsSlice, { successToast } from '../toasts/toastsSlice';
 import api from '../../api';
+import toastsSlice, { successToast } from '../toasts/toastsSlice';
 
 export const sliceName = 'user';
 

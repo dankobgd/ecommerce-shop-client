@@ -1,9 +1,10 @@
 import React, { forwardRef } from 'react';
-import clsx from 'clsx';
-import { Link } from '@reach/router';
-import { makeStyles } from '@material-ui/styles';
+
 import { List, ListItem, Button, colors } from '@material-ui/core';
 import LogoutIcon from '@material-ui/icons/Input';
+import { makeStyles } from '@material-ui/styles';
+import { Link } from '@reach/router';
+import clsx from 'clsx';
 import { useDispatch } from 'react-redux';
 
 import { userLogout } from '../../../../store/user/userSlice';

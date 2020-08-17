@@ -1,14 +1,14 @@
 import React from 'react';
-import { FormControl, TextField, MenuItem } from '@material-ui/core';
-import { Controller, useFormContext } from 'react-hook-form';
+
+import { FormControl, Select, MenuItem, InputLabel, FormHelperText, OutlinedInput } from '@material-ui/core';
 import { nanoid } from 'nanoid';
+import { useFormContext, Controller } from 'react-hook-form';
 
 import { defaultLabel } from './helpers';
 
-function Select({
+export default function MySelect({
   name,
   label = defaultLabel(name),
-  placeholder,
   options,
   margin = 'normal',
   variant = 'outlined',
@@ -16,33 +16,36 @@ function Select({
 }) {
   const { errors, control } = useFormContext();
 
+  const labelRef = React.useRef(null);
+  const [labelWidth, setLabelWidth] = React.useState(0);
+  React.useEffect(() => {
+    setLabelWidth(labelRef.current.offsetWidth);
+  }, [labelRef]);
+
   return (
-    <FormControl variant={variant}>
+    <FormControl margin={margin} variant={variant} style={{ minWidth: 100 }} fullWidth>
+      <InputLabel ref={labelRef} htmlFor={`${name}-outlined-select-label`}>
+        {label}
+      </InputLabel>
       <Controller
         as={
-          <TextField
-            select
-            label={label}
-            placeholder={placeholder}
-            margin={margin}
-            variant={variant}
-            error={!!errors[name]}
-            helperText={errors && errors[name] && errors[name].message}
+          <Select
             {...rest}
+            fullWidth
+            label={label}
+            input={<OutlinedInput labelWidth={labelWidth} name={name} id={`${name}-outlined-select-label`} />}
           >
             {options.map(item => (
               <MenuItem key={nanoid()} value={item.value}>
                 {item.label}
               </MenuItem>
             ))}
-          </TextField>
+          </Select>
         }
         control={control}
         name={name}
-        defaultValue=''
       />
+      <FormHelperText error={!!errors[name]}>{errors && errors[name] && errors[name].message}</FormHelperText>
     </FormControl>
   );
 }
-
-export default Select;

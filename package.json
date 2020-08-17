@@ -27,7 +27,7 @@
     "react-hook-form": "^6.0.8",
     "react-i18next": "^11.7.0",
     "react-redux": "^7.2.1",
-    "react-scripts": "3.4.1",
+    "react-scripts": "^3.4.3",
     "yup": "^0.29.1"
   },
   "scripts": {

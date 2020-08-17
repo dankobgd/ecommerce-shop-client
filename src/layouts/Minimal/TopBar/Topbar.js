@@ -1,11 +1,12 @@
 import React from 'react';
+
 import { AppBar, Toolbar, IconButton, MenuItem, Menu, Button } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import { useSelector, useDispatch } from 'react-redux';
 import { Link } from '@reach/router';
+import { useSelector, useDispatch } from 'react-redux';
 
-import { selectIsUserAuthenticated, userLogout, selectUserProfile } from '../../../store/user/userSlice';
 import AvatarFallback from '../../../components/AvatarFallback/AvatarFallback';
+import { selectIsUserAuthenticated, userLogout, selectUserProfile } from '../../../store/user/userSlice';
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -91,11 +92,9 @@ export default function MenuAppBar() {
                 open={open}
                 onClose={handleClose}
               >
-                <MenuItem onClick={handleClose}>
-                  <Link to='/dashboard' style={{ textDecoration: 'none' }}>
-                    Dashboard
-                  </Link>
-                </MenuItem>
+                <Link to='/dashboard' style={{ textDecoration: 'none' }}>
+                  <MenuItem onClick={handleClose}>Dashboard</MenuItem>
+                </Link>
                 <MenuItem onClick={handleLogout}>Logout</MenuItem>
               </Menu>
             </div>
@@ -118,32 +117,3 @@ export default function MenuAppBar() {
     </div>
   );
 }
-
-// import React from 'react';
-// import { Link } from '@reach/router';
-// import clsx from 'clsx';
-// import { makeStyles } from '@material-ui/styles';
-// import { AppBar, Toolbar } from '@material-ui/core';
-
-// const useStyles = makeStyles(() => ({
-//   root: {
-//     boxShadow: 'none',
-//   },
-// }));
-
-// function Topbar(props) {
-//   const { className, ...rest } = props;
-//   const classes = useStyles();
-
-//   return (
-//     <AppBar {...rest} className={clsx(classes.root, className)} color='primary' position='fixed'>
-//       <Toolbar>
-//         <Link to='/'>
-//           <img alt='Logo' src='https://via.placeholder.com/50' />
-//         </Link>
-//       </Toolbar>
-//     </AppBar>
-//   );
-// }
-
-// export default Topbar;

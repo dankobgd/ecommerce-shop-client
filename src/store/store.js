@@ -1,14 +1,16 @@
 import { configureStore } from '@reduxjs/toolkit';
 
-import uiReducer from './ui';
+import productsSlice from './products/productsSlice';
 import toastsSlice from './toasts/toastsSlice';
+import uiReducer from './ui';
 import userSlice from './user/userSlice';
 
 const store = configureStore({
   reducer: {
-    user: userSlice.reducer,
-    toasts: toastsSlice.reducer,
     ui: uiReducer,
+    toasts: toastsSlice.reducer,
+    user: userSlice.reducer,
+    products: productsSlice.reducer,
   },
 });
 

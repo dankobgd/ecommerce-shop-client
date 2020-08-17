@@ -1,6 +1,8 @@
 import React from 'react';
+
+import { Button } from '@material-ui/core';
 import { makeStyles } from '@material-ui/styles';
-import { Link } from '@reach/router';
+import { navigate } from '@reach/router';
 
 import notfoundGif from '../../assets/img/notfound.webp';
 
@@ -46,7 +48,7 @@ const useStyles = makeStyles({
   },
 });
 
-function NotFound() {
+function NotFound({ backLink = '/' }) {
   const classes = useStyles();
 
   return (
@@ -55,9 +57,9 @@ function NotFound() {
       <div className={classes.group}>
         <div className={classes.code}>404</div>
         <div className={classes.text}>Page Not Found</div>
-        <Link to='/'>
+        <Button onClick={() => navigate(backLink)}>
           <span className={classes.link}>Go Back</span>
-        </Link>
+        </Button>
       </div>
     </div>
   );

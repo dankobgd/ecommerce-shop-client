@@ -1,13 +1,14 @@
 import React from 'react';
-import { Provider } from 'react-redux';
+
 import { CssBaseline } from '@material-ui/core';
 import { MuiThemeProvider } from '@material-ui/core/styles';
+import { Provider } from 'react-redux';
 
-import { getCurrentUser } from './store/user/userSlice';
-import ToastList from './components/Toast/ToastList';
 import AppRoutes from './AppRoutes';
-import theme from './theme/theme';
+import ToastList from './components/Toast/ToastList';
 import store from './store/store';
+import { getCurrentUser } from './store/user/userSlice';
+import theme from './theme/theme';
 
 function App() {
   React.useEffect(() => {

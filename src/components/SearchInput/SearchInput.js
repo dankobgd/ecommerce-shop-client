@@ -1,8 +1,9 @@
 import React from 'react';
-import clsx from 'clsx';
-import { makeStyles } from '@material-ui/styles';
+
 import { Paper, Input } from '@material-ui/core';
 import SearchIcon from '@material-ui/icons/Search';
+import { makeStyles } from '@material-ui/styles';
+import clsx from 'clsx';
 
 const useStyles = makeStyles(theme => ({
   root: {

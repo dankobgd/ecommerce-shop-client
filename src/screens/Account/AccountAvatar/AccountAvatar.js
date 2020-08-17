@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import clsx from 'clsx';
-import { makeStyles } from '@material-ui/styles';
+
 import {
   Card,
   CardActions,
@@ -13,12 +12,14 @@ import {
   CircularProgress,
 } from '@material-ui/core';
 import CloudUploadIcon from '@material-ui/icons/CloudUpload';
+import { makeStyles } from '@material-ui/styles';
+import clsx from 'clsx';
 import { useSelector, useDispatch } from 'react-redux';
 
-import ErrorMessage from '../../../components/Message/ErrorMessage';
 import AvatarFallback from '../../../components/AvatarFallback/AvatarFallback';
-import { userUploadAvatar, userDeleteAvatar, selectUserProfile } from '../../../store/user/userSlice';
+import ErrorMessage from '../../../components/Message/ErrorMessage';
 import { selectUIState } from '../../../store/ui';
+import { userUploadAvatar, userDeleteAvatar, selectUserProfile } from '../../../store/user/userSlice';
 
 const useStyles = makeStyles(theme => ({
   root: {},

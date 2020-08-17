@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { makeStyles } from '@material-ui/styles';
+
 import { Select, MenuItem, ListItemText, FormControl } from '@material-ui/core';
+import { makeStyles } from '@material-ui/styles';
 import { useTranslation } from 'react-i18next';
 
 import engFlag from '../../assets/img/eng_flag.png';

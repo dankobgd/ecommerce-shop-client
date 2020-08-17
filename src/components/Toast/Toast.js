@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import clsx from 'clsx';
+
 import { IconButton, Snackbar, SnackbarContent } from '@material-ui/core';
-import { CheckCircle, Error, Info, Close, Warning } from '@material-ui/icons';
 import { amber, green } from '@material-ui/core/colors';
 import { makeStyles } from '@material-ui/core/styles';
+import { CheckCircle, Error, Info, Close, Warning } from '@material-ui/icons';
+import clsx from 'clsx';
 
 const variantIcon = {
   success: CheckCircle,

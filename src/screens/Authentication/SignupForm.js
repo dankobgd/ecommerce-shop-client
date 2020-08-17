@@ -1,19 +1,20 @@
 import React from 'react';
-import { Avatar, Typography, Container, CircularProgress, Grid } from '@material-ui/core';
-import { makeStyles } from '@material-ui/styles';
-import { LockOutlined } from '@material-ui/icons';
-import { useForm, FormProvider } from 'react-hook-form';
-import { useSelector, useDispatch } from 'react-redux';
+
 import { yupResolver } from '@hookform/resolvers';
+import { Avatar, CircularProgress, Container, Grid, Typography } from '@material-ui/core';
+import { LockOutlined } from '@material-ui/icons';
+import { makeStyles } from '@material-ui/styles';
 import { Link } from '@reach/router';
+import { FormProvider, useForm } from 'react-hook-form';
+import { useDispatch, useSelector } from 'react-redux';
 import * as Yup from 'yup';
 
+import { FormTextField, FormSubmitButton } from '../../components/Form';
 import ErrorMessage from '../../components/Message/ErrorMessage';
-import { SubmitButton, Input } from '../../components/Form';
-import { rules } from '../../utils/validation';
-import { userSignup } from '../../store/user/userSlice';
 import { useFormServerErrors } from '../../hooks/useFormServerErrors';
 import { selectUIState } from '../../store/ui';
+import { userSignup } from '../../store/user/userSlice';
+import { rules } from '../../utils/validation';
 
 const useStyles = makeStyles(theme => ({
   paper: {
@@ -83,12 +84,12 @@ function SignupForm() {
 
         <FormProvider {...methods}>
           <form onSubmit={handleSubmit(onSubmit)} noValidate>
-            <Input name='firstName' />
-            <Input name='lastName' />
-            <Input name='email' type='email' />
-            <Input name='password' type='password' />
-            <Input name='confirmPassword' type='password' />
-            <SubmitButton className={classes.submit}>Signup</SubmitButton>
+            <FormTextField name='firstName' />
+            <FormTextField name='lastName' />
+            <FormTextField name='email' type='email' />
+            <FormTextField name='password' type='password' />
+            <FormTextField name='confirmPassword' type='password' />
+            <FormSubmitButton className={classes.submit}>Signup</FormSubmitButton>
 
             <Grid container>
               <Grid item xs>

@@ -1,12 +1,13 @@
 import React from 'react';
-import clsx from 'clsx';
-import { Link } from '@reach/router';
-import { makeStyles } from '@material-ui/styles';
+
 import { Typography } from '@material-ui/core';
+import { makeStyles } from '@material-ui/styles';
+import { Link } from '@reach/router';
+import clsx from 'clsx';
 import { useSelector } from 'react-redux';
 
-import { selectUserProfile } from '../../../../store/user/userSlice';
 import AvatarFallback from '../../../../components/AvatarFallback/AvatarFallback';
+import { selectUserProfile } from '../../../../store/user/userSlice';
 
 const useStyles = makeStyles(theme => ({
   root: {

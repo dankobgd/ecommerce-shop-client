@@ -1,6 +1,5 @@
 import React from 'react';
-import clsx from 'clsx';
-import { makeStyles } from '@material-ui/styles';
+
 import {
   Card,
   CardActions,
@@ -17,9 +16,11 @@ import {
   TableSortLabel,
 } from '@material-ui/core';
 import ArrowRightIcon from '@material-ui/icons/ArrowRight';
+import { makeStyles } from '@material-ui/styles';
+import clsx from 'clsx';
 
-import mockData from './data';
 import StatusBullet from '../../../components/StatusBullet/StatusBullet';
+import mockData from './data';
 
 const useStyles = makeStyles(theme => ({
   root: {},

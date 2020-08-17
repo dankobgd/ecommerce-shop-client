@@ -1,7 +1,8 @@
 import React from 'react';
 
 // because same key can appear multiple times
-// it converts from [{field: '', message: ''}] to [{field: '', message: []}]
+// this -> [{field: 'password', message: 'min 5'}, {field: 'password', message: 'max 50'}, {field: 'password', message: 'required'}]
+// becomes ->  [{field: 'password', message: ['min 5', 'max 50', 'required']}]
 function convertErrorsFormat(arr) {
   const map = new Map();
 

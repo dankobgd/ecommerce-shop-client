@@ -1,19 +1,20 @@
 import React from 'react';
-import { Avatar, Typography, Grid, Container, CircularProgress } from '@material-ui/core';
-import { makeStyles } from '@material-ui/styles';
-import { LockOutlined } from '@material-ui/icons';
-import { useForm, FormProvider } from 'react-hook-form';
-import { useSelector, useDispatch } from 'react-redux';
+
 import { yupResolver } from '@hookform/resolvers';
+import { Avatar, CircularProgress, Container, Grid, Typography } from '@material-ui/core';
+import { LockOutlined } from '@material-ui/icons';
+import { makeStyles } from '@material-ui/styles';
 import { Link } from '@reach/router';
+import { FormProvider, useForm } from 'react-hook-form';
+import { useDispatch, useSelector } from 'react-redux';
 import * as Yup from 'yup';
 
-import { rules } from '../../utils/validation';
-import { userForgotPassword } from '../../store/user/userSlice';
+import { FormTextField, FormSubmitButton } from '../../components/Form';
 import ErrorMessage from '../../components/Message/ErrorMessage';
-import { SubmitButton, Input } from '../../components/Form';
 import { useFormServerErrors } from '../../hooks/useFormServerErrors';
 import { selectUIState } from '../../store/ui';
+import { userForgotPassword } from '../../store/user/userSlice';
+import { rules } from '../../utils/validation';
 
 const useStyles = makeStyles(theme => ({
   paper: {
@@ -73,8 +74,8 @@ function PasswordForgotForm() {
 
         <FormProvider {...methods}>
           <form onSubmit={handleSubmit(onSubmit)} noValidate>
-            <Input name='email' type='email' />
-            <SubmitButton className={classes.submit}>Send Password Reset Email</SubmitButton>
+            <FormTextField name='email' type='email' />
+            <FormSubmitButton className={classes.submit}>Send Password Reset Email</FormSubmitButton>
 
             <Grid container>
               <Grid item xs>

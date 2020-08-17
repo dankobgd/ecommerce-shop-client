@@ -45,7 +45,16 @@
     "import": 0,
     "func-names": 0,
     "space-before-function-paren": 0,
-    "comma-dangle": 0,
+    "comma-dangle": [
+      "error",
+      {
+        "arrays": "always-multiline",
+        "objects": "always-multiline",
+        "imports": "always-multiline",
+        "exports": "always-multiline",
+        "functions": "never"
+      }
+    ],
     "class-methods-use-this": 0,
     "max-len": 0,
     "import/extensions": 0,
@@ -89,14 +98,33 @@
         "additionalHooks": "useRecoilCallback"
       }
     ],
+    "import/order": [
+      "error",
+      {
+        "groups": ["builtin", "external", "internal", ["parent", "sibling"]],
+        "pathGroups": [
+          {
+            "pattern": "react",
+            "group": "external",
+            "position": "before"
+          }
+        ],
+        "pathGroupsExcludedImportTypes": ["react"],
+        "newlines-between": "always",
+        "alphabetize": {
+          "order": "asc",
+          "caseInsensitive": true
+        }
+      }
+    ],
     "prettier/prettier": [
       "error",
       {
-        "trailingComma": "es5",
         "singleQuote": true,
         "jsxSingleQuote": true,
         "printWidth": 120,
-        "arrowParens": "avoid"
+        "arrowParens": "avoid",
+        "trailingComma": "es5"
       }
     ],
     "jsx-a11y/href-no-hash": "off",

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+
 import tweenFunctions from './tween-functions';
 
 function ScrollTop(props) {

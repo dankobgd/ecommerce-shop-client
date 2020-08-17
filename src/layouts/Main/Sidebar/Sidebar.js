@@ -1,12 +1,13 @@
 import React from 'react';
-import clsx from 'clsx';
-import { makeStyles } from '@material-ui/styles';
+
 import { Divider, Drawer } from '@material-ui/core';
+import AccountBoxIcon from '@material-ui/icons/AccountBox';
 import DashboardIcon from '@material-ui/icons/Dashboard';
 import PeopleIcon from '@material-ui/icons/People';
-import ShoppingBasketIcon from '@material-ui/icons/ShoppingBasket';
-import AccountBoxIcon from '@material-ui/icons/AccountBox';
 import SettingsIcon from '@material-ui/icons/Settings';
+import ShoppingBasketIcon from '@material-ui/icons/ShoppingBasket';
+import { makeStyles } from '@material-ui/styles';
+import clsx from 'clsx';
 
 import Profile from './Profile/Profile';
 import SidebarNav from './SidebarNav/SidebarNav';

@@ -1,7 +1,8 @@
 import React from 'react';
-import clsx from 'clsx';
-import { makeStyles } from '@material-ui/styles';
+
 import { Typography, Link } from '@material-ui/core';
+import { makeStyles } from '@material-ui/styles';
+import clsx from 'clsx';
 
 const useStyles = makeStyles(theme => ({
   root: {

@@ -1,9 +1,10 @@
 import React from 'react';
-import { makeStyles } from '@material-ui/styles';
-import { Grid } from '@material-ui/core';
 
-import TotalUsers from './TotalUsers/TotalUsers';
+import { Grid } from '@material-ui/core';
+import { makeStyles } from '@material-ui/styles';
+
 import LatestOrders from './LatestOrders/LatestOrders';
+import TotalUsers from './TotalUsers/TotalUsers';
 
 const useStyles = makeStyles(theme => ({
   root: {

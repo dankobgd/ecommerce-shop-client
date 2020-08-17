@@ -1,18 +1,19 @@
 import React from 'react';
-import clsx from 'clsx';
-import { makeStyles } from '@material-ui/styles';
-import { Card, CardHeader, CardContent, CardActions, Divider, Grid, CircularProgress } from '@material-ui/core';
-import { yupResolver } from '@hookform/resolvers';
-import * as Yup from 'yup';
-import { useSelector, useDispatch } from 'react-redux';
-import { useForm, FormProvider } from 'react-hook-form';
 
-import { userUpdateProfileDetails, selectUserProfile } from '../../../store/user/userSlice';
-import { rules } from '../../../utils/validation';
+import { yupResolver } from '@hookform/resolvers';
+import { Card, CardActions, CardContent, CardHeader, CircularProgress, Divider, Grid } from '@material-ui/core';
+import { makeStyles } from '@material-ui/styles';
+import clsx from 'clsx';
+import { FormProvider, useForm } from 'react-hook-form';
+import { useDispatch, useSelector } from 'react-redux';
+import * as Yup from 'yup';
+
+import { FormSelect, FormTextField, FormSubmitButton } from '../../../components/Form';
 import ErrorMessage from '../../../components/Message/ErrorMessage';
-import { Input, Select, SubmitButton } from '../../../components/Form';
 import { useFormServerErrors } from '../../../hooks/useFormServerErrors';
 import { selectUIState } from '../../../store/ui';
+import { selectUserProfile, userUpdateProfileDetails } from '../../../store/user/userSlice';
+import { rules } from '../../../utils/validation';
 
 const useStyles = makeStyles(() => ({
   root: {},
@@ -68,19 +69,19 @@ function AccountDetails(props) {
           <CardContent>
             <Grid container spacing={3}>
               <Grid item md={6} xs={12}>
-                <Input name='firstName' />
+                <FormTextField name='firstName' />
               </Grid>
               <Grid item md={6} xs={12}>
-                <Input name='lastName' />
+                <FormTextField name='lastName' />
               </Grid>
               <Grid item md={6} xs={12}>
-                <Input name='username' />
+                <FormTextField name='username' />
               </Grid>
               <Grid item md={6} xs={12}>
-                <Input name='email' type='email' />
+                <FormTextField name='email' type='email' />
               </Grid>
               <Grid item md={6} xs={6}>
-                <Select
+                <FormSelect
                   name='gender'
                   options={[
                     { value: 'm', label: 'Male' },
@@ -89,7 +90,7 @@ function AccountDetails(props) {
                 />
               </Grid>
               <Grid item md={6} xs={6}>
-                <Select
+                <FormSelect
                   name='locale'
                   options={[
                     { value: 'en', label: 'EN' },
@@ -101,7 +102,7 @@ function AccountDetails(props) {
           </CardContent>
           <Divider />
           <CardActions>
-            <SubmitButton>Save Details</SubmitButton>
+            <FormSubmitButton>Save Details</FormSubmitButton>
           </CardActions>
         </form>
       </FormProvider>

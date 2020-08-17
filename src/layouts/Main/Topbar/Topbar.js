@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { Link } from '@reach/router';
-import clsx from 'clsx';
-import { makeStyles } from '@material-ui/styles';
+
 import { AppBar, Toolbar, Badge, Hidden, IconButton } from '@material-ui/core';
+import InputIcon from '@material-ui/icons/Input';
 import MenuIcon from '@material-ui/icons/Menu';
 import NotificationsIcon from '@material-ui/icons/NotificationsOutlined';
-import InputIcon from '@material-ui/icons/Input';
+import { makeStyles } from '@material-ui/styles';
+import { Link } from '@reach/router';
+import clsx from 'clsx';
 import { useDispatch } from 'react-redux';
 
 import { userLogout } from '../../../store/user/userSlice';

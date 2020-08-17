@@ -1,18 +1,19 @@
 import React from 'react';
-import clsx from 'clsx';
-import { CircularProgress, Card, CardHeader, CardContent, CardActions, Divider } from '@material-ui/core';
-import { makeStyles } from '@material-ui/styles';
-import { useSelector, useDispatch } from 'react-redux';
-import { useForm, FormProvider } from 'react-hook-form';
+
 import { yupResolver } from '@hookform/resolvers';
+import { Card, CardActions, CardContent, CardHeader, CircularProgress, Divider } from '@material-ui/core';
+import { makeStyles } from '@material-ui/styles';
+import clsx from 'clsx';
+import { FormProvider, useForm } from 'react-hook-form';
+import { useDispatch, useSelector } from 'react-redux';
 import * as Yup from 'yup';
 
-import { userChangePassword } from '../../../store/user/userSlice';
-import { rules } from '../../../utils/validation';
+import { FormTextField, FormSubmitButton } from '../../../components/Form';
 import ErrorMessage from '../../../components/Message/ErrorMessage';
 import { useFormServerErrors } from '../../../hooks/useFormServerErrors';
 import { selectUIState } from '../../../store/ui';
-import { SubmitButton, Input } from '../../../components/Form';
+import { userChangePassword } from '../../../store/user/userSlice';
+import { rules } from '../../../utils/validation';
 
 const useStyles = makeStyles(() => ({
   root: {},
@@ -60,13 +61,13 @@ function AccountPassword(props) {
         <form onSubmit={handleSubmit(onSubmit)} noValidate>
           <Divider />
           <CardContent>
-            <Input name='oldPassword' type='password' />
-            <Input name='newPassword' type='password' />
-            <Input name='confirmPassword' type='password' />
+            <FormTextField name='oldPassword' type='password' />
+            <FormTextField name='newPassword' type='password' />
+            <FormTextField name='confirmPassword' type='password' />
           </CardContent>
           <Divider />
           <CardActions>
-            <SubmitButton>Update Password</SubmitButton>
+            <FormSubmitButton>Update Password</FormSubmitButton>
           </CardActions>
         </form>
       </FormProvider>
