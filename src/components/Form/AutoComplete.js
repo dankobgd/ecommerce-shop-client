@@ -17,7 +17,7 @@ export default function AutoComplete({
   const { control, errors } = useFormContext();
 
   return (
-    <FormControl>
+    <FormControl {...rest}>
       <Controller
         render={props => (
           <Autocomplete

@@ -47,8 +47,6 @@ const schema = Yup.object({
   name: Yup.string().required(),
   gender: Yup.string().required(),
   locale: Yup.string().required(),
-  isFeatured: Yup.boolean().test('test', 'lol', v => v !== false),
-  isPublished: Yup.boolean().test('test', 'lol', v => v === false),
   priceRange: Yup.array().min(1).required(),
   colors: Yup.array().min(1).required(),
   tags: Yup.array().min(1).required(),
@@ -106,7 +104,7 @@ function CreateProductForm() {
         <FormProvider {...methods}>
           <form onSubmit={handleSubmit(onSubmit)} noValidate>
             <section>
-              <FormTextField name='name' />
+              <FormTextField name='name' fullWidth />
             </section>
 
             <section>
@@ -120,6 +118,7 @@ function CreateProductForm() {
             <section>
               <FormSelect
                 name='locale'
+                fullWidth
                 options={[
                   { value: 'en', label: 'en' },
                   { value: 'sr', label: 'sr' },
@@ -145,6 +144,7 @@ function CreateProductForm() {
               <FormCheckboxGroup
                 row
                 name='colors'
+                fullWidth
                 options={['red', 'green', 'blue', 'orange', 'pink', 'yellow', 'purple']}
               />
             </section>
@@ -154,13 +154,14 @@ function CreateProductForm() {
             </section>
 
             <section>
-              <FormAutoComplete name='tags' multiple options={['winter', 'sports', 'men', 'women']} />
+              <FormAutoComplete name='tags' multiple fullWidth options={['winter', 'sports', 'men', 'women']} />
             </section>
 
             <section>
               <FormSelect
                 name='multi'
                 multiple
+                fullWidth
                 options={[
                   { value: 'one', label: 'one' },
                   { value: 'two', label: 'two' },
@@ -170,7 +171,7 @@ function CreateProductForm() {
               />
             </section>
 
-            <FormSubmitButton>Submit</FormSubmitButton>
+            <FormSubmitButton fullWidth>Submit</FormSubmitButton>
           </form>
         </FormProvider>
       </div>
@@ -199,6 +200,7 @@ function CountrySelect() {
     <section>
       <FormAutoComplete
         name='country'
+        fullWidth
         options={[
           { code: 'AD', label: 'Andorra', phone: '376' },
           { code: 'AE', label: 'United Arab Emirates', phone: '971' },

@@ -74,8 +74,10 @@ function PasswordForgotForm() {
 
         <FormProvider {...methods}>
           <form onSubmit={handleSubmit(onSubmit)} noValidate>
-            <FormTextField name='email' type='email' />
-            <FormSubmitButton className={classes.submit}>Send Password Reset Email</FormSubmitButton>
+            <FormTextField name='email' type='email' fullWidth />
+            <FormSubmitButton className={classes.submit} fullWidth>
+              Send Password Reset Email
+            </FormSubmitButton>
 
             <Grid container>
               <Grid item xs>

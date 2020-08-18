@@ -80,9 +80,11 @@ function PasswordResetForm() {
 
         <FormProvider {...methods}>
           <form onSubmit={handleSubmit(onSubmit)} noValidate>
-            <FormTextField name='password' type='password' />
-            <FormTextField name='confirmPassword' type='password' />
-            <FormSubmitButton className={classes.submit}>Update Password</FormSubmitButton>
+            <FormTextField name='password' type='password' fullWidth />
+            <FormTextField name='confirmPassword' type='password' fullWidth />
+            <FormSubmitButton className={classes.submit} fullWidth>
+              Update Password
+            </FormSubmitButton>
 
             <Grid container>
               <Grid item xs>

@@ -84,12 +84,14 @@ function SignupForm() {
 
         <FormProvider {...methods}>
           <form onSubmit={handleSubmit(onSubmit)} noValidate>
-            <FormTextField name='firstName' />
-            <FormTextField name='lastName' />
-            <FormTextField name='email' type='email' />
-            <FormTextField name='password' type='password' />
-            <FormTextField name='confirmPassword' type='password' />
-            <FormSubmitButton className={classes.submit}>Signup</FormSubmitButton>
+            <FormTextField name='firstName' fullWidth />
+            <FormTextField name='lastName' fullWidth />
+            <FormTextField name='email' type='email' fullWidth />
+            <FormTextField name='password' type='password' fullWidth />
+            <FormTextField name='confirmPassword' type='password' fullWidth />
+            <FormSubmitButton className={classes.submit} fullWidth>
+              Signup
+            </FormSubmitButton>
 
             <Grid container>
               <Grid item xs>

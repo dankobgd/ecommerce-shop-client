@@ -77,10 +77,12 @@ function EditProductForm() {
 
         <FormProvider {...methods}>
           <form onSubmit={handleSubmit(onSubmit)} noValidate>
-            <FormTextField name='name' />
-            <FormTextField name='slug' />
-            <FormTextField name='price' />
-            <FormSubmitButton className={classes.submit}>Save Changes</FormSubmitButton>
+            <FormTextField name='name' fullWidth />
+            <FormTextField name='slug' fullWidth />
+            <FormTextField name='price' fullWidth />
+            <FormSubmitButton className={classes.submit} fullWidth>
+              Save Changes
+            </FormSubmitButton>
           </form>
         </FormProvider>
       </div>

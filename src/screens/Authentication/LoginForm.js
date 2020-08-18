@@ -78,9 +78,11 @@ function LoginForm() {
 
         <FormProvider {...methods}>
           <form onSubmit={handleSubmit(onSubmit)} noValidate>
-            <FormTextField name='email' type='email' />
-            <FormTextField name='password' type='password' />
-            <FormSubmitButton className={classes.submit}>Login</FormSubmitButton>
+            <FormTextField name='email' type='email' fullWidth />
+            <FormTextField name='password' type='password' fullWidth />
+            <FormSubmitButton className={classes.submit} fullWidth>
+              Login
+            </FormSubmitButton>
 
             <Grid container>
               <Grid item xs>

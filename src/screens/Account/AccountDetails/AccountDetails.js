@@ -69,16 +69,16 @@ function AccountDetails(props) {
           <CardContent>
             <Grid container spacing={3}>
               <Grid item md={6} xs={12}>
-                <FormTextField name='firstName' />
+                <FormTextField name='firstName' fullWidth />
               </Grid>
               <Grid item md={6} xs={12}>
-                <FormTextField name='lastName' />
+                <FormTextField name='lastName' fullWidth />
               </Grid>
               <Grid item md={6} xs={12}>
-                <FormTextField name='username' />
+                <FormTextField name='username' fullWidth />
               </Grid>
               <Grid item md={6} xs={12}>
-                <FormTextField name='email' type='email' />
+                <FormTextField name='email' type='email' fullWidth />
               </Grid>
               <Grid item md={6} xs={6}>
                 <FormSelect
@@ -102,7 +102,7 @@ function AccountDetails(props) {
           </CardContent>
           <Divider />
           <CardActions>
-            <FormSubmitButton>Save Details</FormSubmitButton>
+            <FormSubmitButton fullWidth>Save Details</FormSubmitButton>
           </CardActions>
         </form>
       </FormProvider>

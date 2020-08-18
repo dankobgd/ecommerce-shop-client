@@ -61,13 +61,13 @@ function AccountPassword(props) {
         <form onSubmit={handleSubmit(onSubmit)} noValidate>
           <Divider />
           <CardContent>
-            <FormTextField name='oldPassword' type='password' />
-            <FormTextField name='newPassword' type='password' />
-            <FormTextField name='confirmPassword' type='password' />
+            <FormTextField name='oldPassword' type='password' fullWidth />
+            <FormTextField name='newPassword' type='password' fullWidth />
+            <FormTextField name='confirmPassword' type='password' fullWidth />
           </CardContent>
           <Divider />
           <CardActions>
-            <FormSubmitButton>Update Password</FormSubmitButton>
+            <FormSubmitButton fullWidth>Update Password</FormSubmitButton>
           </CardActions>
         </form>
       </FormProvider>
