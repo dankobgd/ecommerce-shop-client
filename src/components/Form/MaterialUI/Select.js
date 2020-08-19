@@ -4,7 +4,7 @@ import { FormControl, Select, MenuItem, InputLabel, FormHelperText, OutlinedInpu
 import { nanoid } from 'nanoid';
 import { useFormContext, Controller } from 'react-hook-form';
 
-import { defaultLabel } from './helpers';
+import { defaultLabel } from '../helpers';
 
 export default function MySelect({
   name,

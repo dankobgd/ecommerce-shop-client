@@ -4,7 +4,7 @@ import { RadioGroup, FormControlLabel, Radio, FormControl, FormHelperText } from
 import { nanoid } from 'nanoid';
 import { useFormContext, Controller } from 'react-hook-form';
 
-import { defaultLabel } from './helpers';
+import { defaultLabel } from '../helpers';
 
 export default function MyRadioGroup({ name, label = defaultLabel(name), row = true, options }) {
   const { control, errors } = useFormContext();

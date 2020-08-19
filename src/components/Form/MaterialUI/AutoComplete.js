@@ -4,7 +4,7 @@ import { TextField, FormControl, FormHelperText } from '@material-ui/core';
 import { Autocomplete } from '@material-ui/lab';
 import { Controller, useFormContext } from 'react-hook-form';
 
-import { defaultLabel } from './helpers';
+import { defaultLabel } from '../helpers';
 
 export default function AutoComplete({
   name,

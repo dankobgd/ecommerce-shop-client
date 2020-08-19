@@ -1,11 +1,11 @@
 import React from 'react';
 
-import { FormControlLabel, Checkbox, FormControl, FormHelperText } from '@material-ui/core';
+import { FormControlLabel, Switch, FormControl, FormHelperText } from '@material-ui/core';
 import { useFormContext, Controller } from 'react-hook-form';
 
-import { defaultLabel } from './helpers';
+import { defaultLabel } from '../helpers';
 
-export default function FormCheckbox({ name, label = defaultLabel(name) }) {
+export default function FormSwitch({ name, label = defaultLabel(name) }) {
   const { control, errors } = useFormContext();
 
   return (
@@ -16,7 +16,7 @@ export default function FormCheckbox({ name, label = defaultLabel(name) }) {
           <Controller
             name={name}
             control={control}
-            render={props => <Checkbox onChange={e => props.onChange(e.target.checked)} checked={props.value} />}
+            render={props => <Switch onChange={e => props.onChange(e.target.checked)} checked={props.value} />}
           />
         }
       />

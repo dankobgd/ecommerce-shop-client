@@ -1,7 +1,11 @@
 import apiClient from './apiClient';
 
 export default {
-  async create(details) {
-    return apiClient.post('v1/products', { data: details });
+  async create(formData) {
+    return apiClient.post(
+      'v1/products',
+      { data: formData, headers: { 'Content-Type': 'multipart/form-data' } },
+      { skipTransformRequest: true }
+    );
   },
 };

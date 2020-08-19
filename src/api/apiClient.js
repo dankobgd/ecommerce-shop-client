@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-import { transformKeysToCamelCase, transformKeysToSnakeCase } from './helpers';
+import { transformKeysToCamelCase, transformKeysToSnakeCase } from '../utils/transformObjectKeys';
 
 const client = axios.create({
   baseURL: 'http://localhost:3001/api/',
@@ -21,7 +21,7 @@ function onSuccess(options, method, response) {
   if (options.raw || method === 'HEAD') {
     return response;
   }
-  if (options.skipTransform) {
+  if (options.skipTransformResponse) {
     return response.data;
   }
   return transformKeysToCamelCase(response?.data);
@@ -31,7 +31,7 @@ function onError(options, error) {
   if (options.raw) {
     return error.response;
   }
-  if (options.skipTransform) {
+  if (options.skipTransformResponse) {
     return error?.response?.data;
   }
   return transformKeysToCamelCase(error?.response?.data);
@@ -43,7 +43,7 @@ function transform(config, data) {
   }
 
   let dataObject;
-  if (config.skipTransform) {
+  if (config.skipTransformRequest) {
     dataObject = data;
   } else {
     dataObject = transformKeysToSnakeCase(data);

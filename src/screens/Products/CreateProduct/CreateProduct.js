@@ -9,20 +9,18 @@ import { useDispatch, useSelector } from 'react-redux';
 import * as Yup from 'yup';
 
 import {
-  FormCheckbox,
-  FormRadioGroup,
-  FormSelect,
   FormTextField,
   FormSwitch,
-  FormSlider,
-  FormCheckboxGroup,
   FormSubmitButton,
   FormAutoComplete,
+  FormNumberField,
 } from '../../../components/Form';
 import ErrorMessage from '../../../components/Message/ErrorMessage';
 import { useFormServerErrors } from '../../../hooks/useFormServerErrors';
 import { productCreate } from '../../../store/products/productsSlice';
 import { selectUIState } from '../../../store/ui';
+import { transformKeysToSnakeCase } from '../../../utils/transformObjectKeys';
+import { ProductImagesDropzone, ProductSingleUpload } from './FileUploadInputs';
 
 const useStyles = makeStyles(theme => ({
   paper: {
@@ -43,33 +41,32 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
-const schema = Yup.object({
-  name: Yup.string().required(),
-  gender: Yup.string().required(),
-  locale: Yup.string().required(),
-  priceRange: Yup.array().min(1).required(),
-  colors: Yup.array().min(1).required(),
-  tags: Yup.array().min(1).required(),
-  multi: Yup.array().min(1).required(),
-  country: Yup.object()
-    .test('test', 'lol', v => Object.keys(v) !== 0)
-    .required(),
-});
+const schema = Yup.object({});
 
 const formOpts = {
   mode: 'onChange',
   reValidateMode: 'onChange',
   defaultValues: {
+    brandId: '',
+    // discountId: '',
     name: '',
-    gender: '',
-    locale: '',
+    slug: '',
+    description: '',
+    price: '',
+    inStock: true,
     isFeatured: false,
-    isPublished: false,
-    priceRange: [0, 5],
-    colors: [],
-    country: null,
+    'Category.name': '',
+    'Category.slug': '',
+    'Category.description': '',
+    'Brand.name': '',
+    'Brand.slug': '',
+    'Brand.type': '',
+    'Brand.description': '',
+    'Brand.email': '',
+    'Brand.websiteUrl': '',
     tags: [],
-    multi: [],
+    image: '',
+    images: [],
   },
   resolver: yupResolver(schema),
 };
@@ -78,12 +75,32 @@ function CreateProductForm() {
   const classes = useStyles();
   const dispatch = useDispatch();
   const methods = useForm(formOpts);
-  const { handleSubmit, setError, errors } = methods;
+  const { handleSubmit, setError } = methods;
   const { loading, error } = useSelector(selectUIState(productCreate));
 
   const onSubmit = async data => {
-    console.log(data);
-    // dispatch(productCreate(data));
+    const { Brand, Category, tags, image, images, ...rest } = data;
+    const formData = new FormData();
+    const fields = transformKeysToSnakeCase(rest);
+
+    formData.append('image', image);
+    Object.keys(fields).forEach(name => {
+      formData.append(name, fields[name]);
+    });
+    Object.keys(Brand).forEach(name => {
+      formData.append(`Brand.${name}`, Brand[name]);
+    });
+    Object.keys(Category).forEach(name => {
+      formData.append(`Category.${name}`, Category[name]);
+    });
+    Object.values(images).forEach(img => {
+      formData.append('images', img);
+    });
+    tags.forEach(tag => {
+      formData.append('tags', tag);
+    });
+
+    dispatch(productCreate(formData));
   };
 
   useFormServerErrors(error, setError);
@@ -103,118 +120,35 @@ function CreateProductForm() {
 
         <FormProvider {...methods}>
           <form onSubmit={handleSubmit(onSubmit)} noValidate>
-            <section>
-              <FormTextField name='name' fullWidth />
-            </section>
+            <FormTextField name='brandId' fullWidth />
+            {/* <FormTextField name='discountId' fullWidth /> */}
+            <FormTextField name='name' fullWidth />
+            <FormTextField name='slug' fullWidth />
+            <FormTextField name='description' fullWidth />
+            <FormNumberField name='price' fullWidth />
+            <FormSwitch name='inStock' />
+            <FormSwitch name='isFeatured' />
+            <FormTextField name='Category.name' fullWidth />
+            <FormTextField name='Category.slug' fullWidth />
+            <FormTextField name='Category.description' fullWidth />
+            <FormTextField name='Brand.name' fullWidth />
+            <FormTextField name='Brand.slug' fullWidth />
+            <FormTextField name='Brand.description' fullWidth />
+            <FormTextField name='Brand.type' fullWidth />
+            <FormTextField name='Brand.email' fullWidth />
+            <FormTextField name='Brand.website_url' label='Brand Website URL' fullWidth />
+            <FormAutoComplete name='tags' multiple fullWidth options={['winter', 'sports', 'men', 'women']} />
 
-            <section>
-              <FormSwitch name='isFeatured' />
-            </section>
+            <ProductSingleUpload />
+            <ProductImagesDropzone />
 
-            <section>
-              <FormCheckbox name='isPublished' />
-            </section>
-
-            <section>
-              <FormSelect
-                name='locale'
-                fullWidth
-                options={[
-                  { value: 'en', label: 'en' },
-                  { value: 'sr', label: 'sr' },
-                ]}
-              />
-            </section>
-
-            <section>
-              <FormRadioGroup
-                name='gender'
-                options={[
-                  { value: 'm', label: 'male' },
-                  { value: 'f', label: 'female' },
-                ]}
-              />
-            </section>
-
-            <section>
-              <FormSlider name='priceRange' />
-            </section>
-
-            <section>
-              <FormCheckboxGroup
-                row
-                name='colors'
-                fullWidth
-                options={['red', 'green', 'blue', 'orange', 'pink', 'yellow', 'purple']}
-              />
-            </section>
-
-            <section>
-              <CountrySelect />
-            </section>
-
-            <section>
-              <FormAutoComplete name='tags' multiple fullWidth options={['winter', 'sports', 'men', 'women']} />
-            </section>
-
-            <section>
-              <FormSelect
-                name='multi'
-                multiple
-                fullWidth
-                options={[
-                  { value: 'one', label: 'one' },
-                  { value: 'two', label: 'two' },
-                  { value: 'three', label: 'three' },
-                  { value: 'four', label: 'four' },
-                ]}
-              />
-            </section>
-
-            <FormSubmitButton fullWidth>Submit</FormSubmitButton>
+            <FormSubmitButton className={classes.submit} fullWidth>
+              Add product
+            </FormSubmitButton>
           </form>
         </FormProvider>
       </div>
     </Container>
-  );
-}
-
-function countryToFlag(isoCode) {
-  return typeof String.fromCodePoint !== 'undefined'
-    ? isoCode.toUpperCase().replace(/./g, char => String.fromCodePoint(char.charCodeAt(0) + 127397))
-    : isoCode;
-}
-
-function CountrySelect() {
-  const getOptionSelected = (option, value) => option.code === value.code;
-  const getOptionLabel = option => option.label;
-
-  const renderOption = option => (
-    <span>
-      {countryToFlag(option.code)}
-      {option.label} ({option.code}) +{option.phone}
-    </span>
-  );
-
-  return (
-    <section>
-      <FormAutoComplete
-        name='country'
-        fullWidth
-        options={[
-          { code: 'AD', label: 'Andorra', phone: '376' },
-          { code: 'AE', label: 'United Arab Emirates', phone: '971' },
-          { code: 'AF', label: 'Afghanistan', phone: '93' },
-          { code: 'AG', label: 'Antigua and Barbuda', phone: '1-268' },
-          { code: 'AI', label: 'Anguilla', phone: '1-264' },
-          { code: 'AL', label: 'Albania', phone: '355' },
-          { code: 'RS', label: 'Serbia', phone: '381' },
-        ]}
-        getOptionLabel={getOptionLabel}
-        getOptionSelected={getOptionSelected}
-        renderOption={renderOption}
-      />
-    </section>
   );
 }
 
