@@ -51,7 +51,7 @@ function AccountDetails(props) {
   const { handleSubmit, setError } = methods;
 
   const onSubmit = async data => {
-    dispatch(userUpdateProfileDetails(data));
+    await dispatch(userUpdateProfileDetails(data));
   };
 
   useFormServerErrors(error, setError);

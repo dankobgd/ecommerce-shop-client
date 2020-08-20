@@ -64,7 +64,7 @@ function SignupForm() {
   const { loading, error } = useSelector(selectUIState(userSignup));
 
   const onSubmit = async data => {
-    dispatch(userSignup(data));
+    await dispatch(userSignup(data));
   };
 
   useFormServerErrors(error, setError);

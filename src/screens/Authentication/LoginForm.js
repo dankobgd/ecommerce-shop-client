@@ -58,7 +58,7 @@ function LoginForm() {
   const { loading, error } = useSelector(selectUIState(userLogin));
 
   const onSubmit = async data => {
-    dispatch(userLogin(data));
+    await dispatch(userLogin(data));
   };
 
   useFormServerErrors(error, setError);

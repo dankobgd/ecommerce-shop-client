@@ -63,7 +63,7 @@ const formOpts = {
     'Brand.type': '',
     'Brand.description': '',
     'Brand.email': '',
-    'Brand.websiteUrl': '',
+    'Brand.website_url': '',
     tags: [],
     image: '',
     images: [],
@@ -100,7 +100,7 @@ function CreateProductForm() {
       formData.append('tags', tag);
     });
 
-    dispatch(productCreate(formData));
+    await dispatch(productCreate(formData));
   };
 
   useFormServerErrors(error, setError);

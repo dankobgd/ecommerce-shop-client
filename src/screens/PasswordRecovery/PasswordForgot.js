@@ -54,7 +54,7 @@ function PasswordForgotForm() {
   const { loading, error } = useSelector(selectUIState(userForgotPassword));
 
   const onSubmit = async data => {
-    dispatch(userForgotPassword(data));
+    await dispatch(userForgotPassword(data));
   };
 
   useFormServerErrors(error, setError);

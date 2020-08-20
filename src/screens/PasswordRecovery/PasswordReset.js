@@ -60,7 +60,7 @@ function PasswordResetForm() {
   const { token } = parse(useLocation().search);
 
   const onSubmit = async data => {
-    dispatch(userResetPassword({ ...data, token }));
+    await dispatch(userResetPassword({ ...data, token }));
   };
 
   useFormServerErrors(error, setError);
