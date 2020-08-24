@@ -3,7 +3,7 @@ import { nanoid } from 'nanoid';
 
 const sliceName = 'toasts';
 
-const toastsSlice = createSlice({
+const toastSlice = createSlice({
   name: sliceName,
   initialState: [],
   reducers: {
@@ -32,4 +32,4 @@ export const selectInfoToasts = state => state.toasts.filter(t => t.type === 'in
 export const selectWarnToasts = state => state.toasts.filter(t => t.type === 'warn');
 export const selectErrorToasts = state => state.toasts.filter(t => t.type === 'error');
 
-export default toastsSlice;
+export default toastSlice;

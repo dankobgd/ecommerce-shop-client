@@ -1,16 +1,16 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 
 import api from '../../api';
-import toastsSlice, { successToast } from '../toasts/toastsSlice';
+import toastSlice, { successToast } from '../toast/toastSlice';
 
-export const sliceName = 'products';
+export const sliceName = 'product';
 
 export const productCreate = createAsyncThunk(
   `${sliceName}/productCreate`,
   async (formData, { dispatch, rejectWithValue }) => {
     try {
       const product = await api.products.create(formData);
-      dispatch(toastsSlice.actions.addToast(successToast('Product created')));
+      dispatch(toastSlice.actions.addToast(successToast('Product created')));
       return product;
     } catch (error) {
       return rejectWithValue(error);
@@ -31,6 +31,6 @@ const productsSlice = createSlice({
   },
 });
 
-export const selectAllProducts = state => state.products.list;
+export const selectAllProducts = state => state.product.list;
 
 export default productsSlice;

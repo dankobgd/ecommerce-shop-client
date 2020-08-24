@@ -2,6 +2,8 @@ import React from 'react';
 
 import { Divider, Drawer } from '@material-ui/core';
 import AccountBoxIcon from '@material-ui/icons/AccountBox';
+import CategoryIcon from '@material-ui/icons/Category';
+import ClassIcon from '@material-ui/icons/Class';
 import DashboardIcon from '@material-ui/icons/Dashboard';
 import PeopleIcon from '@material-ui/icons/People';
 import SettingsIcon from '@material-ui/icons/Settings';
@@ -59,6 +61,16 @@ function Sidebar(props) {
       title: 'Products',
       href: '/products',
       icon: <ShoppingBasketIcon />,
+    },
+    {
+      title: 'Categories',
+      href: '/categories',
+      icon: <CategoryIcon />,
+    },
+    {
+      title: 'Brands',
+      href: '/brands',
+      icon: <ClassIcon />,
     },
     {
       title: 'Settings',

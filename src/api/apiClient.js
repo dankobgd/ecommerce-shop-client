@@ -1,4 +1,5 @@
 import axios from 'axios';
+import _ from 'lodash';
 
 import { transformKeysToCamelCase, transformKeysToSnakeCase } from '../utils/transformObjectKeys';
 
@@ -24,6 +25,7 @@ function onSuccess(options, method, response) {
   if (options.skipTransformResponse) {
     return response.data;
   }
+
   return transformKeysToCamelCase(response?.data);
 }
 
@@ -34,7 +36,34 @@ function onError(options, error) {
   if (options.skipTransformResponse) {
     return error?.response?.data;
   }
+
   return transformKeysToCamelCase(error?.response?.data);
+}
+
+function checkTransformFormData(config, data) {
+  if (config.skipTransformRequest) {
+    return data;
+  }
+
+  const copyFormData = new FormData();
+
+  // eslint-disable-next-line no-restricted-syntax
+  for (const [name, value] of data) {
+    if (typeof value === 'string') {
+      copyFormData.append(_.snakeCase(name), value);
+    } else {
+      copyFormData.append(name, value);
+    }
+  }
+
+  return copyFormData;
+}
+
+function checkTransformData(config, data) {
+  if (config.skipTransformRequest) {
+    return data;
+  }
+  return transformKeysToSnakeCase(data);
 }
 
 function transform(config, data) {
@@ -43,23 +72,18 @@ function transform(config, data) {
   }
 
   let dataObject;
-  if (config.skipTransformRequest) {
-    dataObject = data;
+
+  if (data instanceof FormData) {
+    dataObject = checkTransformFormData(config, data);
   } else {
-    dataObject = transformKeysToSnakeCase(data);
+    dataObject = checkTransformData(config, data);
   }
+
   return dataObject;
 }
 
 function request(method, url, config = {}, options = {}) {
   const { params, data, headers, maxContentLength } = config;
-
-  let dataObject;
-  if (data instanceof FormData) {
-    dataObject = data;
-  } else {
-    dataObject = transform(options, data);
-  }
 
   return new Promise((resolve, reject) =>
     client
@@ -67,7 +91,7 @@ function request(method, url, config = {}, options = {}) {
         method,
         url: formatURL(url),
         params,
-        data: dataObject,
+        data: transform(options, data),
         headers,
         maxContentLength,
       })
@@ -81,7 +105,7 @@ const apiClient = {
   post: (url, config, options) => request('POST', url, config, options),
   put: (url, config, options) => request('PUT', url, config, options),
   patch: (url, config, options) => request('PATCH', url, config, options),
-  del: (url, config, options) => request('DELETE', url, config, options),
+  delete: (url, config, options) => request('DELETE', url, config, options),
 };
 
 export default apiClient;

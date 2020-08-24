@@ -11,7 +11,7 @@ import * as Yup from 'yup';
 import { FormTextField, FormSubmitButton } from '../../../components/Form';
 import ErrorMessage from '../../../components/Message/ErrorMessage';
 import { useFormServerErrors } from '../../../hooks/useFormServerErrors';
-import { productCreate } from '../../../store/product/productSlice';
+import { categoryUpdate, selectCategoryById, selectSelectedId } from '../../../store/category/categorySlice';
 import { selectUIState } from '../../../store/ui';
 import { rules } from '../../../utils/validation';
 
@@ -34,30 +34,30 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
-const schema = Yup.object({
-  email: rules.emailRule,
-  password: rules.passwordRule,
-});
+const schema = Yup.object({});
 
-const formOpts = {
+const formOpts = category => ({
   mode: 'onChange',
   reValidateMode: 'onChange',
   defaultValues: {
-    email: '',
-    password: '',
+    name: category?.name || '',
+    slug: category?.slug || '',
+    description: category?.description || '',
   },
   resolver: yupResolver(schema),
-};
+});
 
-function EditProductForm() {
+function EditCategoryForm() {
   const classes = useStyles();
   const dispatch = useDispatch();
-  const methods = useForm(formOpts);
+  const selectedId = useSelector(selectSelectedId);
+  const category = useSelector(selectCategoryById(selectedId));
+  const methods = useForm(formOpts(category));
   const { handleSubmit, setError } = methods;
-  const { loading, error } = useSelector(selectUIState(productCreate));
+  const { loading, error } = useSelector(selectUIState(categoryUpdate));
 
   const onSubmit = async data => {
-    dispatch(productCreate(data));
+    await dispatch(categoryUpdate({ id: category.id, details: data }));
   };
 
   useFormServerErrors(error, setError);
@@ -69,7 +69,7 @@ function EditProductForm() {
           <ShoppingBasketIcon />
         </Avatar>
         <Typography component='h1' variant='h5'>
-          Edit Product
+          Edit Category
         </Typography>
 
         {loading && <CircularProgress />}
@@ -79,7 +79,7 @@ function EditProductForm() {
           <form onSubmit={handleSubmit(onSubmit)} noValidate>
             <FormTextField name='name' fullWidth />
             <FormTextField name='slug' fullWidth />
-            <FormTextField name='price' fullWidth />
+            <FormTextField name='description' fullWidth />
             <FormSubmitButton className={classes.submit} fullWidth>
               Save Changes
             </FormSubmitButton>
@@ -90,4 +90,4 @@ function EditProductForm() {
   );
 }
 
-export default EditProductForm;
+export default EditCategoryForm;

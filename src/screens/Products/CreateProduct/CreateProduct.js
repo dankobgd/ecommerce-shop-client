@@ -17,7 +17,7 @@ import {
 } from '../../../components/Form';
 import ErrorMessage from '../../../components/Message/ErrorMessage';
 import { useFormServerErrors } from '../../../hooks/useFormServerErrors';
-import { productCreate } from '../../../store/products/productsSlice';
+import { productCreate } from '../../../store/product/productSlice';
 import { selectUIState } from '../../../store/ui';
 import { transformKeysToSnakeCase } from '../../../utils/transformObjectKeys';
 import { ProductImagesDropzone, ProductSingleUpload } from './FileUploadInputs';

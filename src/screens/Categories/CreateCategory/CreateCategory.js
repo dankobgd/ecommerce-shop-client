@@ -11,9 +11,9 @@ import * as Yup from 'yup';
 import { FormTextField, FormSubmitButton } from '../../../components/Form';
 import ErrorMessage from '../../../components/Message/ErrorMessage';
 import { useFormServerErrors } from '../../../hooks/useFormServerErrors';
-import { productCreate } from '../../../store/product/productSlice';
+import { categoryCreate } from '../../../store/category/categorySlice';
 import { selectUIState } from '../../../store/ui';
-import { rules } from '../../../utils/validation';
+import { CategorySingleUpload } from './FileUploadInputs';
 
 const useStyles = makeStyles(theme => ({
   paper: {
@@ -34,30 +34,37 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
-const schema = Yup.object({
-  email: rules.emailRule,
-  password: rules.passwordRule,
-});
+const schema = Yup.object({});
 
 const formOpts = {
   mode: 'onChange',
   reValidateMode: 'onChange',
   defaultValues: {
-    email: '',
-    password: '',
+    name: '',
+    slug: '',
+    description: '',
+    logo: '',
   },
   resolver: yupResolver(schema),
 };
 
-function EditProductForm() {
+function CreateCategoryForm() {
   const classes = useStyles();
   const dispatch = useDispatch();
   const methods = useForm(formOpts);
   const { handleSubmit, setError } = methods;
-  const { loading, error } = useSelector(selectUIState(productCreate));
+  const { loading, error } = useSelector(selectUIState(categoryCreate));
 
   const onSubmit = async data => {
-    dispatch(productCreate(data));
+    const { logo, ...rest } = data;
+    const formData = new FormData();
+
+    formData.append('logo', logo);
+    Object.keys(rest).forEach(name => {
+      formData.append(name, rest[name]);
+    });
+
+    await dispatch(categoryCreate(formData));
   };
 
   useFormServerErrors(error, setError);
@@ -69,7 +76,7 @@ function EditProductForm() {
           <ShoppingBasketIcon />
         </Avatar>
         <Typography component='h1' variant='h5'>
-          Edit Product
+          Create Category
         </Typography>
 
         {loading && <CircularProgress />}
@@ -79,9 +86,11 @@ function EditProductForm() {
           <form onSubmit={handleSubmit(onSubmit)} noValidate>
             <FormTextField name='name' fullWidth />
             <FormTextField name='slug' fullWidth />
-            <FormTextField name='price' fullWidth />
+            <FormTextField name='description' fullWidth />
+            <CategorySingleUpload />
+
             <FormSubmitButton className={classes.submit} fullWidth>
-              Save Changes
+              Add category
             </FormSubmitButton>
           </form>
         </FormProvider>
@@ -90,4 +99,4 @@ function EditProductForm() {
   );
 }
 
-export default EditProductForm;
+export default CreateCategoryForm;

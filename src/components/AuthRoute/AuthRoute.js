@@ -4,7 +4,7 @@ import { Redirect } from '@reach/router';
 import { useSelector } from 'react-redux';
 
 import { selectUIState } from '../../store/ui';
-import { selectUserProfile, getCurrentUser } from '../../store/user/userSlice';
+import { selectUserProfile, getCurrentUser, selectIsUserAuthenticated } from '../../store/user/userSlice';
 
 const Loading = () => <div>Loading...</div>;
 
@@ -20,7 +20,7 @@ function AuthRoute(props) {
   } = props;
 
   const user = useSelector(selectUserProfile);
-  const isAuthenticated = JSON.parse(localStorage.getItem('ecommerce/logged_in'));
+  const isAuthenticated = useSelector(selectIsUserAuthenticated);
   const { loading } = useSelector(selectUIState(getCurrentUser));
 
   const renderPrivateRoute = () => {

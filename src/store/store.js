@@ -1,17 +1,38 @@
-import { configureStore } from '@reduxjs/toolkit';
+import { configureStore, combineReducers, getDefaultMiddleware } from '@reduxjs/toolkit';
+import { persistStore, persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER } from 'redux-persist';
+import localStorageEngine from 'redux-persist/lib/storage';
 
-import productsSlice from './products/productsSlice';
-import toastsSlice from './toasts/toastsSlice';
+import brandSlice from './brand/brandSlice';
+import categorySlice from './category/categorySlice';
+import productSlice from './product/productSlice';
+import toastSlice from './toast/toastSlice';
 import uiReducer from './ui';
 import userSlice from './user/userSlice';
 
-const store = configureStore({
-  reducer: {
-    ui: uiReducer,
-    toasts: toastsSlice.reducer,
-    user: userSlice.reducer,
-    products: productsSlice.reducer,
-  },
+const rootReducer = combineReducers({
+  ui: uiReducer,
+  toasts: toastSlice.reducer,
+  user: userSlice.reducer,
+  product: productSlice.reducer,
+  brand: brandSlice.reducer,
+  category: categorySlice.reducer,
 });
 
-export default store;
+const persistConfig = {
+  key: 'ecommerce/root',
+  storage: localStorageEngine,
+  blacklist: ['ui', 'toasts'],
+};
+
+const persistedReducer = persistReducer(persistConfig, rootReducer);
+
+export const store = configureStore({
+  reducer: persistedReducer,
+  middleware: getDefaultMiddleware({
+    serializableCheck: {
+      ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
+    },
+  }),
+});
+
+export const persistor = persistStore(store);
