@@ -13,7 +13,6 @@ import ErrorMessage from '../../../components/Message/ErrorMessage';
 import { useFormServerErrors } from '../../../hooks/useFormServerErrors';
 import { categoryUpdate, selectCategoryById, selectSelectedId } from '../../../store/category/categorySlice';
 import { selectUIState } from '../../../store/ui';
-import { rules } from '../../../utils/validation';
 
 const useStyles = makeStyles(theme => ({
   paper: {
@@ -34,7 +33,12 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
-const schema = Yup.object({});
+const schema = Yup.object({
+  name: Yup.string().required(),
+  slug: Yup.string().required(),
+  description: Yup.string().required(),
+  logo: Yup.string().required(),
+});
 
 const formOpts = category => ({
   mode: 'onChange',

@@ -13,6 +13,7 @@ import ErrorMessage from '../../../components/Message/ErrorMessage';
 import { useFormServerErrors } from '../../../hooks/useFormServerErrors';
 import { brandCreate } from '../../../store/brand/brandSlice';
 import { selectUIState } from '../../../store/ui';
+import { rules } from '../../../utils/validation';
 import { BrandSingleUpload } from './FileUploadInputs';
 
 const useStyles = makeStyles(theme => ({
@@ -34,7 +35,15 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
-const schema = Yup.object({});
+const schema = Yup.object({
+  name: Yup.string().required(),
+  slug: Yup.string().required(),
+  type: Yup.string().required(),
+  description: Yup.string().required(),
+  email: rules.emailRule,
+  logo: Yup.string().required(),
+  websiteUrl: Yup.string().required(),
+});
 
 const formOpts = {
   mode: 'onChange',

@@ -34,7 +34,15 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
-const schema = Yup.object({});
+const schema = Yup.object({
+  name: Yup.string().required(),
+  slug: Yup.string().required(),
+  type: Yup.string().required(),
+  description: Yup.string().required(),
+  email: rules.emailRule,
+  logo: Yup.string().required(),
+  websiteUrl: Yup.string().required(),
+});
 
 const formOpts = brand => ({
   mode: 'onChange',
