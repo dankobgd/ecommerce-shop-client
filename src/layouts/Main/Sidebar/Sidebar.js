@@ -5,6 +5,7 @@ import AccountBoxIcon from '@material-ui/icons/AccountBox';
 import CategoryIcon from '@material-ui/icons/Category';
 import ClassIcon from '@material-ui/icons/Class';
 import DashboardIcon from '@material-ui/icons/Dashboard';
+import LabelIcon from '@material-ui/icons/Label';
 import PeopleIcon from '@material-ui/icons/People';
 import SettingsIcon from '@material-ui/icons/Settings';
 import ShoppingBasketIcon from '@material-ui/icons/ShoppingBasket';
@@ -71,6 +72,11 @@ function Sidebar(props) {
       title: 'Brands',
       href: '/brands',
       icon: <ClassIcon />,
+    },
+    {
+      title: 'Tags',
+      href: '/tags',
+      icon: <LabelIcon />,
     },
     {
       title: 'Settings',

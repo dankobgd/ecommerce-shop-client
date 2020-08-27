@@ -15,6 +15,7 @@ import NotFound from './screens/NotFound/NotFound';
 import PasswordForgot from './screens/PasswordRecovery/PasswordForgot';
 import PasswordReset from './screens/PasswordRecovery/PasswordReset';
 import ProductRoutes from './screens/Products/ProductRoutes';
+import TagRoutes from './screens/Tags/TagRoutes';
 import UserRoutes from './screens/Users/UserRoutes';
 
 function AppRoutes() {
@@ -31,6 +32,7 @@ function AppRoutes() {
       <AuthRoute path='/users/*' access='private' allowed={['admin']} component={UserRoutes} layout={Main} />
       <AuthRoute path='/categories/*' access='private' allowed={['admin']} component={CategoryRoutes} layout={Main} />
       <AuthRoute path='/brands/*' access='private' allowed={['admin']} component={BrandRoutes} layout={Main} />
+      <AuthRoute path='/tags/*' access='private' allowed={['admin']} component={TagRoutes} layout={Main} />
       <NotFound default />
     </Router>
   );

@@ -5,6 +5,7 @@ import localStorageEngine from 'redux-persist/lib/storage';
 import brandSlice from './brand/brandSlice';
 import categorySlice from './category/categorySlice';
 import productSlice from './product/productSlice';
+import tagSlice from './tag/tagSlice';
 import toastSlice from './toast/toastSlice';
 import uiReducer from './ui';
 import userSlice from './user/userSlice';
@@ -16,6 +17,7 @@ const rootReducer = combineReducers({
   product: productSlice.reducer,
   brand: brandSlice.reducer,
   category: categorySlice.reducer,
+  tag: tagSlice.reducer,
 });
 
 const persistConfig = {

@@ -8,7 +8,7 @@ import Brands from './Brands';
 import CreateProduct from './CreateBrand/CreateBrand';
 import EditBrand from './EditBrand/EditBrand';
 
-function ProductRoutes() {
+function BrandROutes() {
   return (
     <Router>
       <AuthRoute path='/' access='private' allowed={['admin']} component={Brands} layout={null} />
@@ -19,4 +19,4 @@ function ProductRoutes() {
   );
 }
 
-export default ProductRoutes;
+export default BrandROutes;

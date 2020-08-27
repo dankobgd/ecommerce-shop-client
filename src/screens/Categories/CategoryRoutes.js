@@ -8,7 +8,7 @@ import Categories from './Categories';
 import CreateCategory from './CreateCategory/CreateCategory';
 import EditCategory from './EditCategory/EditCategory';
 
-function ProductRoutes() {
+function CategoryRoutes() {
   return (
     <Router>
       <AuthRoute path='/' access='private' allowed={['admin']} component={Categories} layout={null} />
@@ -19,4 +19,4 @@ function ProductRoutes() {
   );
 }
 
-export default ProductRoutes;
+export default CategoryRoutes;
