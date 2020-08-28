@@ -14,10 +14,20 @@ import {
   Typography,
   TablePagination,
   Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
 } from '@material-ui/core';
+import DeleteIcon from '@material-ui/icons/Delete';
 import EditIcon from '@material-ui/icons/Edit';
 import { makeStyles } from '@material-ui/styles';
+import { Link } from '@reach/router';
 import clsx from 'clsx';
+import { useDispatch } from 'react-redux';
+
+import productSlice, { productDelete } from '../../../store/product/productSlice';
 
 const useStyles = makeStyles(theme => ({
   root: {},
@@ -26,6 +36,7 @@ const useStyles = makeStyles(theme => ({
   },
   inner: {
     minWidth: 1050,
+    overflowX: 'auto',
   },
   nameContainer: {
     display: 'flex',
@@ -42,9 +53,19 @@ const useStyles = makeStyles(theme => ({
 const ProductsTable = props => {
   const { className, products, ...rest } = props;
   const classes = useStyles();
+  const dispatch = useDispatch();
   const [selectedProducts, setSelectedProducts] = useState([]);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(0);
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  const handleDialogOpen = () => {
+    setDialogOpen(true);
+  };
+
+  const handleDialogClose = () => {
+    setDialogOpen(false);
+  };
 
   const handleSelectAll = event => {
     let selected;
@@ -102,10 +123,16 @@ const ProductsTable = props => {
                   />
                 </TableCell>
                 <TableCell>Name</TableCell>
-                <TableCell>Email</TableCell>
-                <TableCell>Location</TableCell>
-                <TableCell>Phone</TableCell>
-                <TableCell>Registration date</TableCell>
+                <TableCell>ID</TableCell>
+                <TableCell>Slug</TableCell>
+                <TableCell>Price</TableCell>
+                <TableCell>Description</TableCell>
+                <TableCell>SKU</TableCell>
+                <TableCell>Featured</TableCell>
+                <TableCell>Stock</TableCell>
+                <TableCell>Thumbnail</TableCell>
+                <TableCell>Created at</TableCell>
+                <TableCell>Updated at</TableCell>
                 <TableCell />
               </TableRow>
             </TableHead>
@@ -127,22 +154,69 @@ const ProductsTable = props => {
                   </TableCell>
                   <TableCell>
                     <div className={classes.nameContainer}>
-                      <Avatar className={classes.avatar} src={product.avatar}>
-                        {product.name.substr(0, 2).toUpperCase()}
-                      </Avatar>
+                      <Avatar className={classes.avatar} src={product.imageUrl} />
                       <Typography variant='body1'>{product.name}</Typography>
                     </div>
                   </TableCell>
-                  <TableCell>{product.email}</TableCell>
+                  <TableCell>{product.id}</TableCell>
+                  <TableCell>{product.slug}</TableCell>
+                  <TableCell>{product.price}</TableCell>
+                  <TableCell>{product.description}</TableCell>
+                  <TableCell>{product.sku}</TableCell>
+                  <TableCell>{product.isFeatured.toString()}</TableCell>
+                  <TableCell>{product.inStock.toString()}</TableCell>
+                  <TableCell>{product.imageUrl}</TableCell>
+                  <TableCell>{product.createdAt}</TableCell>
+                  <TableCell>{product.updatedAt}</TableCell>
                   <TableCell>
-                    {product.address.city}, {product.address.state}, {product.address.country}
+                    <Link to='edit' style={{ textDecoration: 'none' }}>
+                      <Button
+                        variant='outlined'
+                        color='secondary'
+                        startIcon={<EditIcon />}
+                        onClick={() => dispatch(productSlice.actions.setSelectedId(product.id))}
+                      >
+                        Edit
+                      </Button>
+                    </Link>
                   </TableCell>
-                  <TableCell>{product.phone}</TableCell>
-                  <TableCell>{new Date().toUTCString()}</TableCell>
                   <TableCell>
-                    <Button variant='outlined' color='secondary' startIcon={<EditIcon />}>
-                      Edit
+                    <Button
+                      variant='outlined'
+                      color='secondary'
+                      startIcon={<DeleteIcon />}
+                      onClick={() => handleDialogOpen()}
+                    >
+                      Delete
                     </Button>
+                    <Dialog
+                      open={dialogOpen}
+                      onClose={handleDialogClose}
+                      aria-labelledby='delete product dialog'
+                      aria-describedby='deletes the product'
+                    >
+                      <DialogTitle id='delete product dialog'>Delete Product?</DialogTitle>
+                      <DialogContent>
+                        <DialogContentText>
+                          Are you sure you want to delete the product <strong>{product.name}</strong> ?
+                        </DialogContentText>
+                      </DialogContent>
+                      <DialogActions>
+                        <Button onClick={handleDialogClose} color='primary'>
+                          Cancel
+                        </Button>
+                        <Button
+                          onClick={() => {
+                            handleDialogClose();
+                            dispatch(productDelete(product.id));
+                          }}
+                          color='primary'
+                          autoFocus
+                        >
+                          Delete
+                        </Button>
+                      </DialogActions>
+                    </Dialog>
                   </TableCell>
                 </TableRow>
               ))}

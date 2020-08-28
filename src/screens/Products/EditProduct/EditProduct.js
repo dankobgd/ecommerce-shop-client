@@ -8,10 +8,16 @@ import { FormProvider, useForm } from 'react-hook-form';
 import { useDispatch, useSelector } from 'react-redux';
 import * as Yup from 'yup';
 
-import { FormTextField, FormSubmitButton } from '../../../components/Form';
+import {
+  FormTextField,
+  FormSubmitButton,
+  FormNumberField,
+  FormSwitch,
+  FormAutoComplete,
+} from '../../../components/Form';
 import ErrorMessage from '../../../components/Message/ErrorMessage';
 import { useFormServerErrors } from '../../../hooks/useFormServerErrors';
-import { productCreate } from '../../../store/product/productSlice';
+import { productCreate, selectSelectedId, selectProductById } from '../../../store/product/productSlice';
 import { selectUIState } from '../../../store/ui';
 import { rules } from '../../../utils/validation';
 
@@ -39,20 +45,30 @@ const schema = Yup.object({
   password: rules.passwordRule,
 });
 
-const formOpts = {
+const formOpts = product => ({
   mode: 'onChange',
   reValidateMode: 'onChange',
   defaultValues: {
-    email: '',
-    password: '',
+    brandId: product?.brandId || '',
+    categoryId: product?.categoryId || '',
+    // discountId: product?.discountId || '',
+    name: product?.name || '',
+    slug: product?.slug || '',
+    description: product?.description || '',
+    price: product?.price || '',
+    inStock: product?.inStock || false,
+    isFeatured: product?.isFeatured || false,
+    tags: product?.tags || [],
   },
   resolver: yupResolver(schema),
-};
+});
 
 function EditProductForm() {
   const classes = useStyles();
   const dispatch = useDispatch();
-  const methods = useForm(formOpts);
+  const selectedId = useSelector(selectSelectedId);
+  const product = useSelector(selectProductById(selectedId));
+  const methods = useForm(formOpts(product));
   const { handleSubmit, setError } = methods;
   const { loading, error } = useSelector(selectUIState(productCreate));
 
@@ -77,9 +93,17 @@ function EditProductForm() {
 
         <FormProvider {...methods}>
           <form onSubmit={handleSubmit(onSubmit)} noValidate>
+            <FormTextField name='brandId' fullWidth />
+            <FormTextField name='categoryId' fullWidth />
+            {/* <FormTextField name='discountId' fullWidth /> */}
             <FormTextField name='name' fullWidth />
             <FormTextField name='slug' fullWidth />
-            <FormTextField name='price' fullWidth />
+            <FormTextField name='description' fullWidth />
+            <FormNumberField name='price' fullWidth />
+            <FormSwitch name='inStock' />
+            <FormSwitch name='isFeatured' />
+            <FormAutoComplete name='tags' multiple fullWidth options={['winter', 'sports', 'men', 'women']} />
+
             <FormSubmitButton className={classes.submit} fullWidth>
               Save Changes
             </FormSubmitButton>

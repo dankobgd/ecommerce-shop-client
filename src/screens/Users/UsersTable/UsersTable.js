@@ -24,6 +24,7 @@ const useStyles = makeStyles(theme => ({
   },
   inner: {
     minWidth: 1050,
+    overflowX: 'auto',
   },
   nameContainer: {
     display: 'flex',

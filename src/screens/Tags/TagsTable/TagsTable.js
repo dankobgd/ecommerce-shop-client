@@ -35,6 +35,7 @@ const useStyles = makeStyles(theme => ({
   },
   inner: {
     minWidth: 1050,
+    overflowX: 'auto',
   },
   nameContainer: {
     display: 'flex',
@@ -120,6 +121,7 @@ const TagsTable = props => {
                     onChange={handleSelectAll}
                   />
                 </TableCell>
+                <TableCell>ID</TableCell>
                 <TableCell>Name</TableCell>
                 <TableCell>Slug</TableCell>
                 <TableCell>Description</TableCell>
@@ -143,6 +145,7 @@ const TagsTable = props => {
                         value='true'
                       />
                     </TableCell>
+                    <TableCell>{tag.id}</TableCell>
                     <TableCell>{tag.name}</TableCell>
                     <TableCell>{tag.slug}</TableCell>
                     <TableCell>{tag.description}</TableCell>

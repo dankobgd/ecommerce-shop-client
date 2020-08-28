@@ -37,6 +37,7 @@ const useStyles = makeStyles(theme => ({
   },
   inner: {
     minWidth: 1050,
+    overflowX: 'auto',
   },
   nameContainer: {
     display: 'flex',
@@ -123,6 +124,7 @@ const CategoriesTable = props => {
                   />
                 </TableCell>
                 <TableCell>Name</TableCell>
+                <TableCell>ID</TableCell>
                 <TableCell>Slug</TableCell>
                 <TableCell>Description</TableCell>
                 <TableCell>Logo URL</TableCell>
@@ -152,6 +154,7 @@ const CategoriesTable = props => {
                         <Typography variant='body1'>{category.name}</Typography>
                       </div>
                     </TableCell>
+                    <TableCell>{category.id}</TableCell>
                     <TableCell>{category.slug}</TableCell>
                     <TableCell>{category.description}</TableCell>
                     <TableCell>{category.logo}</TableCell>

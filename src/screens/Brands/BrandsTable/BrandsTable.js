@@ -37,6 +37,7 @@ const useStyles = makeStyles(theme => ({
   },
   inner: {
     minWidth: 1050,
+    overflowX: 'auto',
   },
   nameContainer: {
     display: 'flex',
@@ -123,6 +124,7 @@ const BrandsTable = props => {
                   />
                 </TableCell>
                 <TableCell>Name</TableCell>
+                <TableCell>ID</TableCell>
                 <TableCell>Slug</TableCell>
                 <TableCell>Type</TableCell>
                 <TableCell>Description</TableCell>
@@ -155,7 +157,7 @@ const BrandsTable = props => {
                         <Typography variant='body1'>{brand.name}</Typography>
                       </div>
                     </TableCell>
-                    <TableCell>{brand.name}</TableCell>
+                    <TableCell>{brand.id}</TableCell>
                     <TableCell>{brand.slug}</TableCell>
                     <TableCell>{brand.type}</TableCell>
                     <TableCell>{brand.description}</TableCell>

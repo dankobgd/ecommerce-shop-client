@@ -48,6 +48,7 @@ const formOpts = {
   reValidateMode: 'onChange',
   defaultValues: {
     brandId: '',
+    categoryId: '',
     // discountId: '',
     name: '',
     slug: '',
@@ -55,15 +56,6 @@ const formOpts = {
     price: '',
     inStock: true,
     isFeatured: false,
-    'Category.name': '',
-    'Category.slug': '',
-    'Category.description': '',
-    'Brand.name': '',
-    'Brand.slug': '',
-    'Brand.type': '',
-    'Brand.description': '',
-    'Brand.email': '',
-    'Brand.website_url': '',
     tags: [],
     image: '',
     images: [],
@@ -121,6 +113,7 @@ function CreateProductForm() {
         <FormProvider {...methods}>
           <form onSubmit={handleSubmit(onSubmit)} noValidate>
             <FormTextField name='brandId' fullWidth />
+            <FormTextField name='categoryId' fullWidth />
             {/* <FormTextField name='discountId' fullWidth /> */}
             <FormTextField name='name' fullWidth />
             <FormTextField name='slug' fullWidth />
@@ -128,15 +121,6 @@ function CreateProductForm() {
             <FormNumberField name='price' fullWidth />
             <FormSwitch name='inStock' />
             <FormSwitch name='isFeatured' />
-            <FormTextField name='Category.name' fullWidth />
-            <FormTextField name='Category.slug' fullWidth />
-            <FormTextField name='Category.description' fullWidth />
-            <FormTextField name='Brand.name' fullWidth />
-            <FormTextField name='Brand.slug' fullWidth />
-            <FormTextField name='Brand.description' fullWidth />
-            <FormTextField name='Brand.type' fullWidth />
-            <FormTextField name='Brand.email' fullWidth />
-            <FormTextField name='Brand.website_url' label='Brand Website URL' fullWidth />
             <FormAutoComplete name='tags' multiple fullWidth options={['winter', 'sports', 'men', 'women']} />
 
             <ProductSingleUpload />

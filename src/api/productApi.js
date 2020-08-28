@@ -8,4 +8,28 @@ export default {
       { skipTransformRequest: true }
     );
   },
+
+  async update(id, details) {
+    return apiClient.patch(`v1/products/${id}`, { data: details });
+  },
+
+  async get(id) {
+    return apiClient.get(`v1/products/${id}`);
+  },
+
+  async getAll() {
+    return apiClient.get('v1/products');
+  },
+
+  async delete(id) {
+    return apiClient.delete(`v1/products/${id}`);
+  },
+
+  async getTags(id) {
+    return apiClient.get(`v1/products/${id}/tags`);
+  },
+
+  async getImages(id) {
+    return apiClient.get(`v1/products/${id}/images`);
+  },
 };
