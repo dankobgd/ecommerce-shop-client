@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, createSelector } from '@reduxjs/toolkit';
 
 import api from '../../api';
 import toastSlice, { successToast } from '../toast/toastSlice';
@@ -91,7 +91,10 @@ const brandSlice = createSlice({
 });
 
 export const selectAllBrands = state => state.brand.list;
-export const selectBrandById = id => state => state.brand.list.find(c => c.id === id);
 export const selectSelectedId = state => state.brand.selectedId;
+
+export const selectCurrentBrand = createSelector([selectAllBrands, selectSelectedId], (items, currentId) =>
+  items.find(x => x.id === currentId)
+);
 
 export default brandSlice;

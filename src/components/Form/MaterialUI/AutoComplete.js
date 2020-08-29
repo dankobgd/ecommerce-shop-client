@@ -11,13 +11,14 @@ export default function AutoComplete({
   label = defaultLabel(name),
   variant = 'outlined',
   margin = 'normal',
+  fullWidth,
   options,
   ...rest
 }) {
   const { control, errors } = useFormContext();
 
   return (
-    <FormControl {...rest}>
+    <FormControl fullWidth={fullWidth}>
       <Controller
         render={props => (
           <Autocomplete

@@ -1,4 +1,4 @@
-import { createReducer } from '@reduxjs/toolkit';
+import { createReducer, createSelector } from '@reduxjs/toolkit';
 
 const actionName = action => action.substring(0, action.lastIndexOf('/'));
 
@@ -32,10 +32,13 @@ const uiReducer = createReducer(initialState, builder => {
     );
 });
 
-export const selectUIState = action => state => {
-  const error = state.ui.error[action.typePrefix] || null;
-  const loading = state.ui.loading[action.typePrefix] || false;
-  return { error, loading };
-};
+const selectLoading = state => state.ui.loading;
+const selectError = state => state.ui.error;
+
+export const selectUIState = action =>
+  createSelector([selectLoading, selectError], (loadingState, errorState) => ({
+    error: errorState[action.typePrefix] || null,
+    loading: loadingState[action.typePrefix] || null,
+  }));
 
 export default uiReducer;

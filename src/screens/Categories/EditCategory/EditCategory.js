@@ -11,7 +11,7 @@ import * as Yup from 'yup';
 import { FormTextField, FormSubmitButton } from '../../../components/Form';
 import ErrorMessage from '../../../components/Message/ErrorMessage';
 import { useFormServerErrors } from '../../../hooks/useFormServerErrors';
-import { categoryUpdate, selectCategoryById, selectSelectedId } from '../../../store/category/categorySlice';
+import { categoryUpdate, selectCurrentCategory } from '../../../store/category/categorySlice';
 import { selectUIState } from '../../../store/ui';
 
 const useStyles = makeStyles(theme => ({
@@ -54,8 +54,7 @@ const formOpts = category => ({
 function EditCategoryForm() {
   const classes = useStyles();
   const dispatch = useDispatch();
-  const selectedId = useSelector(selectSelectedId);
-  const category = useSelector(selectCategoryById(selectedId));
+  const category = useSelector(selectCurrentCategory);
   const methods = useForm(formOpts(category));
   const { handleSubmit, setError } = methods;
   const { loading, error } = useSelector(selectUIState(categoryUpdate));

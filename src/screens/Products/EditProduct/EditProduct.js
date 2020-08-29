@@ -17,7 +17,10 @@ import {
 } from '../../../components/Form';
 import ErrorMessage from '../../../components/Message/ErrorMessage';
 import { useFormServerErrors } from '../../../hooks/useFormServerErrors';
-import { productCreate, selectSelectedId, selectProductById } from '../../../store/product/productSlice';
+import { selectAllBrands, brandGetAll } from '../../../store/brand/brandSlice';
+import { selectAllCategories, categoryGetAll } from '../../../store/category/categorySlice';
+import { productCreate, selectCurrentProduct, productGetTags } from '../../../store/product/productSlice';
+import { selectAllTags, tagGetAll } from '../../../store/tag/tagSlice';
 import { selectUIState } from '../../../store/ui';
 import { rules } from '../../../utils/validation';
 
@@ -49,9 +52,9 @@ const formOpts = product => ({
   mode: 'onChange',
   reValidateMode: 'onChange',
   defaultValues: {
-    brandId: product?.brandId || '',
-    categoryId: product?.categoryId || '',
-    // discountId: product?.discountId || '',
+    // discountId: product?.discountId || null,
+    brandId: product?.brand || null,
+    categoryId: product?.category || null,
     name: product?.name || '',
     slug: product?.slug || '',
     description: product?.description || '',
@@ -59,6 +62,7 @@ const formOpts = product => ({
     inStock: product?.inStock || false,
     isFeatured: product?.isFeatured || false,
     tags: product?.tags || [],
+    // TODO: fix defaults later...
   },
   resolver: yupResolver(schema),
 });
@@ -66,11 +70,20 @@ const formOpts = product => ({
 function EditProductForm() {
   const classes = useStyles();
   const dispatch = useDispatch();
-  const selectedId = useSelector(selectSelectedId);
-  const product = useSelector(selectProductById(selectedId));
+  const tagList = useSelector(selectAllTags);
+  const brandList = useSelector(selectAllBrands);
+  const categoryList = useSelector(selectAllCategories);
+  const product = useSelector(selectCurrentProduct);
+  const { loading, error } = useSelector(selectUIState(productCreate));
   const methods = useForm(formOpts(product));
   const { handleSubmit, setError } = methods;
-  const { loading, error } = useSelector(selectUIState(productCreate));
+
+  React.useEffect(() => {
+    dispatch(productGetTags(product.id));
+    dispatch(brandGetAll());
+    dispatch(categoryGetAll());
+    dispatch(tagGetAll());
+  }, [dispatch, product.id]);
 
   const onSubmit = async data => {
     dispatch(productCreate(data));
@@ -93,16 +106,15 @@ function EditProductForm() {
 
         <FormProvider {...methods}>
           <form onSubmit={handleSubmit(onSubmit)} noValidate>
-            <FormTextField name='brandId' fullWidth />
-            <FormTextField name='categoryId' fullWidth />
-            {/* <FormTextField name='discountId' fullWidth /> */}
+            <BrandDropdown fullWidth options={brandList} />
+            <CategoryDropdown fullWidth options={categoryList} />
             <FormTextField name='name' fullWidth />
             <FormTextField name='slug' fullWidth />
             <FormTextField name='description' fullWidth />
             <FormNumberField name='price' fullWidth />
             <FormSwitch name='inStock' />
             <FormSwitch name='isFeatured' />
-            <FormAutoComplete name='tags' multiple fullWidth options={['winter', 'sports', 'men', 'women']} />
+            <TagsDropdown fullWidth options={tagList} />
 
             <FormSubmitButton className={classes.submit} fullWidth>
               Save Changes
@@ -113,5 +125,52 @@ function EditProductForm() {
     </Container>
   );
 }
+
+const BrandDropdown = ({ options, ...rest }) => {
+  const getOptionLabel = option => option.name || '';
+  const getOptionSelected = (option, value) => option.id === value.id;
+
+  return (
+    <FormAutoComplete
+      {...rest}
+      name='brandId'
+      label='Brand'
+      options={options}
+      getOptionLabel={getOptionLabel}
+      getOptionSelected={getOptionSelected}
+    />
+  );
+};
+
+const CategoryDropdown = ({ options, ...rest }) => {
+  const getOptionLabel = option => option.name || '';
+  const getOptionSelected = (option, value) => option.id === value.id;
+
+  return (
+    <FormAutoComplete
+      {...rest}
+      name='categoryId'
+      label='Category'
+      options={options}
+      getOptionLabel={getOptionLabel}
+      getOptionSelected={getOptionSelected}
+    />
+  );
+};
+const TagsDropdown = ({ options, ...rest }) => {
+  const getOptionLabel = option => option.name || '';
+  const getOptionSelected = (option, value) => option.id === value.id;
+
+  return (
+    <FormAutoComplete
+      {...rest}
+      multiple
+      name='tags'
+      options={options}
+      getOptionLabel={getOptionLabel}
+      getOptionSelected={getOptionSelected}
+    />
+  );
+};
 
 export default EditProductForm;

@@ -27,9 +27,5 @@ export const warnToast = message => ({ type: 'warn', message });
 export const errorToast = message => ({ type: 'error', message });
 
 export const selectToasts = state => state.toasts;
-export const selectSuccessToasts = state => state.toasts.filter(t => t.type === 'success');
-export const selectInfoToasts = state => state.toasts.filter(t => t.type === 'info');
-export const selectWarnToasts = state => state.toasts.filter(t => t.type === 'warn');
-export const selectErrorToasts = state => state.toasts.filter(t => t.type === 'error');
 
 export default toastSlice;

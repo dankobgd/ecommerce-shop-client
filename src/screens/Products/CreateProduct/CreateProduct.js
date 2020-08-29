@@ -17,7 +17,10 @@ import {
 } from '../../../components/Form';
 import ErrorMessage from '../../../components/Message/ErrorMessage';
 import { useFormServerErrors } from '../../../hooks/useFormServerErrors';
+import { brandGetAll, selectAllBrands } from '../../../store/brand/brandSlice';
+import { categoryGetAll, selectAllCategories } from '../../../store/category/categorySlice';
 import { productCreate } from '../../../store/product/productSlice';
+import { tagGetAll, selectAllTags } from '../../../store/tag/tagSlice';
 import { selectUIState } from '../../../store/ui';
 import { transformKeysToSnakeCase } from '../../../utils/transformObjectKeys';
 import { ProductImagesDropzone, ProductSingleUpload } from './FileUploadInputs';
@@ -47,9 +50,9 @@ const formOpts = {
   mode: 'onChange',
   reValidateMode: 'onChange',
   defaultValues: {
-    brandId: '',
-    categoryId: '',
     // discountId: '',
+    brandId: null,
+    categoryId: null,
     name: '',
     slug: '',
     description: '',
@@ -69,27 +72,33 @@ function CreateProductForm() {
   const methods = useForm(formOpts);
   const { handleSubmit, setError } = methods;
   const { loading, error } = useSelector(selectUIState(productCreate));
+  const tagList = useSelector(selectAllTags);
+  const brandList = useSelector(selectAllBrands);
+  const categoryList = useSelector(selectAllCategories);
+
+  React.useEffect(() => {
+    async function fetchDropdownValues() {
+      await Promise.all([dispatch(brandGetAll()), dispatch(categoryGetAll()), dispatch(tagGetAll())]);
+    }
+    fetchDropdownValues();
+  }, [dispatch]);
 
   const onSubmit = async data => {
-    const { Brand, Category, tags, image, images, ...rest } = data;
+    const { brandId, categoryId, tags, image, images, ...rest } = data;
     const formData = new FormData();
     const fields = transformKeysToSnakeCase(rest);
 
     formData.append('image', image);
+    formData.append('brand_id', brandId.id);
+    formData.append('category_id', categoryId.id);
     Object.keys(fields).forEach(name => {
       formData.append(name, fields[name]);
-    });
-    Object.keys(Brand).forEach(name => {
-      formData.append(`Brand.${name}`, Brand[name]);
-    });
-    Object.keys(Category).forEach(name => {
-      formData.append(`Category.${name}`, Category[name]);
     });
     Object.values(images).forEach(img => {
       formData.append('images', img);
     });
     tags.forEach(tag => {
-      formData.append('tags', tag);
+      formData.append('tags', tag.id);
     });
 
     await dispatch(productCreate(formData));
@@ -112,17 +121,15 @@ function CreateProductForm() {
 
         <FormProvider {...methods}>
           <form onSubmit={handleSubmit(onSubmit)} noValidate>
-            <FormTextField name='brandId' fullWidth />
-            <FormTextField name='categoryId' fullWidth />
-            {/* <FormTextField name='discountId' fullWidth /> */}
+            <BrandDropdown fullWidth options={brandList} />
+            <CategoryDropdown fullWidth options={categoryList} />
             <FormTextField name='name' fullWidth />
             <FormTextField name='slug' fullWidth />
             <FormTextField name='description' fullWidth />
             <FormNumberField name='price' fullWidth />
             <FormSwitch name='inStock' />
             <FormSwitch name='isFeatured' />
-            <FormAutoComplete name='tags' multiple fullWidth options={['winter', 'sports', 'men', 'women']} />
-
+            <TagsDropdown fullWidth options={tagList} />
             <ProductSingleUpload />
             <ProductImagesDropzone />
 
@@ -135,5 +142,40 @@ function CreateProductForm() {
     </Container>
   );
 }
+
+const getOptionLabel = option => option.name || '';
+const getOptionSelected = (option, value) => option.id === value.id;
+
+const BrandDropdown = ({ options, ...rest }) => (
+  <FormAutoComplete
+    {...rest}
+    name='brandId'
+    label='Brand'
+    options={options}
+    getOptionLabel={getOptionLabel}
+    getOptionSelected={getOptionSelected}
+  />
+);
+
+const CategoryDropdown = ({ options, ...rest }) => (
+  <FormAutoComplete
+    {...rest}
+    name='categoryId'
+    label='Category'
+    options={options}
+    getOptionLabel={getOptionLabel}
+    getOptionSelected={getOptionSelected}
+  />
+);
+const TagsDropdown = ({ options, ...rest }) => (
+  <FormAutoComplete
+    {...rest}
+    multiple
+    name='tags'
+    options={options}
+    getOptionLabel={getOptionLabel}
+    getOptionSelected={getOptionSelected}
+  />
+);
 
 export default CreateProductForm;

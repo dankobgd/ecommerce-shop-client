@@ -11,7 +11,7 @@ import * as Yup from 'yup';
 import { FormTextField, FormSubmitButton } from '../../../components/Form';
 import ErrorMessage from '../../../components/Message/ErrorMessage';
 import { useFormServerErrors } from '../../../hooks/useFormServerErrors';
-import { tagUpdate, selectTagById, selectSelectedId } from '../../../store/tag/tagSlice';
+import { tagUpdate, selectCurrentTag } from '../../../store/tag/tagSlice';
 import { selectUIState } from '../../../store/ui';
 
 const useStyles = makeStyles(theme => ({
@@ -53,8 +53,7 @@ const formOpts = tag => ({
 function EditTagForm() {
   const classes = useStyles();
   const dispatch = useDispatch();
-  const selectedId = useSelector(selectSelectedId);
-  const tag = useSelector(selectTagById(selectedId));
+  const tag = useSelector(selectCurrentTag);
   const methods = useForm(formOpts(tag));
   const { handleSubmit, setError } = methods;
   const { loading, error } = useSelector(selectUIState(tagUpdate));

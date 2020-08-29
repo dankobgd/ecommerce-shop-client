@@ -11,7 +11,7 @@ import * as Yup from 'yup';
 import { FormTextField, FormSubmitButton } from '../../../components/Form';
 import ErrorMessage from '../../../components/Message/ErrorMessage';
 import { useFormServerErrors } from '../../../hooks/useFormServerErrors';
-import { brandUpdate, selectBrandById, selectSelectedId } from '../../../store/brand/brandSlice';
+import { brandUpdate, selectCurrentBrand } from '../../../store/brand/brandSlice';
 import { selectUIState } from '../../../store/ui';
 import { rules } from '../../../utils/validation';
 
@@ -61,8 +61,7 @@ const formOpts = brand => ({
 function EditBrandForm() {
   const classes = useStyles();
   const dispatch = useDispatch();
-  const selectedId = useSelector(selectSelectedId);
-  const brand = useSelector(selectBrandById(selectedId));
+  const brand = useSelector(selectCurrentBrand);
   const methods = useForm(formOpts(brand));
   const { handleSubmit, setError } = methods;
   const { loading, error } = useSelector(selectUIState(brandUpdate));
