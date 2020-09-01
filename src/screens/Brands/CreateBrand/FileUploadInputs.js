@@ -35,7 +35,7 @@ const thumbImgStyle = {
   height: '100%',
 };
 
-export function BrandSingleUpload() {
+export function BrandLogoUploadField({ name }) {
   const [files, setFiles] = React.useState([]);
 
   const onDrop = acceptedFiles => {
@@ -66,7 +66,7 @@ export function BrandSingleUpload() {
 
   return (
     <div style={{ marginTop: '1rem' }}>
-      <FormDropzone name='logo' accept='image/*' onDrop={onDrop}>
+      <FormDropzone name={name} accept='image/*' onDrop={onDrop}>
         <Button variant='contained'>Upload Brand Thumbnail</Button>
       </FormDropzone>
       <aside style={thumbsContainerStyle}>{thumbs}</aside>

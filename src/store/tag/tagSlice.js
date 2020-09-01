@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk, createSelector } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, createSelector, createEntityAdapter } from '@reduxjs/toolkit';
 
 import api from '../../api';
 import toastSlice, { successToast } from '../toast/toastSlice';
@@ -50,48 +50,50 @@ export const tagDelete = createAsyncThunk(`${sliceName}/tagDelete`, async (id, {
   try {
     await api.tags.delete(id);
     dispatch(toastSlice.actions.addToast(successToast('Tag deleted')));
+    return id;
   } catch (error) {
     return rejectWithValue(error);
   }
 });
 
+export const tagAdapter = createEntityAdapter();
+
+const initialState = tagAdapter.getInitialState({
+  selectedId: null,
+});
+
 const tagSlice = createSlice({
   name: sliceName,
-  initialState: {
-    list: [],
-    selectedId: null,
-  },
+  initialState,
   reducers: {
     setSelectedId: (state, { payload }) => {
       state.selectedId = payload;
     },
   },
   extraReducers: {
-    [tagCreate.fulfilled]: (state, { payload }) => {
-      state.list.push(payload);
-    },
-    [tagGet.fulfilled]: (state, { payload }) => {
-      state.list.push(payload);
-    },
-    [tagGetAll.fulfilled]: (state, { payload }) => {
-      state.list = payload;
-    },
-    [tagUpdate.fulfilled]: (state, { payload }) => {
-      const idx = state.list.findIndex(b => b.id === payload.id);
-      state.list[idx] = payload;
-    },
-    [tagDelete.fulfilled]: (state, { payload }) => {
-      const idx = state.list.findIndex(x => x === payload);
-      state.list.splice(idx, 1);
-    },
+    [tagCreate.fulfilled]: tagAdapter.addOne,
+    [tagGet.fulfilled]: tagAdapter.upsertOne,
+    [tagGetAll.fulfilled]: tagAdapter.setAll,
+    [tagUpdate.fulfilled]: tagAdapter.upsertOne,
+    [tagDelete.fulfilled]: tagAdapter.removeOne,
   },
 });
 
-export const selectAllTags = state => state.tag.list;
-export const selectSelectedId = state => state.tag.selectedId;
+export const {
+  selectById: selectTagById,
+  selectAll: selectAllTags,
+  selectEntities: selectTagEntities,
+  selectIds: selectTagIds,
+  selectTotal: selectTagTotal,
+} = tagAdapter.getSelectors(state => state[sliceName]);
 
-export const selectCurrentTag = createSelector([selectAllTags, selectSelectedId], (items, currentId) =>
-  items.find(x => x.id === currentId)
+export const selectSelectedId = state => state[sliceName].selectedId;
+
+export const selectManyTags = ids => createSelector(selectTagEntities, entities => ids.map(id => entities[id]));
+
+export const selectCurrentTag = createSelector(
+  [selectTagEntities, selectSelectedId],
+  (entities, currentId) => entities[currentId]
 );
 
 export default tagSlice;

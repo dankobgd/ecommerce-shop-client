@@ -20,7 +20,7 @@ import { useFormServerErrors } from '../../../hooks/useFormServerErrors';
 import { selectAllBrands, brandGetAll } from '../../../store/brand/brandSlice';
 import { selectAllCategories, categoryGetAll } from '../../../store/category/categorySlice';
 import { productCreate, selectCurrentProduct, productGetTags } from '../../../store/product/productSlice';
-import { selectAllTags, tagGetAll } from '../../../store/tag/tagSlice';
+import { selectAllTags, tagGetAll, selectManyTags } from '../../../store/tag/tagSlice';
 import { selectUIState } from '../../../store/ui';
 import { rules } from '../../../utils/validation';
 
@@ -61,8 +61,7 @@ const formOpts = product => ({
     price: product?.price || '',
     inStock: product?.inStock || false,
     isFeatured: product?.isFeatured || false,
-    tags: product?.tags || [],
-    // TODO: fix defaults later...
+    tags: [],
   },
   resolver: yupResolver(schema),
 });
@@ -75,6 +74,8 @@ function EditProductForm() {
   const categoryList = useSelector(selectAllCategories);
   const product = useSelector(selectCurrentProduct);
   const { loading, error } = useSelector(selectUIState(productCreate));
+  const tags = useSelector(selectManyTags(product?.tags || []));
+
   const methods = useForm(formOpts(product));
   const { handleSubmit, setError } = methods;
 
@@ -84,6 +85,10 @@ function EditProductForm() {
     dispatch(categoryGetAll());
     dispatch(tagGetAll());
   }, [dispatch, product.id]);
+
+  React.useEffect(() => {
+    methods.setValue('tags', tags);
+  }, [methods, tags]);
 
   const onSubmit = async data => {
     dispatch(productCreate(data));

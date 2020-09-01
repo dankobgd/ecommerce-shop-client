@@ -33,7 +33,9 @@ export default function DropzoneField({
         control={control}
         defaultValue=''
       />
-      <FormHelperText error={!!errors[name]}>{errors && errors[name] && errors[name].message}</FormHelperText>
+      <FormHelperText error={!!errors[name]} margin='dense' variant='outlined'>
+        {errors && errors[name] && errors[name].message}
+      </FormHelperText>
     </FormControl>
   );
 }

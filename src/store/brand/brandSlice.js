@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk, createSelector } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, createSelector, createEntityAdapter } from '@reduxjs/toolkit';
 
 import api from '../../api';
 import toastSlice, { successToast } from '../toast/toastSlice';
@@ -53,48 +53,48 @@ export const brandDelete = createAsyncThunk(`${sliceName}/brandDelete`, async (i
   try {
     await api.brands.delete(id);
     dispatch(toastSlice.actions.addToast(successToast('Brand deleted')));
+    return id;
   } catch (error) {
     return rejectWithValue(error);
   }
 });
 
+export const brandAdapter = createEntityAdapter();
+
+const initialState = brandAdapter.getInitialState({
+  selectedId: null,
+});
+
 const brandSlice = createSlice({
   name: sliceName,
-  initialState: {
-    list: [],
-    selectedId: null,
-  },
+  initialState,
   reducers: {
     setSelectedId: (state, { payload }) => {
       state.selectedId = payload;
     },
   },
   extraReducers: {
-    [brandCreate.fulfilled]: (state, { payload }) => {
-      state.list.push(payload);
-    },
-    [brandGet.fulfilled]: (state, { payload }) => {
-      state.list.push(payload);
-    },
-    [brandGetAll.fulfilled]: (state, { payload }) => {
-      state.list = payload;
-    },
-    [brandUpdate.fulfilled]: (state, { payload }) => {
-      const idx = state.list.findIndex(b => b.id === payload.id);
-      state.list[idx] = payload;
-    },
-    [brandDelete.fulfilled]: (state, { payload }) => {
-      const idx = state.list.findIndex(x => x === payload);
-      state.list.splice(idx, 1);
-    },
+    [brandCreate.fulfilled]: brandAdapter.addOne,
+    [brandGet.fulfilled]: brandAdapter.upsertOne,
+    [brandGetAll.fulfilled]: brandAdapter.setAll,
+    [brandUpdate.fulfilled]: brandAdapter.upsertOne,
+    [brandDelete.fulfilled]: brandAdapter.removeOne,
   },
 });
 
-export const selectAllBrands = state => state.brand.list;
-export const selectSelectedId = state => state.brand.selectedId;
+export const {
+  selectById: selectBrandById,
+  selectAll: selectAllBrands,
+  selectEntities: selectBrandEntities,
+  selectIds: selectBrandIds,
+  selectTotal: selectBrandTotal,
+} = brandAdapter.getSelectors(state => state[sliceName]);
 
-export const selectCurrentBrand = createSelector([selectAllBrands, selectSelectedId], (items, currentId) =>
-  items.find(x => x.id === currentId)
+export const selectSelectedId = state => state[sliceName].selectedId;
+
+export const selectCurrentBrand = createSelector(
+  [selectBrandEntities, selectSelectedId],
+  (entities, currentId) => entities[currentId]
 );
 
 export default brandSlice;

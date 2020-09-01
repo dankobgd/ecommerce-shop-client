@@ -40,7 +40,6 @@ const schema = Yup.object({
   type: Yup.string().required(),
   description: Yup.string().required(),
   email: rules.emailRule,
-  logo: Yup.string().required(),
   websiteUrl: Yup.string().required(),
 });
 

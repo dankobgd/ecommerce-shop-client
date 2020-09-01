@@ -23,7 +23,8 @@ import { productCreate } from '../../../store/product/productSlice';
 import { tagGetAll, selectAllTags } from '../../../store/tag/tagSlice';
 import { selectUIState } from '../../../store/ui';
 import { transformKeysToSnakeCase } from '../../../utils/transformObjectKeys';
-import { ProductImagesDropzone, ProductSingleUpload } from './FileUploadInputs';
+import { rules } from '../../../utils/validation';
+import { ProductImagesDropzoneField, ProductThumbnailUploadField } from './FileUploadInputs';
 
 const useStyles = makeStyles(theme => ({
   paper: {
@@ -44,7 +45,21 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
-const schema = Yup.object({});
+const schema = Yup.object({
+  brandId: Yup.object()
+    .test('required', 'brand is a required field', value => !!value)
+    .nullable(),
+  categoryId: Yup.object()
+    .test('required', 'category is a required field', value => !!value)
+    .nullable(),
+  name: Yup.string().required(),
+  slug: Yup.string().required(),
+  description: Yup.string().required(),
+  price: Yup.string().required(),
+  inStock: Yup.boolean().required(),
+  isFeatured: Yup.boolean().required(),
+  image: rules.imageRule,
+});
 
 const formOpts = {
   mode: 'onChange',
@@ -130,8 +145,8 @@ function CreateProductForm() {
             <FormSwitch name='inStock' />
             <FormSwitch name='isFeatured' />
             <TagsDropdown fullWidth options={tagList} />
-            <ProductSingleUpload />
-            <ProductImagesDropzone />
+            <ProductThumbnailUploadField name='image' />
+            <ProductImagesDropzoneField name='images' />
 
             <FormSubmitButton className={classes.submit} fullWidth>
               Add product

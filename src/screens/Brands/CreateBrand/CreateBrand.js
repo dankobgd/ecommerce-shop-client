@@ -14,7 +14,7 @@ import { useFormServerErrors } from '../../../hooks/useFormServerErrors';
 import { brandCreate } from '../../../store/brand/brandSlice';
 import { selectUIState } from '../../../store/ui';
 import { rules } from '../../../utils/validation';
-import { BrandSingleUpload } from './FileUploadInputs';
+import { BrandLogoUploadField } from './FileUploadInputs';
 
 const useStyles = makeStyles(theme => ({
   paper: {
@@ -41,7 +41,7 @@ const schema = Yup.object({
   type: Yup.string().required(),
   description: Yup.string().required(),
   email: rules.emailRule,
-  logo: Yup.string().required(),
+  logo: rules.imageRule,
   websiteUrl: Yup.string().required(),
 });
 
@@ -95,6 +95,8 @@ function CreateProductForm() {
         {error && <ErrorMessage message={error.message} />}
 
         <FormProvider {...methods}>
+          <pre>{JSON.stringify(methods.getValues(), null, 2)}</pre>
+          <pre>{JSON.stringify(methods.errors, null, 2)}</pre>
           <form onSubmit={handleSubmit(onSubmit)} noValidate>
             <FormTextField name='name' fullWidth />
             <FormTextField name='slug' fullWidth />
@@ -102,7 +104,7 @@ function CreateProductForm() {
             <FormTextField name='description' fullWidth />
             <FormTextField name='email' fullWidth />
             <FormTextField name='websiteUrl' fullWidth />
-            <BrandSingleUpload />
+            <BrandLogoUploadField name='logo' />
 
             <FormSubmitButton className={classes.submit} fullWidth>
               Add Brand

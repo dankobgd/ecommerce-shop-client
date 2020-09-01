@@ -13,7 +13,8 @@ import ErrorMessage from '../../../components/Message/ErrorMessage';
 import { useFormServerErrors } from '../../../hooks/useFormServerErrors';
 import { categoryCreate } from '../../../store/category/categorySlice';
 import { selectUIState } from '../../../store/ui';
-import { CategorySingleUpload } from './FileUploadInputs';
+import { rules } from '../../../utils/validation';
+import { CategoryLogoUploadField } from './FileUploadInputs';
 
 const useStyles = makeStyles(theme => ({
   paper: {
@@ -38,7 +39,7 @@ const schema = Yup.object({
   name: Yup.string().required(),
   slug: Yup.string().required(),
   description: Yup.string().required(),
-  logo: Yup.string().required(),
+  logo: rules.imageRule,
 });
 
 const formOpts = {
@@ -92,7 +93,7 @@ function CreateCategoryForm() {
             <FormTextField name='name' fullWidth />
             <FormTextField name='slug' fullWidth />
             <FormTextField name='description' fullWidth />
-            <CategorySingleUpload />
+            <CategoryLogoUploadField name='logo' />
 
             <FormSubmitButton className={classes.submit} fullWidth>
               Add category

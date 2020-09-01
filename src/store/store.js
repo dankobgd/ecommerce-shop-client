@@ -1,6 +1,6 @@
 import { configureStore, combineReducers, getDefaultMiddleware } from '@reduxjs/toolkit';
 import { persistStore, persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER } from 'redux-persist';
-import localStorageEngine from 'redux-persist/lib/storage';
+import storage from 'redux-persist/lib/storage';
 
 import brandSlice from './brand/brandSlice';
 import categorySlice from './category/categorySlice';
@@ -12,17 +12,17 @@ import userSlice from './user/userSlice';
 
 const rootReducer = combineReducers({
   ui: uiReducer,
-  toasts: toastSlice.reducer,
-  user: userSlice.reducer,
-  product: productSlice.reducer,
-  brand: brandSlice.reducer,
-  category: categorySlice.reducer,
-  tag: tagSlice.reducer,
+  [toastSlice.name]: toastSlice.reducer,
+  [userSlice.name]: userSlice.reducer,
+  [productSlice.name]: productSlice.reducer,
+  [brandSlice.name]: brandSlice.reducer,
+  [categorySlice.name]: categorySlice.reducer,
+  [tagSlice.name]: tagSlice.reducer,
 });
 
 const persistConfig = {
   key: 'ecommerce/root',
-  storage: localStorageEngine,
+  storage,
   blacklist: ['ui', 'toasts'],
 };
 

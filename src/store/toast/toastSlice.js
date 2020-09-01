@@ -26,6 +26,6 @@ export const infoToast = message => ({ type: 'info', message });
 export const warnToast = message => ({ type: 'warn', message });
 export const errorToast = message => ({ type: 'error', message });
 
-export const selectToasts = state => state.toasts;
+export const selectToasts = state => state[sliceName];
 
 export default toastSlice;

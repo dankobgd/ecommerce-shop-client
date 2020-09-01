@@ -37,7 +37,6 @@ const schema = Yup.object({
   name: Yup.string().required(),
   slug: Yup.string().required(),
   description: Yup.string().required(),
-  logo: Yup.string().required(),
 });
 
 const formOpts = category => ({

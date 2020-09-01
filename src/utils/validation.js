@@ -7,6 +7,9 @@ export const regexes = {
   symbol: /^(?=.*?[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?])/,
 };
 
+export const maxFileSize = 2000000;
+export const supportedFileFormats = ['image/jpg', 'image/jpeg', 'image/gif', 'image/png', 'image/bmp'];
+
 export const rules = {
   username: Yup.string().required('Username is required'),
 
@@ -19,6 +22,11 @@ export const rules = {
     .matches(regexes.number, 'one number required')
     .matches(regexes.symbol, 'one symbol required')
     .required('Password is required'),
+
+  imageRule: Yup.mixed()
+    .test('required', 'File is required', value => !!value)
+    .test('fileSize', 'File size is too large', value => value.size <= maxFileSize)
+    .test('fileType', 'Unsupported file format', value => supportedFileFormats.includes(value.type)),
 
   confirmPasswordRule: fieldName =>
     Yup.string()

@@ -33,7 +33,9 @@ export default function AutoComplete({
         name={name}
         control={control}
       />
-      <FormHelperText error={!!errors[name]}>{errors && errors[name] && errors[name].message}</FormHelperText>
+      <FormHelperText error={!!errors[name]} margin='dense' variant={variant}>
+        {errors && errors[name] && errors[name].message}
+      </FormHelperText>
     </FormControl>
   );
 }

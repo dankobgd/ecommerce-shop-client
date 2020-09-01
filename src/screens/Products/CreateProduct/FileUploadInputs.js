@@ -68,7 +68,7 @@ const dropzoneStyles = {
   },
 };
 
-export function ProductSingleUpload() {
+export function ProductThumbnailUploadField({ name }) {
   const [files, setFiles] = React.useState([]);
 
   const onDrop = acceptedFiles => {
@@ -99,7 +99,7 @@ export function ProductSingleUpload() {
 
   return (
     <div style={{ marginTop: '1rem' }}>
-      <FormDropzone name='image' accept='image/*' onDrop={onDrop}>
+      <FormDropzone name={name} accept='image/*' onDrop={onDrop}>
         <Button variant='contained'>Upload Product Thumbnail</Button>
       </FormDropzone>
       <aside style={thumbsContainerStyle}>{thumbs}</aside>
@@ -107,7 +107,7 @@ export function ProductSingleUpload() {
   );
 }
 
-export function ProductImagesDropzone() {
+export function ProductImagesDropzoneField({ name }) {
   const [files, setFiles] = React.useState([]);
 
   const onDrop = acceptedFiles => {
@@ -138,7 +138,7 @@ export function ProductImagesDropzone() {
 
   return (
     <div>
-      <FormDropzone name='images' multiple accept='image/*' onDrop={onDrop} dropzoneStyles={dropzoneStyles} fullWidth>
+      <FormDropzone name={name} multiple accept='image/*' onDrop={onDrop} dropzoneStyles={dropzoneStyles} fullWidth>
         <CloudUploadIcon />
         <p>Drag 'n' drop some files here</p>
         <p style={{ margin: 0, padding: 0 }}>or click to select files</p>

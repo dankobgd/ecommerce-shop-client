@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk, createSelector } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, createSelector, createEntityAdapter } from '@reduxjs/toolkit';
 
 import api from '../../api';
 import toastSlice, { successToast } from '../toast/toastSlice';
@@ -55,6 +55,7 @@ export const productDelete = createAsyncThunk(
     try {
       await api.products.delete(id);
       dispatch(toastSlice.actions.addToast(successToast('Product deleted')));
+      return id;
     } catch (error) {
       return rejectWithValue(error);
     }
@@ -79,47 +80,47 @@ export const productGetImages = createAsyncThunk(`${sliceName}/productGetImages`
   }
 });
 
-const productsSlice = createSlice({
+export const productAdapter = createEntityAdapter();
+
+const initialState = productAdapter.getInitialState({
+  selectedId: null,
+});
+
+const productSlice = createSlice({
   name: sliceName,
-  initialState: {
-    list: [],
-    selectedId: null,
-  },
+  initialState,
   reducers: {
     setSelectedId: (state, { payload }) => {
       state.selectedId = payload;
     },
   },
   extraReducers: {
-    [productCreate.fulfilled]: (state, { payload }) => {
-      state.list.push(payload);
-    },
-    [productGet.fulfilled]: (state, { payload }) => {
-      state.list.push(payload);
-    },
-    [productGetAll.fulfilled]: (state, { payload }) => {
-      state.list = payload;
-    },
-    [productUpdate.fulfilled]: (state, { payload }) => {
-      const idx = state.list.findIndex(p => p.id === payload.id);
-      state.list[idx] = payload;
-    },
-    [productDelete.fulfilled]: (state, { payload }) => {
-      const idx = state.list.findIndex(x => x === payload);
-      state.list.splice(idx, 1);
-    },
+    [productCreate.fulfilled]: productAdapter.addOne,
+    [productGet.fulfilled]: productAdapter.upsertOne,
+    [productGetAll.fulfilled]: productAdapter.setAll,
+    [productUpdate.fulfilled]: productAdapter.upsertOne,
+    [productDelete.fulfilled]: productAdapter.removeOne,
     [productGetTags.fulfilled]: (state, { payload }) => {
-      const idx = state.list.findIndex(p => p.id === payload[0].productId);
-      state.list[idx].tags = payload;
+      const idx = payload[0].productId;
+      const tagIds = payload.map(x => x.id);
+      state.entities[idx].tags = tagIds;
     },
   },
 });
 
-export const selectAllProducts = state => state.product.list;
-export const selectSelectedId = state => state.product.selectedId;
+export const {
+  selectById: selectProductById,
+  selectAll: selectAllProducts,
+  selectEntities: selectProductEntities,
+  selectIds: selectProductIds,
+  selectTotal: selectProductTotal,
+} = productAdapter.getSelectors(state => state[sliceName]);
 
-export const selectCurrentProduct = createSelector([selectAllProducts, selectSelectedId], (items, currentId) =>
-  items.find(x => x.id === currentId)
+export const selectSelectedId = state => state[sliceName].selectedId;
+
+export const selectCurrentProduct = createSelector(
+  [selectProductEntities, selectSelectedId],
+  (entities, currentId) => entities[currentId]
 );
 
-export default productsSlice;
+export default productSlice;

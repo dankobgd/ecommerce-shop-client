@@ -35,7 +35,9 @@ export default function CheckboxGroup({ name, row, options }) {
           />
         ))}
       </FormGroup>
-      <FormHelperText error={!!errors[name]}>{errors && errors[name] && errors[name].message}</FormHelperText>
+      <FormHelperText error={!!errors[name]} margin='dense' variant='outlined'>
+        {errors && errors[name] && errors[name].message}
+      </FormHelperText>
     </FormControl>
   );
 }

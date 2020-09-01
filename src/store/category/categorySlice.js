@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk, createSelector } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, createSelector, createEntityAdapter } from '@reduxjs/toolkit';
 
 import api from '../../api';
 import toastSlice, { successToast } from '../toast/toastSlice';
@@ -55,49 +55,49 @@ export const categoryDelete = createAsyncThunk(
     try {
       await api.categories.delete(id);
       dispatch(toastSlice.actions.addToast(successToast('Category deleted')));
+      return id;
     } catch (error) {
       return rejectWithValue(error);
     }
   }
 );
 
+export const categoryAdapter = createEntityAdapter();
+
+const initialState = categoryAdapter.getInitialState({
+  selectedId: null,
+});
+
 const categorySlice = createSlice({
   name: sliceName,
-  initialState: {
-    list: [],
-    selectedId: null,
-  },
+  initialState,
   reducers: {
     setSelectedId: (state, { payload }) => {
       state.selectedId = payload;
     },
   },
   extraReducers: {
-    [categoryCreate.fulfilled]: (state, { payload }) => {
-      state.list.push(payload);
-    },
-    [categoryGet.fulfilled]: (state, { payload }) => {
-      state.list.push(payload);
-    },
-    [categoryGetAll.fulfilled]: (state, { payload }) => {
-      state.list = payload;
-    },
-    [categoryUpdate.fulfilled]: (state, { payload }) => {
-      const idx = state.list.findIndex(c => c.id === payload.id);
-      state.list[idx] = payload;
-    },
-    [categoryDelete.fulfilled]: (state, { payload }) => {
-      const idx = state.list.findIndex(x => x === payload);
-      state.list.splice(idx, 1);
-    },
+    [categoryCreate.fulfilled]: categoryAdapter.addOne,
+    [categoryGet.fulfilled]: categoryAdapter.upsertOne,
+    [categoryGetAll.fulfilled]: categoryAdapter.setAll,
+    [categoryUpdate.fulfilled]: categoryAdapter.upsertOne,
+    [categoryDelete.fulfilled]: categoryAdapter.removeOne,
   },
 });
 
-export const selectAllCategories = state => state.category.list;
-export const selectSelectedId = state => state.category.selectedId;
+export const {
+  selectById: selectCategoryById,
+  selectAll: selectAllCategories,
+  selectEntities: selectCategoryEntities,
+  selectIds: selectCategoryIds,
+  selectTotal: selectCategoryTotal,
+} = categoryAdapter.getSelectors(state => state[sliceName]);
 
-export const selectCurrentCategory = createSelector([selectAllCategories, selectSelectedId], (items, currentId) =>
-  items.find(x => x.id === currentId)
+export const selectSelectedId = state => state[sliceName].selectedId;
+
+export const selectCurrentCategory = createSelector(
+  [selectCategoryEntities, selectSelectedId],
+  (entities, currentId) => entities[currentId]
 );
 
 export default categorySlice;

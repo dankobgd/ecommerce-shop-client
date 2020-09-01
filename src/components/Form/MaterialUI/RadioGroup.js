@@ -22,7 +22,9 @@ export default function MyRadioGroup({ name, label = defaultLabel(name), row = t
         name={name}
         control={control}
       />
-      <FormHelperText error={!!errors[name]}>{errors && errors[name] && errors[name].message}</FormHelperText>
+      <FormHelperText error={!!errors[name]} margin='dense' variant='outlined'>
+        {errors && errors[name] && errors[name].message}
+      </FormHelperText>
     </FormControl>
   );
 }
