@@ -13,7 +13,13 @@ function CategoryRoutes() {
     <Router>
       <AuthRoute path='/' access='private' allowed={['admin']} component={Categories} layout={null} />
       <AuthRoute path='create' access='private' allowed={['admin']} component={CreateCategory} layout={null} />
-      <AuthRoute path='edit' access='private' allowed={['admin']} component={EditCategory} layout={null} />
+      <AuthRoute
+        path=':categoryId/:categoryName/edit'
+        access='private'
+        allowed={['admin']}
+        component={EditCategory}
+        layout={null}
+      />
       <NotFound default backLink={-1} />
     </Router>
   );

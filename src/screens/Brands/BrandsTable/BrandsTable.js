@@ -164,7 +164,7 @@ const BrandsTable = props => {
                     <TableCell>{brand.email}</TableCell>
                     <TableCell>{brand.websiteUrl}</TableCell>
                     <TableCell>
-                      <Link to='edit' style={{ textDecoration: 'none' }}>
+                      <Link to={`${brand.id}/${brand.slug}/edit`} style={{ textDecoration: 'none' }}>
                         <Button
                           variant='outlined'
                           color='secondary'

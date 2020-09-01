@@ -13,7 +13,13 @@ function ProductRoutes() {
     <Router>
       <AuthRoute path='/' access='private' allowed={['admin']} component={Products} layout={null} />
       <AuthRoute path='create' access='private' allowed={['admin']} component={CreateProduct} layout={null} />
-      <AuthRoute path='edit' access='private' allowed={['admin']} component={EditProduct} layout={null} />
+      <AuthRoute
+        path=':productId/:productName/edit'
+        access='private'
+        allowed={['admin']}
+        component={EditProduct}
+        layout={null}
+      />
       <NotFound default backLink={-1} />
     </Router>
   );

@@ -159,7 +159,7 @@ const CategoriesTable = props => {
                     <TableCell>{category.description}</TableCell>
                     <TableCell>{category.logo}</TableCell>
                     <TableCell>
-                      <Link to='edit' style={{ textDecoration: 'none' }}>
+                      <Link to={`${category.id}/${category.slug}/edit`} style={{ textDecoration: 'none' }}>
                         <Button
                           variant='outlined'
                           color='secondary'

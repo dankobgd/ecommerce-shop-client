@@ -13,7 +13,7 @@ function TagRoutes() {
     <Router>
       <AuthRoute path='/' access='private' allowed={['admin']} component={Tags} layout={null} />
       <AuthRoute path='create' access='private' allowed={['admin']} component={CreateTag} layout={null} />
-      <AuthRoute path='edit' access='private' allowed={['admin']} component={EditTag} layout={null} />
+      <AuthRoute path=':tagId/:tagName/edit' access='private' allowed={['admin']} component={EditTag} layout={null} />
       <NotFound default backLink={-1} />
     </Router>
   );

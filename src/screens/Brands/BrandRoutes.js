@@ -13,7 +13,13 @@ function BrandROutes() {
     <Router>
       <AuthRoute path='/' access='private' allowed={['admin']} component={Brands} layout={null} />
       <AuthRoute path='create' access='private' allowed={['admin']} component={CreateProduct} layout={null} />
-      <AuthRoute path='edit' access='private' allowed={['admin']} component={EditBrand} layout={null} />
+      <AuthRoute
+        path=':brandId/:brandName/edit'
+        access='private'
+        allowed={['admin']}
+        component={EditBrand}
+        layout={null}
+      />
       <NotFound default backLink={-1} />
     </Router>
   );

@@ -150,7 +150,7 @@ const TagsTable = props => {
                     <TableCell>{tag.slug}</TableCell>
                     <TableCell>{tag.description}</TableCell>
                     <TableCell>
-                      <Link to='edit' style={{ textDecoration: 'none' }}>
+                      <Link to={`${tag.id}/${tag.slug}/edit`} style={{ textDecoration: 'none' }}>
                         <Button
                           variant='outlined'
                           color='secondary'
