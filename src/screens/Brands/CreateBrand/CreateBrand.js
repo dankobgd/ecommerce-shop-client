@@ -95,8 +95,6 @@ function CreateProductForm() {
         {error && <ErrorMessage message={error.message} />}
 
         <FormProvider {...methods}>
-          <pre>{JSON.stringify(methods.getValues(), null, 2)}</pre>
-          <pre>{JSON.stringify(methods.errors, null, 2)}</pre>
           <form onSubmit={handleSubmit(onSubmit)} noValidate>
             <FormTextField name='name' fullWidth />
             <FormTextField name='slug' fullWidth />

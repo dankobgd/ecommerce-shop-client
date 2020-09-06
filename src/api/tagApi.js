@@ -2,7 +2,7 @@ import apiClient from './apiClient';
 
 export default {
   async create(details) {
-    return apiClient.post('v1/tags', { data: details });
+    return apiClient.post(`v1/tags`, { data: details });
   },
 
   async update(id, details) {
@@ -13,8 +13,8 @@ export default {
     return apiClient.get(`v1/tags/${id}`);
   },
 
-  async getAll() {
-    return apiClient.get('v1/tags');
+  async getAll(params) {
+    return apiClient.get(`v1/tags`, { params });
   },
 
   async delete(id) {

@@ -24,9 +24,9 @@ import { makeStyles } from '@material-ui/styles';
 import { Link } from '@reach/router';
 import clsx from 'clsx';
 import { nanoid } from 'nanoid';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 
-import tagSlice, { tagDelete } from '../../../store/tag/tagSlice';
+import tagSlice, { tagDelete, tagGetAll, selectPaginationMeta } from '../../../store/tag/tagSlice';
 
 const useStyles = makeStyles(theme => ({
   root: {},
@@ -53,9 +53,8 @@ const TagsTable = props => {
   const { className, tags, ...rest } = props;
   const classes = useStyles();
   const dispatch = useDispatch();
+  const paginationMeta = useSelector(selectPaginationMeta);
   const [selectedTags, setSelectedTags] = useState([]);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [currentPage, setCurrentPage] = useState(0);
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const handleDialogOpen = () => {
@@ -98,12 +97,14 @@ const TagsTable = props => {
     setSelectedTags(newSelectedTags);
   };
 
-  const handlePageChange = (event, page) => {
-    setCurrentPage(page);
+  const handlePageChange = (e, page) => {
+    const params = new URLSearchParams({ per_page: paginationMeta.perPage, page: page + 1 });
+    dispatch(tagGetAll(params));
   };
 
-  const handleRowsPerPageChange = event => {
-    setRowsPerPage(event.target.value);
+  const handleRowsPerPageChange = e => {
+    const params = new URLSearchParams({ per_page: e.target.value });
+    dispatch(tagGetAll(params));
   };
 
   return (
@@ -129,8 +130,9 @@ const TagsTable = props => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {tags.length > 0 &&
-                tags.slice(0, rowsPerPage).map(tag => (
+              {paginationMeta &&
+                tags.length > 0 &&
+                tags.slice(0, paginationMeta.perPage).map(tag => (
                   <TableRow
                     className={classes.tableRow}
                     hover
@@ -155,7 +157,7 @@ const TagsTable = props => {
                           variant='outlined'
                           color='secondary'
                           startIcon={<EditIcon />}
-                          onClick={() => dispatch(tagSlice.actions.setSelectedId(tag.id))}
+                          onClick={() => dispatch(tagSlice.actions.setEditId(tag.id))}
                         >
                           Edit
                         </Button>
@@ -206,15 +208,17 @@ const TagsTable = props => {
         </div>
       </CardContent>
       <CardActions className={classes.actions}>
-        <TablePagination
-          component='div'
-          count={tags.length}
-          onChangePage={handlePageChange}
-          onChangeRowsPerPage={handleRowsPerPageChange}
-          page={currentPage}
-          rowsPerPage={rowsPerPage}
-          rowsPerPageOptions={[5, 10, 25]}
-        />
+        {paginationMeta && (
+          <TablePagination
+            component='div'
+            count={paginationMeta.totalCount || -1}
+            onChangePage={handlePageChange}
+            onChangeRowsPerPage={handleRowsPerPageChange}
+            page={paginationMeta.page - 1 || 0}
+            rowsPerPage={paginationMeta.perPage || 50}
+            rowsPerPageOptions={[10, 25, 50, 100]}
+          />
+        )}
       </CardActions>
     </Card>
   );

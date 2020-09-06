@@ -2,7 +2,7 @@ import apiClient from './apiClient';
 
 export default {
   async create(formData) {
-    return apiClient.post('v1/brands', { data: formData, headers: { 'Content-Type': 'multipart/form-data' } });
+    return apiClient.post(`v1/brands`, { data: formData, headers: { 'Content-Type': 'multipart/form-data' } });
   },
 
   async update(id, details) {
@@ -13,8 +13,8 @@ export default {
     return apiClient.get(`v1/brands/${id}`);
   },
 
-  async getAll() {
-    return apiClient.get('v1/brands');
+  async getAll(params) {
+    return apiClient.get(`v1/brands`, { params });
   },
 
   async delete(id) {

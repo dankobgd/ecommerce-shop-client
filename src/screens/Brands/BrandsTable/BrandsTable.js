@@ -26,9 +26,9 @@ import { makeStyles } from '@material-ui/styles';
 import { Link } from '@reach/router';
 import clsx from 'clsx';
 import { nanoid } from 'nanoid';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 
-import brandSlice, { brandDelete } from '../../../store/brand/brandSlice';
+import brandSlice, { brandDelete, selectPaginationMeta, brandGetAll } from '../../../store/brand/brandSlice';
 
 const useStyles = makeStyles(theme => ({
   root: {},
@@ -55,9 +55,8 @@ const BrandsTable = props => {
   const { className, brands, ...rest } = props;
   const classes = useStyles();
   const dispatch = useDispatch();
+  const paginationMeta = useSelector(selectPaginationMeta);
   const [selectedBrands, setSelectedBrands] = useState([]);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [currentPage, setCurrentPage] = useState(0);
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const handleDialogOpen = () => {
@@ -100,12 +99,14 @@ const BrandsTable = props => {
     setSelectedBrands(newSelectedBrands);
   };
 
-  const handlePageChange = (event, page) => {
-    setCurrentPage(page);
+  const handlePageChange = (e, page) => {
+    const params = new URLSearchParams({ per_page: paginationMeta.perPage, page: page + 1 });
+    dispatch(brandGetAll(params));
   };
 
-  const handleRowsPerPageChange = event => {
-    setRowsPerPage(event.target.value);
+  const handleRowsPerPageChange = e => {
+    const params = new URLSearchParams({ per_page: e.target.value });
+    dispatch(brandGetAll(params));
   };
 
   return (
@@ -135,8 +136,9 @@ const BrandsTable = props => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {brands.length > 0 &&
-                brands.slice(0, rowsPerPage).map(brand => (
+              {paginationMeta &&
+                brands.length > 0 &&
+                brands.slice(0, paginationMeta.perPage).map(brand => (
                   <TableRow
                     className={classes.tableRow}
                     hover
@@ -169,7 +171,7 @@ const BrandsTable = props => {
                           variant='outlined'
                           color='secondary'
                           startIcon={<EditIcon />}
-                          onClick={() => dispatch(brandSlice.actions.setSelectedId(brand.id))}
+                          onClick={() => dispatch(brandSlice.actions.setEditId(brand.id))}
                         >
                           Edit
                         </Button>
@@ -220,15 +222,17 @@ const BrandsTable = props => {
         </div>
       </CardContent>
       <CardActions className={classes.actions}>
-        <TablePagination
-          component='div'
-          count={brands.length}
-          onChangePage={handlePageChange}
-          onChangeRowsPerPage={handleRowsPerPageChange}
-          page={currentPage}
-          rowsPerPage={rowsPerPage}
-          rowsPerPageOptions={[5, 10, 25]}
-        />
+        {paginationMeta && (
+          <TablePagination
+            component='div'
+            count={paginationMeta.totalCount || -1}
+            onChangePage={handlePageChange}
+            onChangeRowsPerPage={handleRowsPerPageChange}
+            page={paginationMeta.page - 1 || 0}
+            rowsPerPage={paginationMeta.perPage || 50}
+            rowsPerPageOptions={[10, 25, 50, 100]}
+          />
+        )}
       </CardActions>
     </Card>
   );

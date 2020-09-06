@@ -31,9 +31,9 @@ export const brandUpdate = createAsyncThunk(
   }
 );
 
-export const brandGetAll = createAsyncThunk(`${sliceName}/brandGetAll`, async (_, { rejectWithValue }) => {
+export const brandGetAll = createAsyncThunk(`${sliceName}/brandGetAll`, async (params, { rejectWithValue }) => {
   try {
-    const brands = await api.brands.getAll();
+    const brands = await api.brands.getAll(params);
     return brands;
   } catch (error) {
     return rejectWithValue(error);
@@ -62,21 +62,28 @@ export const brandDelete = createAsyncThunk(`${sliceName}/brandDelete`, async (i
 export const brandAdapter = createEntityAdapter();
 
 const initialState = brandAdapter.getInitialState({
-  selectedId: null,
+  editId: null,
+  pagination: null,
 });
 
 const brandSlice = createSlice({
   name: sliceName,
   initialState,
   reducers: {
-    setSelectedId: (state, { payload }) => {
-      state.selectedId = payload;
+    setEditId: (state, { payload }) => {
+      state.editId = payload;
+    },
+    setPaginationMeta: (state, { payload }) => {
+      state.pagination = payload;
     },
   },
   extraReducers: {
     [brandCreate.fulfilled]: brandAdapter.addOne,
     [brandGet.fulfilled]: brandAdapter.upsertOne,
-    [brandGetAll.fulfilled]: brandAdapter.setAll,
+    [brandGetAll.fulfilled]: (state, { payload }) => {
+      brandAdapter.setAll(state, payload.data);
+      state.pagination = payload.meta;
+    },
     [brandUpdate.fulfilled]: brandAdapter.upsertOne,
     [brandDelete.fulfilled]: brandAdapter.removeOne,
   },
@@ -90,10 +97,11 @@ export const {
   selectTotal: selectBrandTotal,
 } = brandAdapter.getSelectors(state => state[sliceName]);
 
-export const selectSelectedId = state => state[sliceName].selectedId;
+export const selectEditId = state => state[sliceName].editId;
+export const selectPaginationMeta = state => state[sliceName].pagination;
 
 export const selectCurrentBrand = createSelector(
-  [selectBrandEntities, selectSelectedId],
+  [selectBrandEntities, selectEditId],
   (entities, currentId) => entities[currentId]
 );
 

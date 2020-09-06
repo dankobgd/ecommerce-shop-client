@@ -31,9 +31,9 @@ export const categoryUpdate = createAsyncThunk(
   }
 );
 
-export const categoryGetAll = createAsyncThunk(`${sliceName}/categoryGetAll`, async (_, { rejectWithValue }) => {
+export const categoryGetAll = createAsyncThunk(`${sliceName}/categoryGetAll`, async (params, { rejectWithValue }) => {
   try {
-    const categories = await api.categories.getAll();
+    const categories = await api.categories.getAll(params);
     return categories;
   } catch (error) {
     return rejectWithValue(error);
@@ -65,21 +65,25 @@ export const categoryDelete = createAsyncThunk(
 export const categoryAdapter = createEntityAdapter();
 
 const initialState = categoryAdapter.getInitialState({
-  selectedId: null,
+  editId: null,
+  pagination: null,
 });
 
 const categorySlice = createSlice({
   name: sliceName,
   initialState,
   reducers: {
-    setSelectedId: (state, { payload }) => {
-      state.selectedId = payload;
+    setEditId: (state, { payload }) => {
+      state.editId = payload;
     },
   },
   extraReducers: {
     [categoryCreate.fulfilled]: categoryAdapter.addOne,
     [categoryGet.fulfilled]: categoryAdapter.upsertOne,
-    [categoryGetAll.fulfilled]: categoryAdapter.setAll,
+    [categoryGetAll.fulfilled]: (state, { payload }) => {
+      categoryAdapter.setAll(state, payload.data);
+      state.pagination = payload.meta;
+    },
     [categoryUpdate.fulfilled]: categoryAdapter.upsertOne,
     [categoryDelete.fulfilled]: categoryAdapter.removeOne,
   },
@@ -93,10 +97,11 @@ export const {
   selectTotal: selectCategoryTotal,
 } = categoryAdapter.getSelectors(state => state[sliceName]);
 
-export const selectSelectedId = state => state[sliceName].selectedId;
+export const selectEditId = state => state[sliceName].editId;
+export const selectPaginationMeta = state => state[sliceName].pagination;
 
 export const selectCurrentCategory = createSelector(
-  [selectCategoryEntities, selectSelectedId],
+  [selectCategoryEntities, selectEditId],
   (entities, currentId) => entities[currentId]
 );
 

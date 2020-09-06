@@ -28,9 +28,9 @@ export const tagUpdate = createAsyncThunk(
   }
 );
 
-export const tagGetAll = createAsyncThunk(`${sliceName}/tagGetAll`, async (_, { rejectWithValue }) => {
+export const tagGetAll = createAsyncThunk(`${sliceName}/tagGetAll`, async (params, { rejectWithValue }) => {
   try {
-    const tags = await api.tags.getAll();
+    const tags = await api.tags.getAll(params);
     return tags;
   } catch (error) {
     return rejectWithValue(error);
@@ -59,21 +59,25 @@ export const tagDelete = createAsyncThunk(`${sliceName}/tagDelete`, async (id, {
 export const tagAdapter = createEntityAdapter();
 
 const initialState = tagAdapter.getInitialState({
-  selectedId: null,
+  editId: null,
+  pagination: null,
 });
 
 const tagSlice = createSlice({
   name: sliceName,
   initialState,
   reducers: {
-    setSelectedId: (state, { payload }) => {
-      state.selectedId = payload;
+    setEditId: (state, { payload }) => {
+      state.editId = payload;
     },
   },
   extraReducers: {
     [tagCreate.fulfilled]: tagAdapter.addOne,
     [tagGet.fulfilled]: tagAdapter.upsertOne,
-    [tagGetAll.fulfilled]: tagAdapter.setAll,
+    [tagGetAll.fulfilled]: (state, { payload }) => {
+      tagAdapter.setAll(state, payload.data);
+      state.pagination = payload.meta;
+    },
     [tagUpdate.fulfilled]: tagAdapter.upsertOne,
     [tagDelete.fulfilled]: tagAdapter.removeOne,
   },
@@ -87,12 +91,13 @@ export const {
   selectTotal: selectTagTotal,
 } = tagAdapter.getSelectors(state => state[sliceName]);
 
-export const selectSelectedId = state => state[sliceName].selectedId;
+export const selectEditId = state => state[sliceName].editId;
+export const selectPaginationMeta = state => state[sliceName].pagination;
 
 export const selectManyTags = ids => createSelector(selectTagEntities, entities => ids.map(id => entities[id]));
 
 export const selectCurrentTag = createSelector(
-  [selectTagEntities, selectSelectedId],
+  [selectTagEntities, selectEditId],
   (entities, currentId) => entities[currentId]
 );
 

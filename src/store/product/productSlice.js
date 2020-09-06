@@ -31,9 +31,9 @@ export const productUpdate = createAsyncThunk(
   }
 );
 
-export const productGetAll = createAsyncThunk(`${sliceName}/productGetAll`, async (_, { rejectWithValue }) => {
+export const productGetAll = createAsyncThunk(`${sliceName}/productGetAll`, async (params, { rejectWithValue }) => {
   try {
-    const products = await api.products.getAll();
+    const products = await api.products.getAll(params);
     return products;
   } catch (error) {
     return rejectWithValue(error);
@@ -83,21 +83,25 @@ export const productGetImages = createAsyncThunk(`${sliceName}/productGetImages`
 export const productAdapter = createEntityAdapter();
 
 const initialState = productAdapter.getInitialState({
-  selectedId: null,
+  editId: null,
+  pagination: null,
 });
 
 const productSlice = createSlice({
   name: sliceName,
   initialState,
   reducers: {
-    setSelectedId: (state, { payload }) => {
-      state.selectedId = payload;
+    setEditId: (state, { payload }) => {
+      state.editId = payload;
     },
   },
   extraReducers: {
     [productCreate.fulfilled]: productAdapter.addOne,
     [productGet.fulfilled]: productAdapter.upsertOne,
-    [productGetAll.fulfilled]: productAdapter.setAll,
+    [productGetAll.fulfilled]: (state, { payload }) => {
+      productAdapter.setAll(state, payload.data);
+      state.pagination = payload.meta;
+    },
     [productUpdate.fulfilled]: productAdapter.upsertOne,
     [productDelete.fulfilled]: productAdapter.removeOne,
     [productGetTags.fulfilled]: (state, { payload }) => {
@@ -116,10 +120,11 @@ export const {
   selectTotal: selectProductTotal,
 } = productAdapter.getSelectors(state => state[sliceName]);
 
-export const selectSelectedId = state => state[sliceName].selectedId;
+export const selectEditId = state => state[sliceName].editId;
+export const selectPaginationMeta = state => state[sliceName].pagination;
 
 export const selectCurrentProduct = createSelector(
-  [selectProductEntities, selectSelectedId],
+  [selectProductEntities, selectEditId],
   (entities, currentId) => entities[currentId]
 );
 

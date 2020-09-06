@@ -3,7 +3,7 @@ import apiClient from './apiClient';
 export default {
   async create(formData) {
     return apiClient.post(
-      'v1/products',
+      `v1/products`,
       { data: formData, headers: { 'Content-Type': 'multipart/form-data' } },
       { skipTransformRequest: true }
     );
@@ -17,8 +17,8 @@ export default {
     return apiClient.get(`v1/products/${id}`);
   },
 
-  async getAll() {
-    return apiClient.get('v1/products');
+  async getAll(params) {
+    return apiClient.get(`v1/products`, { params });
   },
 
   async delete(id) {

@@ -26,9 +26,13 @@ import { makeStyles } from '@material-ui/styles';
 import { Link } from '@reach/router';
 import clsx from 'clsx';
 import { nanoid } from 'nanoid';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 
-import categorySlice, { categoryDelete } from '../../../store/category/categorySlice';
+import categorySlice, {
+  categoryDelete,
+  selectPaginationMeta,
+  categoryGetAll,
+} from '../../../store/category/categorySlice';
 
 const useStyles = makeStyles(theme => ({
   root: {},
@@ -55,9 +59,8 @@ const CategoriesTable = props => {
   const { className, categories, ...rest } = props;
   const classes = useStyles();
   const dispatch = useDispatch();
+  const paginationMeta = useSelector(selectPaginationMeta);
   const [selectedCategories, setSelectedCategories] = useState([]);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [currentPage, setCurrentPage] = useState(0);
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const handleDialogOpen = () => {
@@ -100,12 +103,14 @@ const CategoriesTable = props => {
     setSelectedCategories(newSelectedCategories);
   };
 
-  const handlePageChange = (event, page) => {
-    setCurrentPage(page);
+  const handlePageChange = (e, page) => {
+    const params = new URLSearchParams({ per_page: paginationMeta.perPage, page: page + 1 });
+    dispatch(categoryGetAll(params));
   };
 
-  const handleRowsPerPageChange = event => {
-    setRowsPerPage(event.target.value);
+  const handleRowsPerPageChange = e => {
+    const params = new URLSearchParams({ per_page: e.target.value });
+    dispatch(categoryGetAll(params));
   };
 
   return (
@@ -132,8 +137,9 @@ const CategoriesTable = props => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {categories.length > 0 &&
-                categories.slice(0, rowsPerPage).map(category => (
+              {paginationMeta &&
+                categories.length > 0 &&
+                categories.slice(0, paginationMeta.perPage).map(category => (
                   <TableRow
                     className={classes.tableRow}
                     hover
@@ -164,7 +170,7 @@ const CategoriesTable = props => {
                           variant='outlined'
                           color='secondary'
                           startIcon={<EditIcon />}
-                          onClick={() => dispatch(categorySlice.actions.setSelectedId(category.id))}
+                          onClick={() => dispatch(categorySlice.actions.setEditId(category.id))}
                         >
                           Edit
                         </Button>
@@ -215,15 +221,17 @@ const CategoriesTable = props => {
         </div>
       </CardContent>
       <CardActions className={classes.actions}>
-        <TablePagination
-          component='div'
-          count={categories.length}
-          onChangePage={handlePageChange}
-          onChangeRowsPerPage={handleRowsPerPageChange}
-          page={currentPage}
-          rowsPerPage={rowsPerPage}
-          rowsPerPageOptions={[5, 10, 25]}
-        />
+        {paginationMeta && (
+          <TablePagination
+            component='div'
+            count={paginationMeta.totalCount || -1}
+            onChangePage={handlePageChange}
+            onChangeRowsPerPage={handleRowsPerPageChange}
+            page={paginationMeta.page - 1 || 0}
+            rowsPerPage={paginationMeta.perPage || 50}
+            rowsPerPageOptions={[10, 25, 50, 100]}
+          />
+        )}
       </CardActions>
     </Card>
   );
