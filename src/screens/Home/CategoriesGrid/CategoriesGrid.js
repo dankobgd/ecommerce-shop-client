@@ -1,8 +1,8 @@
 import React from 'react';
 
-import { makeStyles, Typography, Button } from '@material-ui/core';
+import { makeStyles } from '@material-ui/core';
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles(() => ({
   grid: {
     display: 'grid',
     justifyItems: 'space-between',
@@ -60,6 +60,7 @@ const useStyles = makeStyles(theme => ({
     maxWidth: '100%',
     position: 'relative',
     opacity: '0.4',
+    objectFit: 'cover',
   },
 
   figcaption: {

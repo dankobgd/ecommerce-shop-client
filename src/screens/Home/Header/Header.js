@@ -4,14 +4,9 @@ import { makeStyles } from '@material-ui/core';
 import { useForm, FormProvider } from 'react-hook-form';
 import { useDispatch, useSelector } from 'react-redux';
 
+import { productGetAll } from '../../../store/product/productSlice';
 import { selectUIState } from '../../../store/ui';
 import SearchBar from '../SearchBar/SearchBar';
-
-const topFilms = [
-  { title: 'The Shawshank Redemption', year: 1994 },
-  { title: 'The Godfather', year: 1972 },
-  { title: 'The Godfather: Part II', year: 1974 },
-];
 
 const formOpts = {
   mode: 'onChange',
@@ -21,7 +16,7 @@ const formOpts = {
   },
 };
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles(() => ({
   headerOuter: {
     width: '100%',
     display: 'flex',
@@ -39,8 +34,8 @@ function Header() {
   const classes = useStyles();
   const dispatch = useDispatch();
   const methods = useForm(formOpts);
-  const { handleSubmit, setError } = methods;
-  // const { loading, error } = useSelector(selectUIState(null));
+  const { handleSubmit } = methods;
+  const { loading, error } = useSelector(selectUIState(productGetAll));
 
   const onSubmit = data => {
     console.log(data);
@@ -49,8 +44,10 @@ function Header() {
   return (
     <div className={classes.headerOuter}>
       <FormProvider {...methods}>
+        {loading && <div>Loading...</div>}
+        {error && <div>{error}</div>}
         <form onSubmit={handleSubmit(onSubmit)} className={classes.form} noValidate>
-          <SearchBar options={topFilms} />
+          <SearchBar options={[]} />
         </form>
       </FormProvider>
     </div>

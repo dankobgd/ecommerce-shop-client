@@ -32,4 +32,8 @@ export default {
   async getImages(id) {
     return apiClient.get(`v1/products/${id}/images`);
   },
+
+  async getProperties() {
+    return apiClient.get(`v1/products/properties`);
+  },
 };

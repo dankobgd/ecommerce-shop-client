@@ -4,6 +4,7 @@ import { yupResolver } from '@hookform/resolvers';
 import { Avatar, CircularProgress, Container, Typography } from '@material-ui/core';
 import ShoppingBasketIcon from '@material-ui/icons/ShoppingBasket';
 import { makeStyles } from '@material-ui/styles';
+import { nanoid } from 'nanoid';
 import { FormProvider, useForm } from 'react-hook-form';
 import { useDispatch, useSelector } from 'react-redux';
 import * as Yup from 'yup';
@@ -19,7 +20,7 @@ import ErrorMessage from '../../../components/Message/ErrorMessage';
 import { useFormServerErrors } from '../../../hooks/useFormServerErrors';
 import { brandGetAll, selectAllBrands } from '../../../store/brand/brandSlice';
 import { categoryGetAll, selectAllCategories } from '../../../store/category/categorySlice';
-import { productCreate } from '../../../store/product/productSlice';
+import { productCreate, productGetProperties, selectProductProperties } from '../../../store/product/productSlice';
 import { tagGetAll, selectAllTags } from '../../../store/tag/tagSlice';
 import { selectUIState } from '../../../store/ui';
 import { transformKeysToSnakeCase } from '../../../utils/transformObjectKeys';
@@ -77,29 +78,55 @@ const formOpts = {
     tags: [],
     image: '',
     images: [],
+    properties: null,
   },
   resolver: yupResolver(schema),
 };
+
+function renderCategoryProperties(chosenCategory, validProperties) {
+  const opts = chosenCategory && validProperties[chosenCategory.name];
+  const createLabel = name => `${chosenCategory?.name.charAt(0).toUpperCase() + chosenCategory?.name.slice(1)} ${name}`;
+
+  return opts
+    ? Object.keys(opts).map(key => (
+        <FormAutoComplete
+          getOptionSelected={(option, value) => (value ? option === value : true)}
+          key={nanoid()}
+          name={`properties.${key}`}
+          label={createLabel(key)}
+          options={opts[key] || []}
+          fullWidth
+        />
+      ))
+    : null;
+}
 
 function CreateProductForm() {
   const classes = useStyles();
   const dispatch = useDispatch();
   const methods = useForm(formOpts);
-  const { handleSubmit, setError } = methods;
+  const { handleSubmit, setError, watch } = methods;
   const { loading, error } = useSelector(selectUIState(productCreate));
   const tagList = useSelector(selectAllTags);
   const brandList = useSelector(selectAllBrands);
   const categoryList = useSelector(selectAllCategories);
+  const validProperties = useSelector(selectProductProperties);
+  const chosenCategory = watch('categoryId');
 
   React.useEffect(() => {
     async function fetchDropdownValues() {
-      await Promise.all([dispatch(brandGetAll()), dispatch(categoryGetAll()), dispatch(tagGetAll())]);
+      await Promise.all([
+        dispatch(productGetProperties()),
+        dispatch(brandGetAll()),
+        dispatch(categoryGetAll()),
+        dispatch(tagGetAll()),
+      ]);
     }
     fetchDropdownValues();
   }, [dispatch]);
 
   const onSubmit = async data => {
-    const { brandId, categoryId, tags, image, images, ...rest } = data;
+    const { brandId, categoryId, tags, image, images, properties, ...rest } = data;
     const formData = new FormData();
     const fields = transformKeysToSnakeCase(rest);
 
@@ -115,6 +142,7 @@ function CreateProductForm() {
     tags.forEach(tag => {
       formData.append('tags', tag.id);
     });
+    formData.append('properties', JSON.stringify(transformKeysToSnakeCase(properties)));
 
     await dispatch(productCreate(formData));
   };
@@ -147,6 +175,8 @@ function CreateProductForm() {
             <TagsDropdown fullWidth options={tagList} />
             <ProductThumbnailUploadField name='image' />
             <ProductImagesDropzoneField name='images' />
+
+            {renderCategoryProperties(chosenCategory, validProperties)}
 
             <FormSubmitButton className={classes.submit} fullWidth>
               Add product

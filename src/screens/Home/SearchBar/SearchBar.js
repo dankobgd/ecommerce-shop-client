@@ -9,7 +9,7 @@ function SearchBar({ options, ...rest }) {
   const getOptionSelected = (option, value) => option.title === value.title;
   // const renderOption = (option, state) => option;
 
-  const { control, errors, setValue } = useFormContext();
+  const { control, setValue } = useFormContext();
 
   const onChange = (e, value, reason) => value;
 
@@ -54,9 +54,6 @@ function SearchBar({ options, ...rest }) {
           />
         )}
       />
-      {/* <FormHelperText error={!!errors[name]} margin='dense' variant={variant}>
-        {errors && errors[name] && errors[name].message}
-      </FormHelperText> */}
     </FormControl>
   );
 }

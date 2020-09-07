@@ -80,11 +80,24 @@ export const productGetImages = createAsyncThunk(`${sliceName}/productGetImages`
   }
 });
 
+export const productGetProperties = createAsyncThunk(
+  `${sliceName}/productGetProperties`,
+  async (_, { rejectWithValue }) => {
+    try {
+      const props = await api.products.getProperties();
+      return props;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
 export const productAdapter = createEntityAdapter();
 
 const initialState = productAdapter.getInitialState({
   editId: null,
   pagination: null,
+  properties: null,
 });
 
 const productSlice = createSlice({
@@ -109,6 +122,9 @@ const productSlice = createSlice({
       const tagIds = payload.map(x => x.id);
       state.entities[idx].tags = tagIds;
     },
+    [productGetProperties.fulfilled]: (state, { payload }) => {
+      state.properties = payload;
+    },
   },
 });
 
@@ -122,6 +138,7 @@ export const {
 
 export const selectEditId = state => state[sliceName].editId;
 export const selectPaginationMeta = state => state[sliceName].pagination;
+export const selectProductProperties = state => state[sliceName].properties;
 
 export const selectCurrentProduct = createSelector(
   [selectProductEntities, selectEditId],

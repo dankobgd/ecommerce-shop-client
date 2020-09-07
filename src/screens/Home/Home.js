@@ -13,7 +13,7 @@ import Header from './Header/Header';
 import ProductsGrid from './ProductsGrid/ProductsGrid';
 import SideBar from './SideBar/SideBar';
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles(() => ({
   categoriesGrid: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',

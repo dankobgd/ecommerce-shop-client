@@ -16,7 +16,7 @@ export default function FormTextField({
   thousandSeparator = true,
   ...rest
 }) {
-  const { control, errors, setValue } = useFormContext();
+  const { control, errors, setValue, trigger } = useFormContext();
 
   return (
     <FormControl {...rest}>
@@ -38,6 +38,7 @@ export default function FormTextField({
             onValueChange={target => {
               props.onChange();
               setValue(name, target.value);
+              trigger(name);
             }}
             onBlur={props.onBlur}
           />
