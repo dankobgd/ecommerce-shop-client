@@ -4,8 +4,19 @@ import { makeStyles } from '@material-ui/core';
 import { useSelector, useDispatch } from 'react-redux';
 
 import { selectAllBrands, brandGetAll } from '../../store/brand/brandSlice';
-import { selectAllCategories, categoryGetAll } from '../../store/category/categorySlice';
-import { selectAllProducts, productGetAll } from '../../store/product/productSlice';
+import {
+  selectFeaturedCategories,
+  categoryGetFeatured,
+  categoryGetAll,
+  selectAllCategories,
+} from '../../store/category/categorySlice';
+import {
+  selectAllProducts,
+  productGetAll,
+  productGetProperties,
+  selectProductVariants,
+} from '../../store/product/productSlice';
+import { tagGetAll, selectAllTags } from '../../store/tag/tagSlice';
 import { selectUIState } from '../../store/ui';
 import BrandsGrid from './BrandsGrid/BrandsGrid';
 import CategoriesGrid from './CategoriesGrid/CategoriesGrid';
@@ -42,28 +53,30 @@ function Home() {
   const products = useSelector(selectAllProducts);
   const brands = useSelector(selectAllBrands);
   const categories = useSelector(selectAllCategories);
+  const tags = useSelector(selectAllTags);
+  const variants = useSelector(selectProductVariants);
+  const featuredCategories = useSelector(selectFeaturedCategories);
   const { loading, error } = useSelector(selectUIState(productGetAll));
 
   React.useEffect(() => {
-    async function fetchProducts() {
-      await dispatch(productGetAll());
-      await dispatch(categoryGetAll());
-      await dispatch(brandGetAll());
+    if (brands.length === 0 && categories.length === 0 && tags.length === 0) {
+      dispatch(productGetProperties());
+      // dispatch(productGetAll());
+      dispatch(categoryGetAll());
+      dispatch(brandGetAll());
+      dispatch(tagGetAll());
     }
-    fetchProducts();
-  }, [dispatch]);
+  }, [dispatch, brands.length, categories.length, tags.length]);
 
   return (
     <div className={classes.homeOuter}>
       <Header />
-      <div>
-        <CategoriesGrid categories={categories} />
-        <BrandsGrid brands={brands} />
+      <div>{/* <CategoriesGrid categories={featuredCategories} />
+        <BrandsGrid brands={brands} /> */}</div>
+      <div className={classes.homeView}>
+        <SideBar brands={brands} categories={categories} tags={tags} variants={variants} />
+        {/* <ProductsGrid products={products} /> */}
       </div>
-      {/* <div className={classes.homeView}>
-        <SideBar />
-        <ProductsGrid products={products} />
-      </div> */}
     </div>
   );
 }

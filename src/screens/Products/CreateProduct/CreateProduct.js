@@ -20,7 +20,7 @@ import ErrorMessage from '../../../components/Message/ErrorMessage';
 import { useFormServerErrors } from '../../../hooks/useFormServerErrors';
 import { brandGetAll, selectAllBrands } from '../../../store/brand/brandSlice';
 import { categoryGetAll, selectAllCategories } from '../../../store/category/categorySlice';
-import { productCreate, productGetProperties, selectProductProperties } from '../../../store/product/productSlice';
+import { productCreate, productGetProperties, selectProductVariants } from '../../../store/product/productSlice';
 import { tagGetAll, selectAllTags } from '../../../store/tag/tagSlice';
 import { selectUIState } from '../../../store/ui';
 import { transformKeysToSnakeCase } from '../../../utils/transformObjectKeys';
@@ -83,22 +83,23 @@ const formOpts = {
   resolver: yupResolver(schema),
 };
 
-function renderCategoryProperties(chosenCategory, validProperties) {
-  const opts = chosenCategory && validProperties[chosenCategory.name];
+function renderCategoryProperties(chosenCategory, variants) {
+  const opts = variants.find(prop => prop.category === chosenCategory?.name);
   const createLabel = name => `${chosenCategory?.name.charAt(0).toUpperCase() + chosenCategory?.name.slice(1)} ${name}`;
 
-  return opts
-    ? Object.keys(opts).map(key => (
-        <FormAutoComplete
-          getOptionSelected={(option, value) => (value ? option === value : true)}
-          key={nanoid()}
-          name={`properties.${key}`}
-          label={createLabel(key)}
-          options={opts[key] || []}
-          fullWidth
-        />
-      ))
-    : null;
+  return (
+    opts &&
+    Object.keys(opts.props).map(key => (
+      <FormAutoComplete
+        getOptionSelected={(option, value) => (value ? option === value : true)}
+        key={nanoid()}
+        name={`properties.${key}`}
+        label={createLabel(key)}
+        options={opts.props[key] || []}
+        fullWidth
+      />
+    ))
+  );
 }
 
 function CreateProductForm() {
@@ -110,7 +111,7 @@ function CreateProductForm() {
   const tagList = useSelector(selectAllTags);
   const brandList = useSelector(selectAllBrands);
   const categoryList = useSelector(selectAllCategories);
-  const validProperties = useSelector(selectProductProperties);
+  const variants = useSelector(selectProductVariants);
   const chosenCategory = watch('categoryId');
 
   React.useEffect(() => {
@@ -176,7 +177,7 @@ function CreateProductForm() {
             <ProductThumbnailUploadField name='image' />
             <ProductImagesDropzoneField name='images' />
 
-            {renderCategoryProperties(chosenCategory, validProperties)}
+            {renderCategoryProperties(chosenCategory, variants)}
 
             <FormSubmitButton className={classes.submit} fullWidth>
               Add product

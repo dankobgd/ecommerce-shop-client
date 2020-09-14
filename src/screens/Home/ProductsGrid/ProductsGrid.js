@@ -12,6 +12,7 @@ const useStyles = makeStyles(() => ({
   productsGridOuter: {
     display: 'grid',
     justifyItems: 'space-between',
+    alignItems: 'flex-start',
     gridTemplateColumns: 'repeat(auto-fit,minmax(250px, 1fr))',
     gridGap: '1rem',
     border: '1px solid #eee',

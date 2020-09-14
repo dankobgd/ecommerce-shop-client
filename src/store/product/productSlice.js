@@ -97,7 +97,8 @@ export const productAdapter = createEntityAdapter();
 const initialState = productAdapter.getInitialState({
   editId: null,
   pagination: null,
-  properties: null,
+  properties: [],
+  filters: {},
 });
 
 const productSlice = createSlice({
@@ -106,6 +107,9 @@ const productSlice = createSlice({
   reducers: {
     setEditId: (state, { payload }) => {
       state.editId = payload;
+    },
+    setFilters: (state, { payload }) => {
+      state.filters = payload;
     },
   },
   extraReducers: {
@@ -138,7 +142,11 @@ export const {
 
 export const selectEditId = state => state[sliceName].editId;
 export const selectPaginationMeta = state => state[sliceName].pagination;
-export const selectProductProperties = state => state[sliceName].properties;
+
+export const selectProductVariants = createSelector(
+  state => state[sliceName].properties,
+  variants => variants
+);
 
 export const selectCurrentProduct = createSelector(
   [selectProductEntities, selectEditId],

@@ -1,9 +1,10 @@
 import React from 'react';
 
 import { FormControlLabel, Checkbox, FormGroup, FormControl, FormHelperText } from '@material-ui/core';
+import { nanoid } from 'nanoid';
 import { useFormContext, Controller } from 'react-hook-form';
 
-export default function CheckboxGroup({ name, row, options }) {
+export default function CheckboxGroup({ name, row, options, getOptionLabel = option => option }) {
   const { control, errors, watch } = useFormContext();
   const [checkedValues, setCheckedValues] = React.useState(watch(name));
 
@@ -30,8 +31,8 @@ export default function CheckboxGroup({ name, row, options }) {
                 control={control}
               />
             }
-            key={opt}
-            label={opt}
+            key={nanoid()}
+            label={getOptionLabel(opt)}
           />
         ))}
       </FormGroup>

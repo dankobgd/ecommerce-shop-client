@@ -17,6 +17,10 @@ export default {
     return apiClient.get(`v1/categories`, { params });
   },
 
+  async getFeatured(params) {
+    return apiClient.get(`v1/categories/featured`, { params });
+  },
+
   async delete(id) {
     return apiClient.delete(`v1/categories/${id}`);
   },

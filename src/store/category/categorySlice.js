@@ -40,6 +40,18 @@ export const categoryGetAll = createAsyncThunk(`${sliceName}/categoryGetAll`, as
   }
 });
 
+export const categoryGetFeatured = createAsyncThunk(
+  `${sliceName}/categoryGetFeatured`,
+  async (params, { rejectWithValue }) => {
+    try {
+      const featured = await api.categories.getFeatured(params);
+      return featured;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
 export const categoryGet = createAsyncThunk(`${sliceName}/categoryGet`, async (id, { rejectWithValue }) => {
   try {
     const category = await api.categories.get(id);
@@ -84,6 +96,9 @@ const categorySlice = createSlice({
       categoryAdapter.setAll(state, payload.data);
       state.pagination = payload.meta;
     },
+    [categoryGetFeatured.fulfilled]: (state, { payload }) => {
+      categoryAdapter.upsertMany(state, payload.data);
+    },
     [categoryUpdate.fulfilled]: categoryAdapter.upsertOne,
     [categoryDelete.fulfilled]: categoryAdapter.removeOne,
   },
@@ -99,6 +114,10 @@ export const {
 
 export const selectEditId = state => state[sliceName].editId;
 export const selectPaginationMeta = state => state[sliceName].pagination;
+
+export const selectFeaturedCategories = createSelector(selectAllCategories, categories =>
+  categories.filter(x => x.isFeatured === true).slice(0, 6)
+);
 
 export const selectCurrentCategory = createSelector(
   [selectCategoryEntities, selectEditId],
