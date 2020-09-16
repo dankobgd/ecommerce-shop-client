@@ -36,4 +36,8 @@ export default {
   async getProperties() {
     return apiClient.get(`v1/products/properties`);
   },
+
+  async getFeatured(params) {
+    return apiClient.get(`v1/products/featured`, { params });
+  },
 };

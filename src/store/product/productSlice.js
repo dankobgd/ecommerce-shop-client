@@ -92,6 +92,18 @@ export const productGetProperties = createAsyncThunk(
   }
 );
 
+export const productGetFeatured = createAsyncThunk(
+  `${sliceName}/productGetFeatured`,
+  async (params, { rejectWithValue }) => {
+    try {
+      const featured = await api.products.getFeatured(params);
+      return featured;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
 export const productAdapter = createEntityAdapter();
 
 const initialState = productAdapter.getInitialState({
@@ -111,6 +123,9 @@ const productSlice = createSlice({
     setFilters: (state, { payload }) => {
       state.filters = payload;
     },
+    setpPriceFilter: (state, { payload }) => {
+      state.filters.price = [...payload];
+    },
   },
   extraReducers: {
     [productCreate.fulfilled]: productAdapter.addOne,
@@ -128,6 +143,9 @@ const productSlice = createSlice({
     },
     [productGetProperties.fulfilled]: (state, { payload }) => {
       state.properties = payload;
+    },
+    [productGetFeatured.fulfilled]: (state, { payload }) => {
+      productAdapter.upsertMany(state, payload.data);
     },
   },
 });
@@ -151,6 +169,10 @@ export const selectProductVariants = createSelector(
 export const selectCurrentProduct = createSelector(
   [selectProductEntities, selectEditId],
   (entities, currentId) => entities[currentId]
+);
+
+export const selectFeaturedProducts = createSelector(selectAllProducts, products =>
+  products.filter(x => x.isFeatured === true)
 );
 
 export default productSlice;

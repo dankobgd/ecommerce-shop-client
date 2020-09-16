@@ -11,6 +11,9 @@ import { store, persistor } from './store/store';
 import { getCurrentUser } from './store/user/userSlice';
 import theme from './theme/theme';
 
+import 'slick-carousel/slick/slick.css';
+import 'slick-carousel/slick/slick-theme.css';
+
 function App() {
   React.useEffect(() => {
     store.dispatch(getCurrentUser());

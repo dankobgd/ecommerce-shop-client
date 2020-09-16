@@ -1,9 +1,20 @@
-import React from 'react';
+import React, { useState } from 'react';
 
-import { makeStyles, Accordion, AccordionSummary, Typography, AccordionDetails } from '@material-ui/core';
+import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
+  Checkbox,
+  FormControlLabel,
+  FormGroup,
+  makeStyles,
+  Slider,
+  Typography,
+} from '@material-ui/core';
+import CheckBoxIcon from '@material-ui/icons/CheckBox';
+import CheckBoxOutlineBlankIcon from '@material-ui/icons/CheckBoxOutlineBlank';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
-import { nanoid } from 'nanoid';
-import { FormProvider, useForm } from 'react-hook-form';
+import { nanoid } from '@reduxjs/toolkit';
 import { useDispatch } from 'react-redux';
 
 import productSlice from '../../../store/product/productSlice';
@@ -14,23 +25,25 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
-const formOpts = {
-  mode: 'onChange',
-  reValidateMode: 'onChange',
-  defaultValues: {
-    categories: [],
-    brands: [],
-    tags: [],
-    price: [0, 1000],
-  },
-};
-
-function SpecificCategoryFilters({ chosenCategories, variants, register, watch }) {
-  const dispatch = useDispatch();
-  const opts = variants.filter(v => v.category === chosenCategories?.find(c => c === v.category));
+function SpecificCategoryFilters({ formState, setFormState, variants }) {
+  const opts = variants.filter(v => v.category === formState.categories?.find(c => c === v.category));
 
   const handleChange = e => {
-    dispatch(productSlice.actions.setFilters(watch()));
+    const { name, value } = e.target;
+    const [category, property] = name.split('_');
+    const propertyItems = formState[category][property];
+
+    const items = propertyItems?.includes(value)
+      ? propertyItems.filter(x => x === value)
+      : [...(propertyItems ?? []), value];
+
+    setFormState(state => ({
+      ...state,
+      [category]: {
+        ...state[category],
+        [property]: items,
+      },
+    }));
   };
 
   return opts.map(({ category, props }) => (
@@ -47,19 +60,26 @@ function SpecificCategoryFilters({ chosenCategories, variants, register, watch }
             </Typography>
           </AccordionSummary>
           <AccordionDetails style={{ flexDirection: 'column' }}>
-            {props[prop].map(p => (
-              <div key={nanoid()}>
-                <input
-                  id={`filter-${category}-${prop}`}
-                  type='checkbox'
-                  name={`${category}_${prop}`}
-                  value={p}
-                  ref={register}
-                  onChange={handleChange}
-                />
-                <label htmlFor={`filter-${category}-${prop}`}>{p}</label>
-              </div>
-            ))}
+            <FormGroup>
+              {props[prop].map(p => (
+                <div key={nanoid()}>
+                  <FormControlLabel
+                    key={nanoid()}
+                    control={
+                      <Checkbox
+                        icon={<CheckBoxOutlineBlankIcon fontSize='small' />}
+                        checkedIcon={<CheckBoxIcon fontSize='small' />}
+                        name={`${category}_${prop}`}
+                        value={p}
+                        checked={formState[category][prop]?.includes(p)}
+                        onChange={handleChange}
+                      />
+                    }
+                    label={p}
+                  />
+                </div>
+              ))}
+            </FormGroup>
           </AccordionDetails>
         </Accordion>
       ))}
@@ -67,110 +87,163 @@ function SpecificCategoryFilters({ chosenCategories, variants, register, watch }
   ));
 }
 
-let renderCount = 0;
-const Counter = ({ count }) => <div>render count: {count}</div>;
+const transformVariants = arr =>
+  arr.map(({ category, props }) => {
+    const obj = Object.keys(props).reduce((categoryName, propName) => {
+      categoryName[propName] = [];
+      return categoryName;
+    }, {});
+
+    return {
+      key: category,
+      value: obj,
+    };
+  });
+
+const getFiltersFormFormat = arr =>
+  arr.reduce((acc, item) => {
+    acc[item.key] = item.value;
+    return acc;
+  }, {});
 
 function SideBar({ tags, brands, categories, variants }) {
   const classes = useStyles();
   const dispatch = useDispatch();
-  const methods = useForm(formOpts);
-  const { register, watch } = methods;
-  const chosenCategories = watch('categories');
 
-  renderCount++;
+  const filterProps = getFiltersFormFormat(transformVariants(variants));
+
+  const [formState, setFormState] = useState({
+    tags: [],
+    brands: [],
+    categories: [],
+    // price: [0, 1000],
+    ...filterProps,
+  });
 
   const handleChange = e => {
-    dispatch(productSlice.actions.setFilters(watch()));
+    const { name, value } = e.target;
+
+    const items = formState[name]?.includes(value)
+      ? formState[name].filter(x => x !== value)
+      : [...(formState[name] ?? []), value];
+
+    setFormState(state => ({
+      ...state,
+      [name]: items,
+    }));
   };
+
+  React.useEffect(() => {
+    dispatch(productSlice.actions.setFilters(formState));
+  }, [dispatch, formState]);
 
   return (
     <div className={classes.sideBarOuter}>
-      <FormProvider {...methods}>
-        <form noValidate>
-          <Counter count={renderCount} />
-
-          <Accordion>
-            <AccordionSummary expandIcon={<ExpandMoreIcon />} aria-controls='categories-filter' id='categories-filter'>
-              <Typography className={classes.heading}>Categories</Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                {categories.map(c => (
-                  <div key={c.id}>
-                    <input
-                      id={`${c.name}-filter`}
-                      type='checkbox'
+      <form noValidate>
+        <Accordion>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />} aria-controls='categories-filter' id='categories-filter'>
+            <Typography className={classes.heading}>Categories</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <FormGroup>
+              {categories.map(category => (
+                <FormControlLabel
+                  key={nanoid()}
+                  control={
+                    <Checkbox
+                      icon={<CheckBoxOutlineBlankIcon fontSize='small' />}
+                      checkedIcon={<CheckBoxIcon fontSize='small' />}
                       name='categories'
-                      value={c.name}
-                      ref={register}
+                      value={category.name}
+                      checked={formState.categories?.includes(category.name)}
                       onChange={handleChange}
                     />
-                    <label htmlFor={`${c.name}-filter`}>{c.name}</label>
-                  </div>
-                ))}
-              </div>
-            </AccordionDetails>
-          </Accordion>
+                  }
+                  label={category.name}
+                />
+              ))}
+            </FormGroup>
+          </AccordionDetails>
+        </Accordion>
 
-          <Accordion>
-            <AccordionSummary expandIcon={<ExpandMoreIcon />} aria-controls='brands-filter' id='brands-filter'>
-              <Typography className={classes.heading}>Brands</Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                {brands.map(b => (
-                  <div key={b.id}>
-                    <input
-                      id={`${b.name}-filter`}
-                      type='checkbox'
+        <Accordion>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />} aria-controls='brands-filter' id='brands-filter'>
+            <Typography className={classes.heading}>Brands</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <FormGroup>
+              {brands.map(brand => (
+                <FormControlLabel
+                  key={nanoid()}
+                  control={
+                    <Checkbox
+                      icon={<CheckBoxOutlineBlankIcon fontSize='small' />}
+                      checkedIcon={<CheckBoxIcon fontSize='small' />}
                       name='brands'
-                      value={b.name}
-                      ref={register}
+                      value={brand.name}
+                      checked={formState.brands?.includes(brand.name)}
                       onChange={handleChange}
                     />
-                    <label htmlFor={`${b.name}-filter`}>{b.name}</label>
-                  </div>
-                ))}
-              </div>
-            </AccordionDetails>
-          </Accordion>
+                  }
+                  label={brand.name}
+                />
+              ))}
+            </FormGroup>
+          </AccordionDetails>
+        </Accordion>
 
-          <Accordion>
-            <AccordionSummary expandIcon={<ExpandMoreIcon />} aria-controls='tags-filter' id='tags-filter'>
-              <Typography className={classes.heading}>Tags</Typography>
-            </AccordionSummary>
-            <AccordionDetails style={{ flexDirection: 'column' }}>
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                {tags.map(t => (
-                  <div key={t.id}>
-                    <input
-                      id={`${t.name}-filter`}
-                      type='checkbox'
+        <Accordion>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />} aria-controls='tags-filter' id='tags-filter'>
+            <Typography className={classes.heading}>Tags</Typography>
+          </AccordionSummary>
+          <AccordionDetails style={{ flexDirection: 'column' }}>
+            <FormGroup>
+              {tags.map(tag => (
+                <FormControlLabel
+                  key={nanoid()}
+                  control={
+                    <Checkbox
+                      icon={<CheckBoxOutlineBlankIcon fontSize='small' />}
+                      checkedIcon={<CheckBoxIcon fontSize='small' />}
                       name='tags'
-                      value={t.name}
-                      ref={register}
+                      value={tag.name}
+                      checked={formState.tags?.includes(tag.name)}
                       onChange={handleChange}
                     />
-                    <label htmlFor={`${t.name}-filter`}>{t.name}</label>
-                  </div>
-                ))}
-              </div>
-            </AccordionDetails>
-          </Accordion>
+                  }
+                  label={tag.name}
+                />
+              ))}
+            </FormGroup>
+          </AccordionDetails>
+        </Accordion>
 
-          {chosenCategories.length > 0 && <p style={{ color: 'green' }}>Specific filters</p>}
-          <div style={{ marginTop: '1rem' }}>
-            <SpecificCategoryFilters
-              chosenCategories={chosenCategories}
-              variants={variants}
-              register={register}
-              watch={watch}
-            />
-          </div>
-        </form>
-      </FormProvider>
+        <PriceSlider />
+
+        <SpecificCategoryFilters
+          formState={formState}
+          setFormState={setFormState}
+          variants={variants}
+          handleChange={handleChange}
+        />
+      </form>
     </div>
   );
 }
 
 export default SideBar;
+
+function PriceSlider() {
+  const dispatch = useDispatch();
+  const [state, setState] = useState([0, 1000]);
+
+  const onChange = (_, value) => {
+    setState([...value]);
+  };
+
+  React.useEffect(() => {
+    dispatch(productSlice.actions.setpPriceFilter(state));
+  }, [dispatch, state]);
+
+  return <Slider min={0} max={1000} step={1} value={state} onChange={onChange} valueLabelDisplay='auto' />;
+}

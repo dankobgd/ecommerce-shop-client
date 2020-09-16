@@ -116,7 +116,7 @@ export const selectEditId = state => state[sliceName].editId;
 export const selectPaginationMeta = state => state[sliceName].pagination;
 
 export const selectFeaturedCategories = createSelector(selectAllCategories, categories =>
-  categories.filter(x => x.isFeatured === true).slice(0, 6)
+  categories.filter(x => x.isFeatured === true).slice(0, 5)
 );
 
 export const selectCurrentCategory = createSelector(

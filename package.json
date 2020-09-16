@@ -30,7 +30,9 @@
     "react-number-format": "^4.4.1",
     "react-redux": "^7.2.1",
     "react-scripts": "^3.4.3",
+    "react-slick": "^0.27.11",
     "redux-persist": "^6.0.0",
+    "slick-carousel": "^1.8.1",
     "yup": "^0.29.1"
   },
   "scripts": {
