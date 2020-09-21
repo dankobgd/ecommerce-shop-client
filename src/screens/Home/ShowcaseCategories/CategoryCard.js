@@ -3,13 +3,6 @@ import React from 'react';
 import { makeStyles } from '@material-ui/core';
 
 const useStyles = makeStyles(() => ({
-  grid: {
-    display: 'grid',
-    justifyItems: 'space-between',
-    gridTemplateColumns: 'repeat(auto-fit,minmax(250px, 1fr))',
-    gridGap: '1rem',
-  },
-
   figure: {
     fontFamily: 'Raleway, Arial, sans-serif',
     position: 'relative',
@@ -86,17 +79,6 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
-function CategoriesGrid({ categories }) {
-  const classes = useStyles();
-  return (
-    <div className={classes.grid}>
-      {categories.map(category => (
-        <CategoryCard key={category.id} category={category} />
-      ))}
-    </div>
-  );
-}
-
 function CategoryCard({ category }) {
   const classes = useStyles();
 
@@ -110,4 +92,4 @@ function CategoryCard({ category }) {
   );
 }
 
-export default CategoriesGrid;
+export default CategoryCard;

@@ -27,6 +27,7 @@ import { nanoid } from 'nanoid';
 import { useDispatch, useSelector } from 'react-redux';
 
 import tagSlice, { tagDelete, tagGetAll, selectPaginationMeta } from '../../../store/tag/tagSlice';
+import { calculatePaginationStartEndPosition } from '../../../utils/pagination';
 
 const useStyles = makeStyles(theme => ({
   root: {},
@@ -107,6 +108,8 @@ const TagsTable = props => {
     dispatch(tagGetAll(params));
   };
 
+  const { start, end } = calculatePaginationStartEndPosition(paginationMeta?.page, paginationMeta?.perPage);
+
   return (
     <Card {...rest} className={clsx(classes.root, className)}>
       <CardContent className={classes.content}>
@@ -132,7 +135,7 @@ const TagsTable = props => {
             <TableBody>
               {paginationMeta &&
                 tags.length > 0 &&
-                tags.slice(0, paginationMeta.perPage).map(tag => (
+                tags.slice(start, end).map(tag => (
                   <TableRow
                     className={classes.tableRow}
                     hover
@@ -216,7 +219,7 @@ const TagsTable = props => {
             onChangeRowsPerPage={handleRowsPerPageChange}
             page={paginationMeta.page - 1 || 0}
             rowsPerPage={paginationMeta.perPage || 50}
-            rowsPerPageOptions={[10, 25, 50, 100]}
+            rowsPerPageOptions={[10, 25, 50, 75, 120]}
           />
         )}
       </CardActions>

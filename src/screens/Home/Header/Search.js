@@ -4,7 +4,7 @@ import { FormControl, TextField } from '@material-ui/core';
 import { Autocomplete } from '@material-ui/lab';
 import { Controller, useFormContext } from 'react-hook-form';
 
-function SearchBar({ options, ...rest }) {
+function Search({ options, ...rest }) {
   const getOptionLabel = option => option.title || '';
   const getOptionSelected = (option, value) => option.title === value.title;
   // const renderOption = (option, state) => option;
@@ -58,7 +58,7 @@ function SearchBar({ options, ...rest }) {
   );
 }
 
-export default SearchBar;
+export default Search;
 
 /*
 <Autocomplete

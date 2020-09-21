@@ -108,6 +108,7 @@ export const productAdapter = createEntityAdapter();
 
 const initialState = productAdapter.getInitialState({
   editId: null,
+  currentId: null,
   pagination: null,
   properties: [],
   filters: {},
@@ -120,6 +121,9 @@ const productSlice = createSlice({
     setEditId: (state, { payload }) => {
       state.editId = payload;
     },
+    setCurrentId: (state, { payload }) => {
+      state.currentId = payload;
+    },
     setFilters: (state, { payload }) => {
       state.filters = payload;
     },
@@ -131,21 +135,31 @@ const productSlice = createSlice({
     [productCreate.fulfilled]: productAdapter.addOne,
     [productGet.fulfilled]: productAdapter.upsertOne,
     [productGetAll.fulfilled]: (state, { payload }) => {
-      productAdapter.setAll(state, payload.data);
+      productAdapter.upsertMany(state, payload.data);
       state.pagination = payload.meta;
     },
     [productUpdate.fulfilled]: productAdapter.upsertOne,
     [productDelete.fulfilled]: productAdapter.removeOne,
     [productGetTags.fulfilled]: (state, { payload }) => {
-      const idx = payload[0].productId;
-      const tagIds = payload.map(x => x.id);
-      state.entities[idx].tags = tagIds;
+      if (payload.length > 0) {
+        const idx = payload[0].productId;
+        const tagIds = payload.map(x => x.id);
+        state.entities[idx].tags = tagIds;
+      }
+    },
+    [productGetImages.fulfilled]: (state, { payload }) => {
+      if (payload.length > 0) {
+        const idx = payload[0].productId;
+        const imgIds = payload.map(x => x.id);
+        state.entities[idx].images = imgIds;
+      }
     },
     [productGetProperties.fulfilled]: (state, { payload }) => {
       state.properties = payload;
     },
     [productGetFeatured.fulfilled]: (state, { payload }) => {
       productAdapter.upsertMany(state, payload.data);
+      state.pagination = payload.meta;
     },
   },
 });
@@ -159,6 +173,7 @@ export const {
 } = productAdapter.getSelectors(state => state[sliceName]);
 
 export const selectEditId = state => state[sliceName].editId;
+export const selectCurrentId = state => state[sliceName].currentId;
 export const selectPaginationMeta = state => state[sliceName].pagination;
 
 export const selectProductVariants = createSelector(
@@ -167,12 +182,29 @@ export const selectProductVariants = createSelector(
 );
 
 export const selectCurrentProduct = createSelector(
-  [selectProductEntities, selectEditId],
+  [selectProductEntities, selectCurrentId],
   (entities, currentId) => entities[currentId]
+);
+
+export const selectCurrentEditProduct = createSelector(
+  [selectProductEntities, selectEditId],
+  (entities, editId) => entities[editId]
 );
 
 export const selectFeaturedProducts = createSelector(selectAllProducts, products =>
   products.filter(x => x.isFeatured === true)
 );
+
+export const selectTopFeaturedProducts = createSelector(selectFeaturedProducts, products => products.slice(0, 3));
+export const selectMostSoldProducts = createSelector(selectFeaturedProducts, products => products.slice(0, 3));
+export const selectBeastDealsProducts = createSelector(selectFeaturedProducts, products => products.slice(0, 3));
+
+// export const selectMostSoldProducts = createSelector(selectAllProducts, products =>
+//   products.filter(x => x.isFeatured === true)
+// );
+
+// export const selectBeastDealsProducts = createSelector(selectAllProducts, products =>
+//   products.filter(x => x.isFeatured === true)
+// );
 
 export default productSlice;

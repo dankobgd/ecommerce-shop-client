@@ -28,6 +28,7 @@ import clsx from 'clsx';
 import { useDispatch, useSelector } from 'react-redux';
 
 import productSlice, { productDelete, selectPaginationMeta, productGetAll } from '../../../store/product/productSlice';
+import { calculatePaginationStartEndPosition } from '../../../utils/pagination';
 
 const useStyles = makeStyles(theme => ({
   root: {},
@@ -108,6 +109,8 @@ const ProductsTable = props => {
     dispatch(productGetAll(params));
   };
 
+  const { start, end } = calculatePaginationStartEndPosition(paginationMeta?.page, paginationMeta?.perPage);
+
   return (
     <Card {...rest} className={clsx(classes.root, className)}>
       <CardContent className={classes.content}>
@@ -140,11 +143,11 @@ const ProductsTable = props => {
             <TableBody>
               {paginationMeta &&
                 products.length > 0 &&
-                products.slice(0, paginationMeta.perPage).map(product => (
+                products.slice(start, end).map(product => (
                   <TableRow
                     className={classes.tableRow}
                     hover
-                    key={product.id}
+                    key={product.sku}
                     selected={selectedProducts.indexOf(product.id) !== -1}
                   >
                     <TableCell padding='checkbox'>
@@ -236,7 +239,7 @@ const ProductsTable = props => {
             onChangeRowsPerPage={handleRowsPerPageChange}
             page={paginationMeta.page - 1 || 0}
             rowsPerPage={paginationMeta.perPage || 50}
-            rowsPerPageOptions={[10, 25, 50, 100]}
+            rowsPerPageOptions={[10, 25, 50, 75, 120]}
           />
         )}
       </CardActions>

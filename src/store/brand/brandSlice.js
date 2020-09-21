@@ -81,7 +81,7 @@ const brandSlice = createSlice({
     [brandCreate.fulfilled]: brandAdapter.addOne,
     [brandGet.fulfilled]: brandAdapter.upsertOne,
     [brandGetAll.fulfilled]: (state, { payload }) => {
-      brandAdapter.setAll(state, payload.data);
+      brandAdapter.upsertMany(state, payload.data);
       state.pagination = payload.meta;
     },
     [brandUpdate.fulfilled]: brandAdapter.upsertOne,
@@ -100,9 +100,9 @@ export const {
 export const selectEditId = state => state[sliceName].editId;
 export const selectPaginationMeta = state => state[sliceName].pagination;
 
-export const selectCurrentBrand = createSelector(
+export const selectCurrentEditBrand = createSelector(
   [selectBrandEntities, selectEditId],
-  (entities, currentId) => entities[currentId]
+  (entities, editId) => entities[editId]
 );
 
 export default brandSlice;

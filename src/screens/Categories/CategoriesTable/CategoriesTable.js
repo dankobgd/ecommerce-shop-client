@@ -33,6 +33,7 @@ import categorySlice, {
   selectPaginationMeta,
   categoryGetAll,
 } from '../../../store/category/categorySlice';
+import { calculatePaginationStartEndPosition } from '../../../utils/pagination';
 
 const useStyles = makeStyles(theme => ({
   root: {},
@@ -113,6 +114,8 @@ const CategoriesTable = props => {
     dispatch(categoryGetAll(params));
   };
 
+  const { start, end } = calculatePaginationStartEndPosition(paginationMeta?.page, paginationMeta?.perPage);
+
   return (
     <Card {...rest} className={clsx(classes.root, className)}>
       <CardContent className={classes.content}>
@@ -139,7 +142,7 @@ const CategoriesTable = props => {
             <TableBody>
               {paginationMeta &&
                 categories.length > 0 &&
-                categories.slice(0, paginationMeta.perPage).map(category => (
+                categories.slice(start, end).map(category => (
                   <TableRow
                     className={classes.tableRow}
                     hover
@@ -229,7 +232,7 @@ const CategoriesTable = props => {
             onChangeRowsPerPage={handleRowsPerPageChange}
             page={paginationMeta.page - 1 || 0}
             rowsPerPage={paginationMeta.perPage || 50}
-            rowsPerPageOptions={[10, 25, 50, 100]}
+            rowsPerPageOptions={[10, 25, 50, 75, 120]}
           />
         )}
       </CardActions>

@@ -19,7 +19,7 @@ import ErrorMessage from '../../../components/Message/ErrorMessage';
 import { useFormServerErrors } from '../../../hooks/useFormServerErrors';
 import { selectAllBrands, brandGetAll } from '../../../store/brand/brandSlice';
 import { selectAllCategories, categoryGetAll } from '../../../store/category/categorySlice';
-import { productCreate, selectCurrentProduct, productGetTags } from '../../../store/product/productSlice';
+import { productCreate, selectCurrentEditProduct, productGetTags } from '../../../store/product/productSlice';
 import { selectAllTags, tagGetAll, selectManyTags } from '../../../store/tag/tagSlice';
 import { selectUIState } from '../../../store/ui';
 import { rules } from '../../../utils/validation';
@@ -72,7 +72,7 @@ function EditProductForm() {
   const tagList = useSelector(selectAllTags);
   const brandList = useSelector(selectAllBrands);
   const categoryList = useSelector(selectAllCategories);
-  const product = useSelector(selectCurrentProduct);
+  const product = useSelector(selectCurrentEditProduct);
   const { loading, error } = useSelector(selectUIState(productCreate));
   const tags = useSelector(selectManyTags(product?.tags || []));
 

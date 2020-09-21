@@ -75,7 +75,7 @@ const tagSlice = createSlice({
     [tagCreate.fulfilled]: tagAdapter.addOne,
     [tagGet.fulfilled]: tagAdapter.upsertOne,
     [tagGetAll.fulfilled]: (state, { payload }) => {
-      tagAdapter.setAll(state, payload.data);
+      tagAdapter.upsertMany(state, payload.data);
       state.pagination = payload.meta;
     },
     [tagUpdate.fulfilled]: tagAdapter.upsertOne,
@@ -96,9 +96,9 @@ export const selectPaginationMeta = state => state[sliceName].pagination;
 
 export const selectManyTags = ids => createSelector(selectTagEntities, entities => ids.map(id => entities[id]));
 
-export const selectCurrentTag = createSelector(
+export const selectCurrentEditTag = createSelector(
   [selectTagEntities, selectEditId],
-  (entities, currentId) => entities[currentId]
+  (entities, editId) => entities[editId]
 );
 
 export default tagSlice;

@@ -8,6 +8,7 @@ import {
   FormControlLabel,
   FormGroup,
   makeStyles,
+  Paper,
   Slider,
   Typography,
 } from '@material-ui/core';
@@ -23,9 +24,27 @@ const useStyles = makeStyles(() => ({
   sideBarOuter: {
     border: '1px solid #eee',
   },
+  expanded: {
+    '&$expanded': {
+      margin: 0,
+    },
+  },
+  accordionDetails: {
+    flexDirection: 'column',
+    maxHeight: '300px',
+    overflowY: 'auto',
+  },
+  pricePaper: {
+    padding: '10px 1rem',
+    marginTop: 0,
+  },
+  specificFilters: {
+    marginTop: '1rem',
+  },
 }));
 
 function SpecificCategoryFilters({ formState, setFormState, variants }) {
+  const classes = useStyles();
   const opts = variants.filter(v => v.category === formState.categories?.find(c => c === v.category));
 
   const handleChange = e => {
@@ -59,7 +78,7 @@ function SpecificCategoryFilters({ formState, setFormState, variants }) {
               {category} {prop}
             </Typography>
           </AccordionSummary>
-          <AccordionDetails style={{ flexDirection: 'column' }}>
+          <AccordionDetails className={classes.accordionDetails}>
             <FormGroup>
               {props[prop].map(p => (
                 <div key={nanoid()}>
@@ -140,11 +159,11 @@ function SideBar({ tags, brands, categories, variants }) {
   return (
     <div className={classes.sideBarOuter}>
       <form noValidate>
-        <Accordion>
+        <Accordion classes={{ expanded: classes.expanded }}>
           <AccordionSummary expandIcon={<ExpandMoreIcon />} aria-controls='categories-filter' id='categories-filter'>
             <Typography className={classes.heading}>Categories</Typography>
           </AccordionSummary>
-          <AccordionDetails>
+          <AccordionDetails className={classes.accordionDetails}>
             <FormGroup>
               {categories.map(category => (
                 <FormControlLabel
@@ -166,11 +185,11 @@ function SideBar({ tags, brands, categories, variants }) {
           </AccordionDetails>
         </Accordion>
 
-        <Accordion>
+        <Accordion classes={{ expanded: classes.expanded }}>
           <AccordionSummary expandIcon={<ExpandMoreIcon />} aria-controls='brands-filter' id='brands-filter'>
             <Typography className={classes.heading}>Brands</Typography>
           </AccordionSummary>
-          <AccordionDetails>
+          <AccordionDetails className={classes.accordionDetails}>
             <FormGroup>
               {brands.map(brand => (
                 <FormControlLabel
@@ -192,11 +211,11 @@ function SideBar({ tags, brands, categories, variants }) {
           </AccordionDetails>
         </Accordion>
 
-        <Accordion>
+        <Accordion classes={{ expanded: classes.expanded }}>
           <AccordionSummary expandIcon={<ExpandMoreIcon />} aria-controls='tags-filter' id='tags-filter'>
             <Typography className={classes.heading}>Tags</Typography>
           </AccordionSummary>
-          <AccordionDetails style={{ flexDirection: 'column' }}>
+          <AccordionDetails className={classes.accordionDetails}>
             <FormGroup>
               {tags.map(tag => (
                 <FormControlLabel
@@ -218,14 +237,21 @@ function SideBar({ tags, brands, categories, variants }) {
           </AccordionDetails>
         </Accordion>
 
-        <PriceSlider />
+        <Paper className={classes.pricePaper}>
+          <Typography className={classes.heading}>Price</Typography>
+          <PriceSlider />
+        </Paper>
 
-        <SpecificCategoryFilters
-          formState={formState}
-          setFormState={setFormState}
-          variants={variants}
-          handleChange={handleChange}
-        />
+        {(categories.length > 0 || brands.length > 0 || tags.length > 0) && (
+          <div className={classes.specificFilters}>
+            <SpecificCategoryFilters
+              formState={formState}
+              setFormState={setFormState}
+              variants={variants}
+              handleChange={handleChange}
+            />
+          </div>
+        )}
       </form>
     </div>
   );

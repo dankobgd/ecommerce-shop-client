@@ -93,7 +93,7 @@ const categorySlice = createSlice({
     [categoryCreate.fulfilled]: categoryAdapter.addOne,
     [categoryGet.fulfilled]: categoryAdapter.upsertOne,
     [categoryGetAll.fulfilled]: (state, { payload }) => {
-      categoryAdapter.setAll(state, payload.data);
+      categoryAdapter.upsertMany(state, payload.data);
       state.pagination = payload.meta;
     },
     [categoryGetFeatured.fulfilled]: (state, { payload }) => {
@@ -116,12 +116,12 @@ export const selectEditId = state => state[sliceName].editId;
 export const selectPaginationMeta = state => state[sliceName].pagination;
 
 export const selectFeaturedCategories = createSelector(selectAllCategories, categories =>
-  categories.filter(x => x.isFeatured === true).slice(0, 5)
+  categories.filter(x => x.isFeatured === true).slice(0, 8)
 );
 
-export const selectCurrentCategory = createSelector(
+export const selectCurrentEditCategory = createSelector(
   [selectCategoryEntities, selectEditId],
-  (entities, currentId) => entities[currentId]
+  (entities, editId) => entities[editId]
 );
 
 export default categorySlice;

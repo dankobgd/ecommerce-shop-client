@@ -24,6 +24,18 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
+const responsiveSettings = numToShow => ({
+  dots: false,
+  infinite: true,
+  speed: 500,
+  autoplay: true,
+  slidesToShow: Number.parseInt(numToShow),
+  slidesToScroll: Number.parseInt(numToShow),
+  arrows: false,
+  centerMode: true,
+  centerPadding: '50px',
+});
+
 function BrandsGrid({ brands }) {
   const classes = useStyles();
 
@@ -37,6 +49,24 @@ function BrandsGrid({ brands }) {
     arrows: false,
     centerMode: true,
     centerPadding: '50px',
+    responsive: [
+      {
+        breakpoint: 320,
+        settings: responsiveSettings(1),
+      },
+      {
+        breakpoint: 768,
+        settings: responsiveSettings(2),
+      },
+      {
+        breakpoint: 1024,
+        settings: responsiveSettings(3),
+      },
+      {
+        breakpoint: 1200,
+        settings: responsiveSettings(4),
+      },
+    ],
   };
 
   return (

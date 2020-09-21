@@ -2,11 +2,11 @@ import React from 'react';
 
 import { makeStyles } from '@material-ui/core';
 import { useForm, FormProvider } from 'react-hook-form';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 
 import { productGetAll } from '../../../store/product/productSlice';
 import { selectUIState } from '../../../store/ui';
-import SearchBar from '../SearchBar/SearchBar';
+import SearchBar from './Search';
 
 const formOpts = {
   mode: 'onChange',
@@ -32,7 +32,7 @@ const useStyles = makeStyles(() => ({
 
 function Header() {
   const classes = useStyles();
-  const dispatch = useDispatch();
+  // const dispatch = useDispatch();
   const methods = useForm(formOpts);
   const { handleSubmit } = methods;
   const { loading, error } = useSelector(selectUIState(productGetAll));

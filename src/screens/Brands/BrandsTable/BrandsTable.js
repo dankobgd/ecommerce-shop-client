@@ -29,6 +29,7 @@ import { nanoid } from 'nanoid';
 import { useDispatch, useSelector } from 'react-redux';
 
 import brandSlice, { brandDelete, selectPaginationMeta, brandGetAll } from '../../../store/brand/brandSlice';
+import { calculatePaginationStartEndPosition } from '../../../utils/pagination';
 
 const useStyles = makeStyles(theme => ({
   root: {},
@@ -109,6 +110,8 @@ const BrandsTable = props => {
     dispatch(brandGetAll(params));
   };
 
+  const { start, end } = calculatePaginationStartEndPosition(paginationMeta?.page, paginationMeta?.perPage);
+
   return (
     <Card {...rest} className={clsx(classes.root, className)}>
       <CardContent className={classes.content}>
@@ -138,7 +141,7 @@ const BrandsTable = props => {
             <TableBody>
               {paginationMeta &&
                 brands.length > 0 &&
-                brands.slice(0, paginationMeta.perPage).map(brand => (
+                brands.slice(start, end).map(brand => (
                   <TableRow
                     className={classes.tableRow}
                     hover
@@ -230,7 +233,7 @@ const BrandsTable = props => {
             onChangeRowsPerPage={handleRowsPerPageChange}
             page={paginationMeta.page - 1 || 0}
             rowsPerPage={paginationMeta.perPage || 50}
-            rowsPerPageOptions={[10, 25, 50, 100]}
+            rowsPerPageOptions={[10, 25, 50, 75, 120]}
           />
         )}
       </CardActions>
