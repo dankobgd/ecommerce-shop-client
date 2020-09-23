@@ -9,6 +9,7 @@ import Login from './screens/Authentication/LoginForm';
 import Signup from './screens/Authentication/SignupForm';
 import BrandRoutes from './screens/Brands/BrandRoutes';
 import CategoryRoutes from './screens/Categories/CategoryRoutes';
+import Checkout from './screens/Checkout/Checkout';
 import DashBoard from './screens/Dashboard/Dashboard';
 import Home from './screens/Home/Home';
 import NotFound from './screens/NotFound/NotFound';
@@ -37,6 +38,7 @@ function AppRoutes() {
       <AuthRoute path='/tags/*' access='private' allowed={['admin']} component={TagRoutes} layout={Main} />
       <AuthRoute path='/:productId/:productSlug' access='public' component={ProductSingle} layout={Minimal} />
       <AuthRoute path='/shop' access='public' component={Shop} layout={Minimal} />
+      <AuthRoute path='/checkout' access='private' component={Checkout} layout={Minimal} />
       <NotFound default />
     </Router>
   );

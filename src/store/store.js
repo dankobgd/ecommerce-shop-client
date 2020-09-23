@@ -3,6 +3,7 @@ import { persistStore, persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, 
 import storage from 'redux-persist/lib/storage';
 
 import brandSlice from './brand/brandSlice';
+import cartSlice from './cart/cartSlice';
 import categorySlice from './category/categorySlice';
 import productSlice from './product/productSlice';
 import tagSlice from './tag/tagSlice';
@@ -18,6 +19,7 @@ const rootReducer = combineReducers({
   [brandSlice.name]: brandSlice.reducer,
   [categorySlice.name]: categorySlice.reducer,
   [tagSlice.name]: tagSlice.reducer,
+  [cartSlice.name]: cartSlice.reducer,
 });
 
 const persistConfig = {

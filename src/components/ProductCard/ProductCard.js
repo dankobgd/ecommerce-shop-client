@@ -8,7 +8,8 @@ import { withStyles } from '@material-ui/styles';
 import { Link } from '@reach/router';
 import { useDispatch } from 'react-redux';
 
-import productSlice from '../../../store/product/productSlice';
+import cartSlice from '../../store/cart/cartSlice';
+import productSlice from '../../store/product/productSlice';
 
 const useStyles = makeStyles(theme => ({
   cardOuter: {
@@ -81,6 +82,10 @@ function ProductCard({ product }) {
     dispatch(productSlice.actions.setCurrentId(product.id));
   };
 
+  const handleAddToCart = () => {
+    dispatch(cartSlice.actions.addProductToCart(product));
+  };
+
   return (
     <div className={classes.cardOuter}>
       <div className={classes.brandWrapper}>
@@ -107,7 +112,7 @@ function ProductCard({ product }) {
 
         <div className={classes.add}>
           <CustomTooltip title={<Typography color='inherit'>Add to cart</Typography>}>
-            <Fab color='primary' variant='round' size='medium'>
+            <Fab color='primary' variant='round' size='medium' onClick={handleAddToCart}>
               <AddShoppingCartIcon />
             </Fab>
           </CustomTooltip>

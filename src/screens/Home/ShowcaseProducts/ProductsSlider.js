@@ -5,7 +5,7 @@ import ArrowBackIosIcon from '@material-ui/icons/ArrowBackIos';
 import ArrowForwardIosIcon from '@material-ui/icons/ArrowForwardIos';
 import Slider from 'react-slick';
 
-import ProductCard from './ProductCard';
+import ProductCard from '../../../components/ProductCard/ProductCard';
 
 const useStyles = makeStyles(() => ({
   arrowLeft: {
@@ -56,7 +56,7 @@ const responsiveSettings = numToShow => ({
   speed: 500,
   autoplay: true,
   slidesToShow: Number.parseInt(numToShow),
-  slidesToScroll: Number.parseInt(numToShow),
+  slidesToScroll: 1,
   arrows: true,
   centerMode: true,
   centerPadding: 0,

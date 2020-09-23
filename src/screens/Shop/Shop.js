@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { Container, Grid, makeStyles } from '@material-ui/core';
+import { Container, makeStyles } from '@material-ui/core';
 import { useDispatch, useSelector } from 'react-redux';
 
 import ScrollTopButton from '../../components/ScrollTop/ScrollTopButton';

@@ -40,8 +40,11 @@ function Home() {
     <Container>
       <Header />
 
-      <Link style={{ display: 'block', margin: '2rem' }} to='shop'>
+      <Link style={{ display: 'flex' }} to='shop'>
         Shop Page
+      </Link>
+      <Link style={{ display: 'flex' }} to='checkout'>
+        Checkout Page
       </Link>
 
       <div>

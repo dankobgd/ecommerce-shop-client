@@ -3,10 +3,10 @@ import React from 'react';
 import { makeStyles } from '@material-ui/core';
 import { useSelector } from 'react-redux';
 
+import ProductCard from '../../../components/ProductCard/ProductCard';
 import { selectPaginationMeta } from '../../../store/product/productSlice';
 import { calculatePaginationStartEndPosition } from '../../../utils/pagination';
 import PaginationRanges from '../Pagination/Pagination';
-import ProductCard from '../ProductCard/ProductCard';
 
 const useStyles = makeStyles(() => ({
   outer: {
