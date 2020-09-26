@@ -6,13 +6,13 @@ import ReactNumberFormat from 'react-number-format';
 
 import { defaultLabel } from '../../helpers';
 
-export default function FormTextField({
+export default function FormNumberField({
   name,
   label = defaultLabel(name),
   placeholder,
   margin = 'normal',
   variant = 'outlined',
-  prefix = '$',
+  prefix,
   thousandSeparator = true,
   ...rest
 }) {

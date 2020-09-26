@@ -14,7 +14,11 @@ import ShowcaseBrands from './ShowcaseBrands/ShowcaseBrands';
 import ShowcaseCategories from './ShowcaseCategories/ShowcaseCategories';
 import ShowcaseProducts from './ShowcaseProducts/ShowcaseProducts';
 
-const useStyles = makeStyles(() => ({}));
+const useStyles = makeStyles(() => ({
+  popular: {
+    marginTop: '3rem',
+  },
+}));
 
 function Home() {
   const dispatch = useDispatch();
@@ -51,7 +55,7 @@ function Home() {
         <ShowcaseCategories categories={featuredCategories} />
         <ShowcaseProducts products={featuredProducts} />
 
-        <div style={{ marginTop: '3rem' }}>
+        <div className={classes.popular}>
           <PopularProductsSection />
         </div>
 

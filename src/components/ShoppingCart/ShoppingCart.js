@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-import { Button, Divider, IconButton, Typography } from '@material-ui/core';
+import { Button, Divider, IconButton, Tooltip, Typography } from '@material-ui/core';
 import Drawer from '@material-ui/core/Drawer';
 import { makeStyles } from '@material-ui/core/styles';
 import AddIcon from '@material-ui/icons/Add';
@@ -8,11 +8,13 @@ import ClearAllIcon from '@material-ui/icons/ClearAll';
 import CloseIcon from '@material-ui/icons/Close';
 import DeleteIcon from '@material-ui/icons/Delete';
 import RemoveIcon from '@material-ui/icons/Remove';
+import { withStyles } from '@material-ui/styles';
 import { Link } from '@reach/router';
 import { useDispatch, useSelector } from 'react-redux';
 
 import cartSlice, {
   selectCartItems,
+  selectCartLength,
   selectCartTotalPrice,
   selectCartTotalQuantity,
   selectDrawerOpen,
@@ -152,6 +154,7 @@ function ShoppingCart({ anchor = 'right' }) {
   const cartTotalPrice = useSelector(selectCartTotalPrice);
   const cartTotalQuantity = useSelector(selectCartTotalQuantity);
   const cartItems = useSelector(selectCartItems);
+  const cartLength = useSelector(selectCartLength);
 
   const toggleDrawer = () => {
     dispatch(cartSlice.actions.toggleDrawer());
@@ -169,7 +172,7 @@ function ShoppingCart({ anchor = 'right' }) {
   return (
     <Drawer anchor={anchor} open={drawerOpen} onClose={toggleDrawer}>
       <div className={classes.cartContent}>
-        {cartItems.length > 0 ? (
+        {cartLength > 0 ? (
           <>
             <Typography variant='subtitle1' component='h2' className={classes.cartTitle}>
               Shopping Cart Items
@@ -239,6 +242,16 @@ function ShoppingCart({ anchor = 'right' }) {
   );
 }
 
+const CustomTooltip = withStyles(theme => ({
+  tooltip: {
+    backgroundColor: '#f5f5f9',
+    color: 'rgba(0, 0, 0, 0.87)',
+    maxWidth: 220,
+    fontSize: theme.typography.pxToRem(16),
+    border: '1px solid #dadde9',
+  },
+}))(Tooltip);
+
 function CartListItem({ product, quantity }) {
   const dispatch = useDispatch();
   const [isHover, setIsHover] = useState(false);
@@ -277,15 +290,21 @@ function CartListItem({ product, quantity }) {
             </div>
             {isHover && (
               <div className={classes.controls}>
-                <IconButton onClick={() => dispatch(cartSlice.actions.addProductToCart(product))}>
-                  <AddIcon />
-                </IconButton>
-                <IconButton onClick={() => dispatch(cartSlice.actions.removeProductFromCart(product.id))}>
-                  <RemoveIcon />
-                </IconButton>
-                <IconButton onClick={() => dispatch(cartSlice.actions.clearProductFromCart(product.id))}>
-                  <DeleteIcon />
-                </IconButton>
+                <CustomTooltip title={<Typography color='inherit'>Increase Quantity</Typography>}>
+                  <IconButton onClick={() => dispatch(cartSlice.actions.addProductToCart(product))}>
+                    <AddIcon />
+                  </IconButton>
+                </CustomTooltip>
+                <CustomTooltip title={<Typography color='inherit'>Decrease Quantity</Typography>}>
+                  <IconButton onClick={() => dispatch(cartSlice.actions.removeProductFromCart(product.id))}>
+                    <RemoveIcon />
+                  </IconButton>
+                </CustomTooltip>
+                <CustomTooltip title={<Typography color='inherit'>Remove Item</Typography>}>
+                  <IconButton onClick={() => dispatch(cartSlice.actions.clearProductFromCart(product.id))}>
+                    <DeleteIcon />
+                  </IconButton>
+                </CustomTooltip>
               </div>
             )}
           </div>

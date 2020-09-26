@@ -116,7 +116,7 @@ function EditProductForm() {
             <FormTextField name='name' fullWidth />
             <FormTextField name='slug' fullWidth />
             <FormTextField name='description' fullWidth />
-            <FormNumberField name='price' fullWidth />
+            <FormNumberField name='price' fullWidth prefix='$' />
             <FormSwitch name='inStock' />
             <FormSwitch name='isFeatured' />
             <TagsDropdown fullWidth options={tagList} />

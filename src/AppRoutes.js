@@ -13,6 +13,7 @@ import Checkout from './screens/Checkout/Checkout';
 import DashBoard from './screens/Dashboard/Dashboard';
 import Home from './screens/Home/Home';
 import NotFound from './screens/NotFound/NotFound';
+import Order from './screens/Order/Order';
 import PasswordForgot from './screens/PasswordRecovery/PasswordForgot';
 import PasswordReset from './screens/PasswordRecovery/PasswordReset';
 import ProductRoutes from './screens/Products/ProductRoutes';
@@ -39,6 +40,7 @@ function AppRoutes() {
       <AuthRoute path='/:productId/:productSlug' access='public' component={ProductSingle} layout={Minimal} />
       <AuthRoute path='/shop' access='public' component={Shop} layout={Minimal} />
       <AuthRoute path='/checkout' access='private' component={Checkout} layout={Minimal} />
+      <AuthRoute path='/checkout/order' access='private' component={Order} layout={Minimal} />
       <NotFound default />
     </Router>
   );

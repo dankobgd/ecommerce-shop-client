@@ -9,8 +9,10 @@ function ProductSingle() {
   const product = useSelector(selectCurrentProduct);
 
   React.useEffect(() => {
-    dispatch(productGetImages(product.id));
-  }, [dispatch, product.id]);
+    if (product) {
+      dispatch(productGetImages(product.id));
+    }
+  }, [dispatch, product]);
 
   return (
     <div>
