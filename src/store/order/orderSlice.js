@@ -32,8 +32,6 @@ export const orderGetAllForUser = createAsyncThunk(
   `${sliceName}/getOrdersForUser`,
   async ({ id, params }, { rejectWithValue }) => {
     try {
-      console.log('wtf shit ass id: ', id);
-      console.log('wtf shit ass params: ', params);
       const orders = await api.users.getOrders(id, params);
       return orders;
     } catch (error) {
@@ -86,7 +84,6 @@ export const selectCurrentEditOrder = createSelector(
   (entities, editId) => entities[editId]
 );
 
-export const selectUserOrders = uid =>
-  createSelector([selectOrderEntities], entities => entities.map(ord => ord.userId === uid));
+export const selectManyOrders = ids => createSelector(selectOrderEntities, entities => ids.map(id => entities[id]));
 
 export default orderSlice;

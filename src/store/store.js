@@ -7,6 +7,7 @@ import cartSlice from './cart/cartSlice';
 import categorySlice from './category/categorySlice';
 import orderSlice from './order/orderSlice';
 import productSlice from './product/productSlice';
+import productImageSlice from './product_image/productImageSlice';
 import reviewSlice from './review/reviewSlice';
 import tagSlice from './tag/tagSlice';
 import toastSlice from './toast/toastSlice';
@@ -24,6 +25,7 @@ const rootReducer = combineReducers({
   [cartSlice.name]: cartSlice.reducer,
   [orderSlice.name]: orderSlice.reducer,
   [reviewSlice.name]: reviewSlice.reducer,
+  [productImageSlice.name]: productImageSlice.reducer,
 });
 
 const persistConfig = {

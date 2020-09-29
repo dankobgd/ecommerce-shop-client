@@ -72,24 +72,6 @@ export const productDelete = createAsyncThunk(`${sliceName}/delete`, async (id, 
   }
 });
 
-export const productGetTags = createAsyncThunk(`${sliceName}/getTags`, async (id, { rejectWithValue }) => {
-  try {
-    const tags = await api.products.getTags(id);
-    return tags;
-  } catch (error) {
-    return rejectWithValue(error);
-  }
-});
-
-export const productGetImages = createAsyncThunk(`${sliceName}/getImages`, async (id, { rejectWithValue }) => {
-  try {
-    const images = await api.products.getImages(id);
-    return images;
-  } catch (error) {
-    return rejectWithValue(error);
-  }
-});
-
 export const productGetProperties = createAsyncThunk(`${sliceName}/getProperties`, async (_, { rejectWithValue }) => {
   try {
     const props = await api.products.getProperties();
@@ -127,6 +109,27 @@ const productSlice = createSlice({
   name: sliceName,
   initialState,
   reducers: {
+    setTagIds: (state, { payload }) => {
+      const idx = payload[0]?.productId;
+      const idsArr = payload.map(x => x.id);
+      if (idsArr.length > 0) {
+        state.entities[idx].tags = idsArr;
+      }
+    },
+    setImageIds: (state, { payload }) => {
+      const idx = payload[0]?.productId;
+      const idsArr = payload.map(x => x.id);
+      if (idsArr.length > 0) {
+        state.entities[idx].images = idsArr;
+      }
+    },
+    setReviewIds: (state, { payload }) => {
+      const idx = payload[0]?.productId;
+      const idsArr = payload.map(x => x.id);
+      if (idsArr.length > 0) {
+        state.entities[idx].reviews = idsArr;
+      }
+    },
     setEditId: (state, { payload }) => {
       state.editId = payload;
     },
@@ -149,20 +152,6 @@ const productSlice = createSlice({
     },
     [productUpdate.fulfilled]: productAdapter.upsertOne,
     [productDelete.fulfilled]: productAdapter.removeOne,
-    [productGetTags.fulfilled]: (state, { payload }) => {
-      if (payload.length > 0) {
-        const idx = payload[0].productId;
-        const tagIds = payload.map(x => x.id);
-        state.entities[idx].tags = tagIds;
-      }
-    },
-    [productGetImages.fulfilled]: (state, { payload }) => {
-      if (payload.length > 0) {
-        const idx = payload[0].productId;
-        const imgIds = payload.map(x => x.id);
-        state.entities[idx].images = imgIds;
-      }
-    },
     [productGetProperties.fulfilled]: (state, { payload }) => {
       state.properties = payload;
     },

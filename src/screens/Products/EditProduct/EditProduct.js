@@ -19,8 +19,8 @@ import ErrorMessage from '../../../components/Message/ErrorMessage';
 import { useFormServerErrors } from '../../../hooks/useFormServerErrors';
 import { selectAllBrands, brandGetAll } from '../../../store/brand/brandSlice';
 import { selectAllCategories, categoryGetAll } from '../../../store/category/categorySlice';
-import { productCreate, selectCurrentEditProduct, productGetTags } from '../../../store/product/productSlice';
-import { selectAllTags, tagGetAll, selectManyTags } from '../../../store/tag/tagSlice';
+import { productCreate, selectCurrentEditProduct } from '../../../store/product/productSlice';
+import { selectAllTags, tagGetAll, selectManyTags, tagGetAllForProduct } from '../../../store/tag/tagSlice';
 import { selectUIState } from '../../../store/ui';
 import { rules } from '../../../utils/validation';
 
@@ -80,7 +80,7 @@ function EditProductForm() {
   const { handleSubmit, setError } = methods;
 
   React.useEffect(() => {
-    dispatch(productGetTags(product.id));
+    dispatch(tagGetAllForProduct(product.id));
     dispatch(brandGetAll());
     dispatch(categoryGetAll());
     dispatch(tagGetAll());

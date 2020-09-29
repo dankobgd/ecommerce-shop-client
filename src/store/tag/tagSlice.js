@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk, createSelector, createEntityAdapter } from '@reduxjs/toolkit';
 
 import api from '../../api';
+import productSlice from '../product/productSlice';
 import toastSlice, { successToast } from '../toast/toastSlice';
 
 export const sliceName = 'tags';
@@ -56,6 +57,19 @@ export const tagDelete = createAsyncThunk(`${sliceName}/delete`, async (id, { di
   }
 });
 
+export const tagGetAllForProduct = createAsyncThunk(
+  `${sliceName}/getAllForProduct`,
+  async (id, { dispatch, rejectWithValue }) => {
+    try {
+      const tags = await api.products.getTags(id);
+      dispatch(productSlice.actions.setTagIds(tags));
+      return tags;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
 export const tagAdapter = createEntityAdapter();
 
 const initialState = tagAdapter.getInitialState({
@@ -77,6 +91,9 @@ const tagSlice = createSlice({
     [tagGetAll.fulfilled]: (state, { payload }) => {
       tagAdapter.upsertMany(state, payload.data);
       state.pagination = payload.meta;
+    },
+    [tagGetAllForProduct.fulfilled]: (state, { payload }) => {
+      tagAdapter.upsertMany(state, payload);
     },
     [tagUpdate.fulfilled]: tagAdapter.upsertOne,
     [tagDelete.fulfilled]: tagAdapter.removeOne,

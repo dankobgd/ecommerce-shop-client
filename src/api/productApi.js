@@ -33,6 +33,10 @@ export default {
     return apiClient.get(`v1/products/${id}/images`);
   },
 
+  async getReviews(id) {
+    return apiClient.get(`v1/products/${id}/reviews`);
+  },
+
   async getProperties() {
     return apiClient.get(`v1/products/properties`);
   },

@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk, createSelector, createEntityAdapter } from '@reduxjs/toolkit';
 
 import api from '../../api';
+import productSlice from '../product/productSlice';
 import toastSlice, { successToast } from '../toast/toastSlice';
 
 export const sliceName = 'reviews';
@@ -56,6 +57,19 @@ export const reviewDelete = createAsyncThunk(`${sliceName}/delete`, async (id, {
   }
 });
 
+export const reviewGetAllForProduct = createAsyncThunk(
+  `${sliceName}/getAllForProduct`,
+  async (id, { dispatch, rejectWithValue }) => {
+    try {
+      const reviews = await api.products.getReviews(id);
+      dispatch(productSlice.actions.setReviewIds(reviews));
+      return reviews;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
 export const reviewAdapter = createEntityAdapter();
 
 const initialState = reviewAdapter.getInitialState({
@@ -78,6 +92,9 @@ const reviewSlice = createSlice({
       reviewAdapter.upsertMany(state, payload.data);
       state.pagination = payload.meta;
     },
+    [reviewGetAllForProduct.fulfilled]: (state, { payload }) => {
+      reviewAdapter.upsertMany(state, payload);
+    },
     [reviewUpdate.fulfilled]: reviewAdapter.upsertOne,
     [reviewDelete.fulfilled]: reviewAdapter.removeOne,
   },
@@ -98,5 +115,7 @@ export const selectCurrentEditReview = createSelector(
   [selectReviewEntities, selectEditId],
   (entities, editId) => entities[editId]
 );
+
+export const selectManyReviews = ids => createSelector(selectReviewEntities, entities => ids.map(id => entities[id]));
 
 export default reviewSlice;

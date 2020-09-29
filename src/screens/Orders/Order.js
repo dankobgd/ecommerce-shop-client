@@ -65,8 +65,6 @@ function CheckoutForm() {
   const onSubmit = async (data, event) => {
     event.preventDefault();
 
-    console.log(data);
-
     if (!stripe || !elements) {
       return;
     }
