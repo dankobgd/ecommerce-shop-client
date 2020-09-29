@@ -6,8 +6,9 @@ import Typography from '@material-ui/core/Typography';
 import AddShoppingCartIcon from '@material-ui/icons/AddShoppingCart';
 import { withStyles } from '@material-ui/styles';
 import { Link } from '@reach/router';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 
+import { selectBrandById } from '../../store/brand/brandSlice';
 import cartSlice from '../../store/cart/cartSlice';
 import productSlice from '../../store/product/productSlice';
 
@@ -77,6 +78,7 @@ const CustomTooltip = withStyles(theme => ({
 function ProductCard({ product }) {
   const classes = useStyles();
   const dispatch = useDispatch();
+  const brand = useSelector(s => selectBrandById(s, product.brand));
 
   const handleCardClick = () => {
     dispatch(productSlice.actions.setCurrentId(product.id));
@@ -89,19 +91,23 @@ function ProductCard({ product }) {
   return (
     <div className={classes.cardOuter}>
       <div className={classes.brandWrapper}>
-        <CustomTooltip title={<Typography color='inherit'>{product.brand.name}</Typography>}>
+        <CustomTooltip title={<Typography color='inherit'>{brand?.name}</Typography>}>
           <div className={classes.brandLogo}>
-            <img src={product.brand.logo} alt={product.brand.name} />
+            <img src={brand?.logo} alt={brand?.name || 'brand logo'} />
           </div>
         </CustomTooltip>
       </div>
-      <Link to={`${product.id}/${product.slug}`} onClick={handleCardClick}>
+      <Link to={`/product/${product.id}/${product.slug}`} onClick={handleCardClick}>
         <div className={classes.cardMedia}>
           <img src={product.imageUrl} alt={product.name} />
         </div>
       </Link>
       <div className={classes.cardContent}>
-        <Link to={`${product.id}/${product.slug}`} onClick={handleCardClick} style={{ textDecoration: 'none' }}>
+        <Link
+          to={`/product/${product.id}/${product.slug}`}
+          onClick={handleCardClick}
+          style={{ textDecoration: 'none' }}
+        >
           <Typography variant='subtitle1' className={classes.productName}>
             {product.name}
           </Typography>

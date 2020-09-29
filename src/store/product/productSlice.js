@@ -1,12 +1,20 @@
 import { createSlice, createAsyncThunk, createSelector, createEntityAdapter } from '@reduxjs/toolkit';
+import { normalize, schema } from 'normalizr';
 
 import api from '../../api';
 import toastSlice, { successToast } from '../toast/toastSlice';
 
-export const sliceName = 'product';
+const brandSchema = new schema.Entity('brands');
+const categorySchema = new schema.Entity('categories');
+const productSchema = new schema.Entity('products', {
+  brand: brandSchema,
+  category: categorySchema,
+});
+
+export const sliceName = 'products';
 
 export const productCreate = createAsyncThunk(
-  `${sliceName}/productCreate`,
+  `${sliceName}/create`,
   async (formData, { dispatch, rejectWithValue }) => {
     try {
       const product = await api.products.create(formData);
@@ -19,7 +27,7 @@ export const productCreate = createAsyncThunk(
 );
 
 export const productUpdate = createAsyncThunk(
-  `${sliceName}/productUpdate`,
+  `${sliceName}/update`,
   async ({ id, details }, { dispatch, rejectWithValue }) => {
     try {
       const product = await api.products.update(id, details);
@@ -31,16 +39,21 @@ export const productUpdate = createAsyncThunk(
   }
 );
 
-export const productGetAll = createAsyncThunk(`${sliceName}/productGetAll`, async (params, { rejectWithValue }) => {
+export const productGetAll = createAsyncThunk(`${sliceName}/getAll`, async (params, { rejectWithValue }) => {
   try {
     const products = await api.products.getAll(params);
-    return products;
+    const { entities } = normalize(products.data, [productSchema]);
+
+    return {
+      entities,
+      meta: products.meta,
+    };
   } catch (error) {
     return rejectWithValue(error);
   }
 });
 
-export const productGet = createAsyncThunk(`${sliceName}/productGet`, async (id, { rejectWithValue }) => {
+export const productGet = createAsyncThunk(`${sliceName}/get`, async (id, { rejectWithValue }) => {
   try {
     const product = await api.products.get(id);
     return product;
@@ -49,20 +62,17 @@ export const productGet = createAsyncThunk(`${sliceName}/productGet`, async (id,
   }
 });
 
-export const productDelete = createAsyncThunk(
-  `${sliceName}/productDelete`,
-  async (id, { dispatch, rejectWithValue }) => {
-    try {
-      await api.products.delete(id);
-      dispatch(toastSlice.actions.addToast(successToast('Product deleted')));
-      return id;
-    } catch (error) {
-      return rejectWithValue(error);
-    }
+export const productDelete = createAsyncThunk(`${sliceName}/delete`, async (id, { dispatch, rejectWithValue }) => {
+  try {
+    await api.products.delete(id);
+    dispatch(toastSlice.actions.addToast(successToast('Product deleted')));
+    return id;
+  } catch (error) {
+    return rejectWithValue(error);
   }
-);
+});
 
-export const productGetTags = createAsyncThunk(`${sliceName}/productGetTags`, async (id, { rejectWithValue }) => {
+export const productGetTags = createAsyncThunk(`${sliceName}/getTags`, async (id, { rejectWithValue }) => {
   try {
     const tags = await api.products.getTags(id);
     return tags;
@@ -71,7 +81,7 @@ export const productGetTags = createAsyncThunk(`${sliceName}/productGetTags`, as
   }
 });
 
-export const productGetImages = createAsyncThunk(`${sliceName}/productGetImages`, async (id, { rejectWithValue }) => {
+export const productGetImages = createAsyncThunk(`${sliceName}/getImages`, async (id, { rejectWithValue }) => {
   try {
     const images = await api.products.getImages(id);
     return images;
@@ -80,29 +90,28 @@ export const productGetImages = createAsyncThunk(`${sliceName}/productGetImages`
   }
 });
 
-export const productGetProperties = createAsyncThunk(
-  `${sliceName}/productGetProperties`,
-  async (_, { rejectWithValue }) => {
-    try {
-      const props = await api.products.getProperties();
-      return props;
-    } catch (error) {
-      return rejectWithValue(error);
-    }
+export const productGetProperties = createAsyncThunk(`${sliceName}/getProperties`, async (_, { rejectWithValue }) => {
+  try {
+    const props = await api.products.getProperties();
+    return props;
+  } catch (error) {
+    return rejectWithValue(error);
   }
-);
+});
 
-export const productGetFeatured = createAsyncThunk(
-  `${sliceName}/productGetFeatured`,
-  async (params, { rejectWithValue }) => {
-    try {
-      const featured = await api.products.getFeatured(params);
-      return featured;
-    } catch (error) {
-      return rejectWithValue(error);
-    }
+export const productGetFeatured = createAsyncThunk(`${sliceName}/getFeatured`, async (params, { rejectWithValue }) => {
+  try {
+    const featured = await api.products.getFeatured(params);
+    const { entities } = normalize(featured.data, [productSchema]);
+
+    return {
+      entities,
+      meta: featured.meta,
+    };
+  } catch (error) {
+    return rejectWithValue(error);
   }
-);
+});
 
 export const productAdapter = createEntityAdapter();
 
@@ -135,7 +144,7 @@ const productSlice = createSlice({
     [productCreate.fulfilled]: productAdapter.addOne,
     [productGet.fulfilled]: productAdapter.upsertOne,
     [productGetAll.fulfilled]: (state, { payload }) => {
-      productAdapter.upsertMany(state, payload.data);
+      productAdapter.upsertMany(state, payload.entities.products);
       state.pagination = payload.meta;
     },
     [productUpdate.fulfilled]: productAdapter.upsertOne,
@@ -158,7 +167,7 @@ const productSlice = createSlice({
       state.properties = payload;
     },
     [productGetFeatured.fulfilled]: (state, { payload }) => {
-      productAdapter.upsertMany(state, payload.data);
+      productAdapter.upsertMany(state, payload.entities.products);
       state.pagination = payload.meta;
     },
   },

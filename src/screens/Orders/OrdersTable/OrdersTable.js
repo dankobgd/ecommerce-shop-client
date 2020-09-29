@@ -26,7 +26,8 @@ import clsx from 'clsx';
 import { nanoid } from 'nanoid';
 import { useDispatch, useSelector } from 'react-redux';
 
-import tagSlice, { tagDelete, tagGetAll, selectPaginationMeta } from '../../../store/tag/tagSlice';
+import orderSlice, { orderGetAll, orderGetAllForUser, selectPaginationMeta } from '../../../store/order/orderSlice';
+import { selectUserProfile } from '../../../store/user/userSlice';
 import { calculatePaginationStartEndPosition } from '../../../utils/pagination';
 
 const useStyles = makeStyles(theme => ({
@@ -50,12 +51,13 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
-const TagsTable = props => {
-  const { className, tags, ...rest } = props;
+const OrdersTable = props => {
+  const { className, orders, ...rest } = props;
   const classes = useStyles();
   const dispatch = useDispatch();
+  const user = useSelector(selectUserProfile);
   const paginationMeta = useSelector(selectPaginationMeta);
-  const [selectedTags, setSelectedTags] = useState([]);
+  const [selectedOrders, setSelectedOrders] = useState([]);
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const handleDialogOpen = () => {
@@ -70,42 +72,50 @@ const TagsTable = props => {
     let selected;
 
     if (event.target.checked) {
-      selected = tags.map(tag => tag.id);
+      selected = orders.map(order => order.id);
     } else {
       selected = [];
     }
 
-    setSelectedTags(selected);
+    setSelectedOrders(selected);
   };
 
   const handleSelectOne = (event, id) => {
-    const selectedIndex = selectedTags.indexOf(id);
-    let newSelectedTags = [];
+    const selectedIndex = selectedOrders.indexOf(id);
+    let newSelectedOrders = [];
 
     if (selectedIndex === -1) {
-      newSelectedTags = newSelectedTags.concat(selectedTags, id);
+      newSelectedOrders = newSelectedOrders.concat(selectedOrders, id);
     } else if (selectedIndex === 0) {
-      newSelectedTags = newSelectedTags.concat(selectedTags.slice(1));
-    } else if (selectedIndex === selectedTags.length - 1) {
-      newSelectedTags = newSelectedTags.concat(selectedTags.slice(0, -1));
+      newSelectedOrders = newSelectedOrders.concat(selectedOrders.slice(1));
+    } else if (selectedIndex === selectedOrders.length - 1) {
+      newSelectedOrders = newSelectedOrders.concat(selectedOrders.slice(0, -1));
     } else if (selectedIndex > 0) {
-      newSelectedTags = newSelectedTags.concat(
-        selectedTags.slice(0, selectedIndex),
-        selectedTags.slice(selectedIndex + 1)
+      newSelectedOrders = newSelectedOrders.concat(
+        selectedOrders.slice(0, selectedIndex),
+        selectedOrders.slice(selectedIndex + 1)
       );
     }
 
-    setSelectedTags(newSelectedTags);
+    setSelectedOrders(newSelectedOrders);
   };
 
   const handlePageChange = (e, page) => {
     const params = new URLSearchParams({ per_page: paginationMeta.perPage, page: page + 1 });
-    dispatch(tagGetAll(params));
+    if (user.role === 'admin') {
+      dispatch(orderGetAll(params));
+    } else {
+      dispatch(orderGetAllForUser({ id: user.id, params }));
+    }
   };
 
   const handleRowsPerPageChange = e => {
     const params = new URLSearchParams({ per_page: e.target.value });
-    dispatch(tagGetAll(params));
+    if (user.role === 'admin') {
+      dispatch(orderGetAll(params));
+    } else {
+      dispatch(orderGetAllForUser({ id: user.id, params }));
+    }
   };
 
   const { start, end } = calculatePaginationStartEndPosition(paginationMeta?.page, paginationMeta?.perPage);
@@ -119,48 +129,80 @@ const TagsTable = props => {
               <TableRow>
                 <TableCell padding='checkbox'>
                   <Checkbox
-                    checked={selectedTags.length === tags.length}
+                    checked={selectedOrders.length === orders.length}
                     color='primary'
-                    indeterminate={selectedTags.length > 0 && selectedTags.length < tags.length}
+                    indeterminate={selectedOrders.length > 0 && selectedOrders.length < orders.length}
                     onChange={handleSelectAll}
                   />
                 </TableCell>
                 <TableCell>ID</TableCell>
-                <TableCell>Name</TableCell>
-                <TableCell>Slug</TableCell>
-                <TableCell>Description</TableCell>
+                <TableCell>Status</TableCell>
+                <TableCell>Total</TableCell>
+                <TableCell>ShippedAt</TableCell>
+                <TableCell>Billing Line1 </TableCell>
+                <TableCell>Billing Line2 </TableCell>
+                <TableCell>Billing City </TableCell>
+                <TableCell>Billing Country </TableCell>
+                <TableCell>Billing State </TableCell>
+                <TableCell>Billing ZIP </TableCell>
+                <TableCell>Billing Latitude </TableCell>
+                <TableCell>Billing Longitude</TableCell>
+                <TableCell>Shipping Line1 </TableCell>
+                <TableCell>Shipping Line2 </TableCell>
+                <TableCell>Shipping City </TableCell>
+                <TableCell>Shipping Country </TableCell>
+                <TableCell>Shipping State </TableCell>
+                <TableCell>Shipping ZIP </TableCell>
+                <TableCell>Shipping Latitude </TableCell>
+                <TableCell>Shipping Longitude</TableCell>
                 <TableCell />
               </TableRow>
             </TableHead>
             <TableBody>
               {paginationMeta &&
-                tags.length > 0 &&
-                tags.slice(start, end).map(tag => (
+                orders.length > 0 &&
+                orders.slice(start, end).map(order => (
                   <TableRow
                     className={classes.tableRow}
                     hover
                     key={nanoid()}
-                    selected={selectedTags.indexOf(tag.id) !== -1}
+                    selected={selectedOrders.indexOf(order.id) !== -1}
                   >
                     <TableCell padding='checkbox'>
                       <Checkbox
-                        checked={selectedTags.indexOf(tag.id) !== -1}
+                        checked={selectedOrders.indexOf(order.id) !== -1}
                         color='primary'
-                        onChange={event => handleSelectOne(event, tag.id)}
+                        onChange={event => handleSelectOne(event, order.id)}
                         value='true'
                       />
                     </TableCell>
-                    <TableCell>{tag.id}</TableCell>
-                    <TableCell>{tag.name}</TableCell>
-                    <TableCell>{tag.slug}</TableCell>
-                    <TableCell>{tag.description}</TableCell>
+                    <TableCell>{order.id}</TableCell>
+                    <TableCell>{order.status}</TableCell>
+                    <TableCell>${order.total}</TableCell>
+                    <TableCell>{order.shippedAt}</TableCell>
+                    <TableCell>{order.billingAddressLine1}</TableCell>
+                    <TableCell>{order.billingAddressLine2}</TableCell>
+                    <TableCell>{order.billingAddressCity}</TableCell>
+                    <TableCell>{order.billingAddressCountry}</TableCell>
+                    <TableCell>{order.billingAddressState}</TableCell>
+                    <TableCell>{order.billingAddressZip}</TableCell>
+                    <TableCell>{order.billingAddressLatitude}</TableCell>
+                    <TableCell>{order.billingAddressLongitude}</TableCell>
+                    <TableCell>{order.shippingAddressLine1}</TableCell>
+                    <TableCell>{order.shippingAddressLine2}</TableCell>
+                    <TableCell>{order.shippingAddressCity}</TableCell>
+                    <TableCell>{order.shippingAddressCountry}</TableCell>
+                    <TableCell>{order.shippingAddressState}</TableCell>
+                    <TableCell>{order.shippingAddressZip}</TableCell>
+                    <TableCell>{order.shippingAddressLatitude}</TableCell>
+                    <TableCell>{order.shippingAddressLongitude}</TableCell>
                     <TableCell>
-                      <Link to={`${tag.id}/${tag.slug}/edit`} style={{ textDecoration: 'none' }}>
+                      <Link to={`${order.id}/${order.slug}/edit`} style={{ textDecoration: 'none' }}>
                         <Button
                           variant='outlined'
                           color='secondary'
                           startIcon={<EditIcon />}
-                          onClick={() => dispatch(tagSlice.actions.setEditId(tag.id))}
+                          onClick={() => dispatch(orderSlice.actions.setEditId(order.id))}
                         >
                           Edit
                         </Button>
@@ -178,13 +220,13 @@ const TagsTable = props => {
                       <Dialog
                         open={dialogOpen}
                         onClose={handleDialogClose}
-                        aria-labelledby='delete tag dialog'
-                        aria-describedby='deletes the tag'
+                        aria-labelledby='delete order dialog'
+                        aria-describedby='deletes the order'
                       >
-                        <DialogTitle id='delete tag dialog'>Delete Tag?</DialogTitle>
+                        <DialogTitle id='delete order dialog'>Delete Order?</DialogTitle>
                         <DialogContent>
                           <DialogContentText>
-                            Are you sure you want to delete the tag <strong>{tag.name}</strong> ?
+                            Are you sure you want to delete the order <strong>{order.name}</strong> ?
                           </DialogContentText>
                         </DialogContent>
                         <DialogActions>
@@ -194,7 +236,7 @@ const TagsTable = props => {
                           <Button
                             onClick={() => {
                               handleDialogClose();
-                              dispatch(tagDelete(tag.id));
+                              dispatch(order(order.id));
                             }}
                             color='primary'
                             autoFocus
@@ -227,4 +269,4 @@ const TagsTable = props => {
   );
 };
 
-export default TagsTable;
+export default OrdersTable;

@@ -26,7 +26,7 @@ import clsx from 'clsx';
 import { nanoid } from 'nanoid';
 import { useDispatch, useSelector } from 'react-redux';
 
-import tagSlice, { tagDelete, tagGetAll, selectPaginationMeta } from '../../../store/tag/tagSlice';
+import reviewSlice, { reviewDelete, reviewGetAll, selectPaginationMeta } from '../../../store/review/reviewSlice';
 import { calculatePaginationStartEndPosition } from '../../../utils/pagination';
 
 const useStyles = makeStyles(theme => ({
@@ -50,12 +50,12 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
-const TagsTable = props => {
-  const { className, tags, ...rest } = props;
+const ReviewsTable = props => {
+  const { className, reviews, ...rest } = props;
   const classes = useStyles();
   const dispatch = useDispatch();
   const paginationMeta = useSelector(selectPaginationMeta);
-  const [selectedTags, setSelectedTags] = useState([]);
+  const [selectedReviews, setSelectedReviews] = useState([]);
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const handleDialogOpen = () => {
@@ -70,42 +70,42 @@ const TagsTable = props => {
     let selected;
 
     if (event.target.checked) {
-      selected = tags.map(tag => tag.id);
+      selected = reviews.map(rev => rev.id);
     } else {
       selected = [];
     }
 
-    setSelectedTags(selected);
+    setSelectedReviews(selected);
   };
 
   const handleSelectOne = (event, id) => {
-    const selectedIndex = selectedTags.indexOf(id);
-    let newSelectedTags = [];
+    const selectedIndex = selectedReviews.indexOf(id);
+    let newSelectedReviews = [];
 
     if (selectedIndex === -1) {
-      newSelectedTags = newSelectedTags.concat(selectedTags, id);
+      newSelectedReviews = newSelectedReviews.concat(selectedReviews, id);
     } else if (selectedIndex === 0) {
-      newSelectedTags = newSelectedTags.concat(selectedTags.slice(1));
-    } else if (selectedIndex === selectedTags.length - 1) {
-      newSelectedTags = newSelectedTags.concat(selectedTags.slice(0, -1));
+      newSelectedReviews = newSelectedReviews.concat(selectedReviews.slice(1));
+    } else if (selectedIndex === selectedReviews.length - 1) {
+      newSelectedReviews = newSelectedReviews.concat(selectedReviews.slice(0, -1));
     } else if (selectedIndex > 0) {
-      newSelectedTags = newSelectedTags.concat(
-        selectedTags.slice(0, selectedIndex),
-        selectedTags.slice(selectedIndex + 1)
+      newSelectedReviews = newSelectedReviews.concat(
+        selectedReviews.slice(0, selectedIndex),
+        selectedReviews.slice(selectedIndex + 1)
       );
     }
 
-    setSelectedTags(newSelectedTags);
+    setSelectedReviews(newSelectedReviews);
   };
 
   const handlePageChange = (e, page) => {
     const params = new URLSearchParams({ per_page: paginationMeta.perPage, page: page + 1 });
-    dispatch(tagGetAll(params));
+    dispatch(reviewGetAll(params));
   };
 
   const handleRowsPerPageChange = e => {
     const params = new URLSearchParams({ per_page: e.target.value });
-    dispatch(tagGetAll(params));
+    dispatch(reviewGetAll(params));
   };
 
   const { start, end } = calculatePaginationStartEndPosition(paginationMeta?.page, paginationMeta?.perPage);
@@ -119,48 +119,48 @@ const TagsTable = props => {
               <TableRow>
                 <TableCell padding='checkbox'>
                   <Checkbox
-                    checked={selectedTags.length === tags.length}
+                    checked={selectedReviews.length === reviews.length}
                     color='primary'
-                    indeterminate={selectedTags.length > 0 && selectedTags.length < tags.length}
+                    indeterminate={selectedReviews.length > 0 && selectedReviews.length < reviews.length}
                     onChange={handleSelectAll}
                   />
                 </TableCell>
                 <TableCell>ID</TableCell>
-                <TableCell>Name</TableCell>
-                <TableCell>Slug</TableCell>
-                <TableCell>Description</TableCell>
+                <TableCell>ProductID</TableCell>
+                <TableCell>Rating</TableCell>
+                <TableCell>Comment</TableCell>
                 <TableCell />
               </TableRow>
             </TableHead>
             <TableBody>
               {paginationMeta &&
-                tags.length > 0 &&
-                tags.slice(start, end).map(tag => (
+                reviews.length > 0 &&
+                reviews.slice(start, end).map(review => (
                   <TableRow
                     className={classes.tableRow}
                     hover
                     key={nanoid()}
-                    selected={selectedTags.indexOf(tag.id) !== -1}
+                    selected={selectedReviews.indexOf(review.id) !== -1}
                   >
                     <TableCell padding='checkbox'>
                       <Checkbox
-                        checked={selectedTags.indexOf(tag.id) !== -1}
+                        checked={selectedReviews.indexOf(review.id) !== -1}
                         color='primary'
-                        onChange={event => handleSelectOne(event, tag.id)}
+                        onChange={event => handleSelectOne(event, review.id)}
                         value='true'
                       />
                     </TableCell>
-                    <TableCell>{tag.id}</TableCell>
-                    <TableCell>{tag.name}</TableCell>
-                    <TableCell>{tag.slug}</TableCell>
-                    <TableCell>{tag.description}</TableCell>
+                    <TableCell>{review.id}</TableCell>
+                    <TableCell>{review.productId}</TableCell>
+                    <TableCell>{review.rating}</TableCell>
+                    <TableCell>{review.comment}</TableCell>
                     <TableCell>
-                      <Link to={`${tag.id}/${tag.slug}/edit`} style={{ textDecoration: 'none' }}>
+                      <Link to={`${review.id}/edit`} style={{ textDecoration: 'none' }}>
                         <Button
                           variant='outlined'
                           color='secondary'
                           startIcon={<EditIcon />}
-                          onClick={() => dispatch(tagSlice.actions.setEditId(tag.id))}
+                          onClick={() => dispatch(reviewSlice.actions.setEditId(review.id))}
                         >
                           Edit
                         </Button>
@@ -178,13 +178,13 @@ const TagsTable = props => {
                       <Dialog
                         open={dialogOpen}
                         onClose={handleDialogClose}
-                        aria-labelledby='delete tag dialog'
-                        aria-describedby='deletes the tag'
+                        aria-labelledby='delete review dialog'
+                        aria-describedby='deletes the review'
                       >
-                        <DialogTitle id='delete tag dialog'>Delete Tag?</DialogTitle>
+                        <DialogTitle id='delete review dialog'>Delete Review?</DialogTitle>
                         <DialogContent>
                           <DialogContentText>
-                            Are you sure you want to delete the tag <strong>{tag.name}</strong> ?
+                            Are you sure you want to delete the review <strong>{review.name}</strong> ?
                           </DialogContentText>
                         </DialogContent>
                         <DialogActions>
@@ -194,7 +194,7 @@ const TagsTable = props => {
                           <Button
                             onClick={() => {
                               handleDialogClose();
-                              dispatch(tagDelete(tag.id));
+                              dispatch(reviewDelete(review.id));
                             }}
                             color='primary'
                             autoFocus
@@ -227,4 +227,4 @@ const TagsTable = props => {
   );
 };
 
-export default TagsTable;
+export default ReviewsTable;

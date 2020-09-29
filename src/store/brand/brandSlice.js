@@ -3,23 +3,20 @@ import { createSlice, createAsyncThunk, createSelector, createEntityAdapter } fr
 import api from '../../api';
 import toastSlice, { successToast } from '../toast/toastSlice';
 
-export const sliceName = 'brand';
+export const sliceName = 'brands';
 
-export const brandCreate = createAsyncThunk(
-  `${sliceName}/brandCreate`,
-  async (formData, { dispatch, rejectWithValue }) => {
-    try {
-      const brand = await api.brands.create(formData);
-      dispatch(toastSlice.actions.addToast(successToast('Brand created')));
-      return brand;
-    } catch (error) {
-      return rejectWithValue(error);
-    }
+export const brandCreate = createAsyncThunk(`${sliceName}/create`, async (formData, { dispatch, rejectWithValue }) => {
+  try {
+    const brand = await api.brands.create(formData);
+    dispatch(toastSlice.actions.addToast(successToast('Brand created')));
+    return brand;
+  } catch (error) {
+    return rejectWithValue(error);
   }
-);
+});
 
 export const brandUpdate = createAsyncThunk(
-  `${sliceName}/brandUpdate`,
+  `${sliceName}/update`,
   async ({ id, details }, { dispatch, rejectWithValue }) => {
     try {
       const brand = await api.brands.update(id, details);
@@ -31,7 +28,7 @@ export const brandUpdate = createAsyncThunk(
   }
 );
 
-export const brandGetAll = createAsyncThunk(`${sliceName}/brandGetAll`, async (params, { rejectWithValue }) => {
+export const brandGetAll = createAsyncThunk(`${sliceName}/getAll`, async (params, { rejectWithValue }) => {
   try {
     const brands = await api.brands.getAll(params);
     return brands;
@@ -40,7 +37,7 @@ export const brandGetAll = createAsyncThunk(`${sliceName}/brandGetAll`, async (p
   }
 });
 
-export const brandGet = createAsyncThunk(`${sliceName}/brandGet`, async (id, { rejectWithValue }) => {
+export const brandGet = createAsyncThunk(`${sliceName}/get`, async (id, { rejectWithValue }) => {
   try {
     const brand = await api.brands.get(id);
     return brand;
@@ -49,7 +46,7 @@ export const brandGet = createAsyncThunk(`${sliceName}/brandGet`, async (id, { r
   }
 });
 
-export const brandDelete = createAsyncThunk(`${sliceName}/brandDelete`, async (id, { dispatch, rejectWithValue }) => {
+export const brandDelete = createAsyncThunk(`${sliceName}/delete`, async (id, { dispatch, rejectWithValue }) => {
   try {
     await api.brands.delete(id);
     dispatch(toastSlice.actions.addToast(successToast('Brand deleted')));

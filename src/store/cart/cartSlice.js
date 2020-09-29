@@ -52,11 +52,9 @@ export const selectCartItems = state => state[sliceName].items;
 export const selectDrawerOpen = state => state[sliceName].drawerOpen;
 export const selectCartLength = createSelector(selectCartItems, items => items?.length);
 export const selectCartTotalPrice = createSelector(selectCartItems, items =>
-  // eslint-disable-next-line
   items.reduce((total, item) => total + item.product.price * item.quantity, 0)
 );
 export const selectCartTotalQuantity = createSelector(selectCartItems, items =>
-  // eslint-disable-next-line
   items.reduce((total, item) => total + item.quantity, 0)
 );
 export const selectCartProducts = createSelector(selectCartItems, items => items.map(x => x.product));

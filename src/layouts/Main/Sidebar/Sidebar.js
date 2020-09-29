@@ -7,8 +7,10 @@ import ClassIcon from '@material-ui/icons/Class';
 import DashboardIcon from '@material-ui/icons/Dashboard';
 import LabelIcon from '@material-ui/icons/Label';
 import PeopleIcon from '@material-ui/icons/People';
+import RateReviewIcon from '@material-ui/icons/RateReview';
 import SettingsIcon from '@material-ui/icons/Settings';
 import ShoppingBasketIcon from '@material-ui/icons/ShoppingBasket';
+import StoreIcon from '@material-ui/icons/Store';
 import { makeStyles } from '@material-ui/styles';
 import clsx from 'clsx';
 
@@ -64,6 +66,11 @@ function Sidebar(props) {
       icon: <ShoppingBasketIcon />,
     },
     {
+      title: 'Orders',
+      href: '/orders',
+      icon: <StoreIcon />,
+    },
+    {
       title: 'Categories',
       href: '/categories',
       icon: <CategoryIcon />,
@@ -77,6 +84,11 @@ function Sidebar(props) {
       title: 'Tags',
       href: '/tags',
       icon: <LabelIcon />,
+    },
+    {
+      title: 'Reviews',
+      href: '/reviews',
+      icon: <RateReviewIcon />,
     },
     {
       title: 'Settings',

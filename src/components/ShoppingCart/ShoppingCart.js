@@ -271,13 +271,13 @@ function CartListItem({ product, quantity }) {
   return (
     <div className={classes.listItem} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}>
       <div className={classes.listItemContent}>
-        <Link to={`${product.id}/${product.slug}`} onClick={handleCardClick} className={classes.link}>
+        <Link to={`/${product.id}/${product.slug}`} onClick={handleCardClick} className={classes.link}>
           <img className={classes.listItemImage} src={product.imageUrl} alt={product.name} />
         </Link>
         <div className={classes.listItemInner}>
           <div className={classes.listItemDetails}>
             <div className={classes.details}>
-              <Link to={`${product.id}/${product.slug}`} onClick={handleCardClick} className={classes.link}>
+              <Link to={`/${product.id}/${product.slug}`} onClick={handleCardClick} className={classes.link}>
                 <Typography className={classes.listItemName} component='h3' variant='subtitle2'>
                   {product.name}
                 </Typography>

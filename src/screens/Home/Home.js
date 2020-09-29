@@ -6,7 +6,7 @@ import { useSelector, useDispatch } from 'react-redux';
 
 import ScrollTopButton from '../../components/ScrollTop/ScrollTopButton';
 import { selectAllBrands, brandGetAll } from '../../store/brand/brandSlice';
-import { selectFeaturedCategories, selectAllCategories, categoryGetFeatured } from '../../store/category/categorySlice';
+import { selectFeaturedCategories, categoryGetAll } from '../../store/category/categorySlice';
 import { selectFeaturedProducts, productGetFeatured } from '../../store/product/productSlice';
 import Header from './Header/Header';
 import PopularProductsSection from './PopularProductsSection/PopularProductsSection';
@@ -24,7 +24,6 @@ function Home() {
   const dispatch = useDispatch();
   const classes = useStyles();
   const brands = useSelector(selectAllBrands);
-  const categories = useSelector(selectAllCategories);
   const featuredCategories = useSelector(selectFeaturedCategories);
   const featuredProducts = useSelector(selectFeaturedProducts);
 
@@ -32,13 +31,13 @@ function Home() {
     if (featuredProducts.length === 0) {
       dispatch(productGetFeatured());
     }
-    if (categories.length === 0) {
-      dispatch(categoryGetFeatured());
+    if (featuredCategories.length === 0) {
+      dispatch(categoryGetAll());
     }
     if (brands.length === 0) {
       dispatch(brandGetAll());
     }
-  }, [dispatch, featuredProducts.length, brands.length, categories.length]);
+  }, [dispatch, brands.length, featuredProducts.length, featuredCategories.length]);
 
   return (
     <Container>

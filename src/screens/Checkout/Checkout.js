@@ -213,10 +213,10 @@ function CartListItem({ product, quantity }) {
     <div className={classes.listItem}>
       <div className={classes.listItemContent}>
         <div className={classes.imgNameSection}>
-          <Link to={`${product.id}/${product.slug}`} onClick={handleCardClick} className={classes.link}>
+          <Link to={`/${product.id}/${product.slug}`} onClick={handleCardClick} className={classes.link}>
             <img className={classes.listItemImage} src={product.imageUrl} alt={product.name} />
           </Link>
-          <Link to={`${product.id}/${product.slug}`} onClick={handleCardClick} className={classes.link}>
+          <Link to={`/${product.id}/${product.slug}`} onClick={handleCardClick} className={classes.link}>
             <Typography className={classes.listItemName} component='h3' variant='subtitle1'>
               {product.name}
             </Typography>

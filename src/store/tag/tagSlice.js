@@ -3,9 +3,9 @@ import { createSlice, createAsyncThunk, createSelector, createEntityAdapter } fr
 import api from '../../api';
 import toastSlice, { successToast } from '../toast/toastSlice';
 
-export const sliceName = 'tag';
+export const sliceName = 'tags';
 
-export const tagCreate = createAsyncThunk(`${sliceName}/tagCreate`, async (details, { dispatch, rejectWithValue }) => {
+export const tagCreate = createAsyncThunk(`${sliceName}/create`, async (details, { dispatch, rejectWithValue }) => {
   try {
     const tag = await api.tags.create(details);
     dispatch(toastSlice.actions.addToast(successToast('Tag created')));
@@ -16,7 +16,7 @@ export const tagCreate = createAsyncThunk(`${sliceName}/tagCreate`, async (detai
 });
 
 export const tagUpdate = createAsyncThunk(
-  `${sliceName}/tagUpdate`,
+  `${sliceName}/update`,
   async ({ id, details }, { dispatch, rejectWithValue }) => {
     try {
       const tag = await api.tags.update(id, details);
@@ -28,7 +28,7 @@ export const tagUpdate = createAsyncThunk(
   }
 );
 
-export const tagGetAll = createAsyncThunk(`${sliceName}/tagGetAll`, async (params, { rejectWithValue }) => {
+export const tagGetAll = createAsyncThunk(`${sliceName}/getAll`, async (params, { rejectWithValue }) => {
   try {
     const tags = await api.tags.getAll(params);
     return tags;
@@ -37,7 +37,7 @@ export const tagGetAll = createAsyncThunk(`${sliceName}/tagGetAll`, async (param
   }
 });
 
-export const tagGet = createAsyncThunk(`${sliceName}/tagGet`, async (id, { rejectWithValue }) => {
+export const tagGet = createAsyncThunk(`${sliceName}/get`, async (id, { rejectWithValue }) => {
   try {
     const tag = await api.tags.get(id);
     return tag;
@@ -46,7 +46,7 @@ export const tagGet = createAsyncThunk(`${sliceName}/tagGet`, async (id, { rejec
   }
 });
 
-export const tagDelete = createAsyncThunk(`${sliceName}/tagDelete`, async (id, { dispatch, rejectWithValue }) => {
+export const tagDelete = createAsyncThunk(`${sliceName}/delete`, async (id, { dispatch, rejectWithValue }) => {
   try {
     await api.tags.delete(id);
     dispatch(toastSlice.actions.addToast(successToast('Tag deleted')));

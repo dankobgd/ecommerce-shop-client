@@ -3,10 +3,10 @@ import { createSlice, createAsyncThunk, createSelector, createEntityAdapter } fr
 import api from '../../api';
 import toastSlice, { successToast } from '../toast/toastSlice';
 
-export const sliceName = 'category';
+export const sliceName = 'categories';
 
 export const categoryCreate = createAsyncThunk(
-  `${sliceName}/categoryCreate`,
+  `${sliceName}/create`,
   async (formData, { dispatch, rejectWithValue }) => {
     try {
       const category = await api.categories.create(formData);
@@ -19,7 +19,7 @@ export const categoryCreate = createAsyncThunk(
 );
 
 export const categoryUpdate = createAsyncThunk(
-  `${sliceName}/categoryUpdate`,
+  `${sliceName}/update`,
   async ({ id, details }, { dispatch, rejectWithValue }) => {
     try {
       const category = await api.categories.update(id, details);
@@ -31,7 +31,7 @@ export const categoryUpdate = createAsyncThunk(
   }
 );
 
-export const categoryGetAll = createAsyncThunk(`${sliceName}/categoryGetAll`, async (params, { rejectWithValue }) => {
+export const categoryGetAll = createAsyncThunk(`${sliceName}/getAll`, async (params, { rejectWithValue }) => {
   try {
     const categories = await api.categories.getAll(params);
     return categories;
@@ -40,19 +40,16 @@ export const categoryGetAll = createAsyncThunk(`${sliceName}/categoryGetAll`, as
   }
 });
 
-export const categoryGetFeatured = createAsyncThunk(
-  `${sliceName}/categoryGetFeatured`,
-  async (params, { rejectWithValue }) => {
-    try {
-      const featured = await api.categories.getFeatured(params);
-      return featured;
-    } catch (error) {
-      return rejectWithValue(error);
-    }
+export const categoryGetFeatured = createAsyncThunk(`${sliceName}/getFeatured`, async (params, { rejectWithValue }) => {
+  try {
+    const featured = await api.categories.getFeatured(params);
+    return featured;
+  } catch (error) {
+    return rejectWithValue(error);
   }
-);
+});
 
-export const categoryGet = createAsyncThunk(`${sliceName}/categoryGet`, async (id, { rejectWithValue }) => {
+export const categoryGet = createAsyncThunk(`${sliceName}/get`, async (id, { rejectWithValue }) => {
   try {
     const category = await api.categories.get(id);
     return category;
@@ -61,18 +58,15 @@ export const categoryGet = createAsyncThunk(`${sliceName}/categoryGet`, async (i
   }
 });
 
-export const categoryDelete = createAsyncThunk(
-  `${sliceName}/categoryDelete`,
-  async (id, { dispatch, rejectWithValue }) => {
-    try {
-      await api.categories.delete(id);
-      dispatch(toastSlice.actions.addToast(successToast('Category deleted')));
-      return id;
-    } catch (error) {
-      return rejectWithValue(error);
-    }
+export const categoryDelete = createAsyncThunk(`${sliceName}/delete`, async (id, { dispatch, rejectWithValue }) => {
+  try {
+    await api.categories.delete(id);
+    dispatch(toastSlice.actions.addToast(successToast('Category deleted')));
+    return id;
+  } catch (error) {
+    return rejectWithValue(error);
   }
-);
+});
 
 export const categoryAdapter = createEntityAdapter();
 

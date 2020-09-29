@@ -14,7 +14,7 @@ function ProductRoutes() {
       <AuthRoute path='/' access='private' allowed={['admin']} component={Products} layout={null} />
       <AuthRoute path='create' access='private' allowed={['admin']} component={CreateProduct} layout={null} />
       <AuthRoute
-        path=':productId/:productName/edit'
+        path='/product/:productId/:productName/edit'
         access='private'
         allowed={['admin']}
         component={EditProduct}
