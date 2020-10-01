@@ -138,7 +138,7 @@ function ProductListCard({ product }) {
 
   return (
     <Paper className={classes.card}>
-      <Link to={`/${product.id}/${product.slug}`} onClick={handleCardClick} className={classes.link}>
+      <Link to={`/product/${product.id}/${product.slug}`} onClick={handleCardClick} className={classes.link}>
         <div className={classes.cardInner}>
           <img className={classes.cover} src={product.imageUrl} alt={product.name} />
           <div className={classes.content}>
