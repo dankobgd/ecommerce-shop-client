@@ -121,7 +121,7 @@ export const selectManyReviews = ids => createSelector(selectReviewEntities, ent
 export const selectAverageProductRating = ids =>
   createSelector(selectReviewEntities, entities => {
     const arr = ids.map(id => entities[id]);
-    return arr.length > 0 ? arr.reduce((avg, val) => avg + val?.rating, 0) / arr.length : null;
+    return arr.length > 0 ? arr.reduce((sum, val) => sum + val?.rating, 0) / arr.length : null;
   });
 
 export default reviewSlice;

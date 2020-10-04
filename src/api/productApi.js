@@ -44,4 +44,8 @@ export default {
   async getFeatured(params) {
     return apiClient.get(`v1/products/featured`, { params });
   },
+
+  async search(params) {
+    return apiClient.get(`v1/products/search`, { params });
+  },
 };

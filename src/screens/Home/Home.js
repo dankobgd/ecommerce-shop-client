@@ -43,7 +43,7 @@ function Home() {
     <Container>
       <Header />
 
-      <Link style={{ display: 'flex' }} to='shop'>
+      <Link style={{ display: 'flex', marginTop: '3rem' }} to='shop'>
         Shop Page
       </Link>
       <Link style={{ display: 'flex' }} to='checkout'>

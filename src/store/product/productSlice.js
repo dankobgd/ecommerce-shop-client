@@ -95,6 +95,15 @@ export const productGetFeatured = createAsyncThunk(`${sliceName}/getFeatured`, a
   }
 });
 
+export const productSearch = createAsyncThunk(`${sliceName}/search`, async (params, { rejectWithValue }) => {
+  try {
+    const products = await api.products.search(params);
+    return products;
+  } catch (error) {
+    return rejectWithValue(error);
+  }
+});
+
 export const productAdapter = createEntityAdapter();
 
 const initialState = productAdapter.getInitialState({
@@ -103,6 +112,7 @@ const initialState = productAdapter.getInitialState({
   pagination: null,
   properties: [],
   filters: {},
+  searchResults: [],
 });
 
 const productSlice = createSlice({
@@ -142,6 +152,9 @@ const productSlice = createSlice({
     setpPriceFilter: (state, { payload }) => {
       state.filters.price = [...payload];
     },
+    clearSearchResults: state => {
+      state.searchResults = [];
+    },
   },
   extraReducers: {
     [productCreate.fulfilled]: productAdapter.addOne,
@@ -158,6 +171,9 @@ const productSlice = createSlice({
     [productGetFeatured.fulfilled]: (state, { payload }) => {
       productAdapter.upsertMany(state, payload.entities.products);
       state.pagination = payload.meta;
+    },
+    [productSearch.fulfilled]: (state, { payload }) => {
+      state.searchResults = payload;
     },
   },
 });

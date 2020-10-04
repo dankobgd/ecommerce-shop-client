@@ -2,22 +2,11 @@ import React from 'react';
 
 import { Badge, makeStyles, Popover, Typography } from '@material-ui/core';
 import ShoppingCartIcon from '@material-ui/icons/ShoppingCartOutlined';
-import { useForm, FormProvider } from 'react-hook-form';
 import { useDispatch, useSelector } from 'react-redux';
 
 import ShoppingCart from '../../../components/ShoppingCart/ShoppingCart';
 import cartSlice, { selectCartLength, selectCartTotalQuantity } from '../../../store/cart/cartSlice';
-import { productGetAll } from '../../../store/product/productSlice';
-import { selectUIState } from '../../../store/ui';
 import Search from './Search';
-
-const formOpts = {
-  mode: 'onChange',
-  reValidateMode: 'onChange',
-  defaultValues: {
-    search: null,
-  },
-};
 
 const useStyles = makeStyles(theme => ({
   headerOuter: {
@@ -33,7 +22,7 @@ const useStyles = makeStyles(theme => ({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  form: {
+  searchInner: {
     width: '100%',
     padding: '2rem 5rem',
     maxWidth: '640px',
@@ -59,9 +48,7 @@ const useStyles = makeStyles(theme => ({
 function Header() {
   const classes = useStyles();
   const dispatch = useDispatch();
-  const methods = useForm(formOpts);
-  const { handleSubmit } = methods;
-  const { loading, error } = useSelector(selectUIState(productGetAll));
+
   const cartLength = useSelector(selectCartLength);
   const cartTotalQuantity = useSelector(selectCartTotalQuantity);
 
@@ -72,10 +59,6 @@ function Header() {
   };
 
   const id = anchorEl ? 'simple-popover' : undefined;
-
-  const onSubmit = data => {
-    console.log(data);
-  };
 
   const handleDrawer = event => {
     if (!cartLength || cartLength === 0) {
@@ -113,13 +96,9 @@ function Header() {
           </Badge>
         </div>
         <div className={classes.searchOuter}>
-          <FormProvider {...methods}>
-            {loading && <div>Loading...</div>}
-            {error && <div>{error}</div>}
-            <form onSubmit={handleSubmit(onSubmit)} className={classes.form} noValidate>
-              <Search options={[]} />
-            </form>
-          </FormProvider>
+          <div className={classes.searchInner}>
+            <Search />
+          </div>
         </div>
       </div>
     </>
