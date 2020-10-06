@@ -21,7 +21,7 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
-function PaginationRanges({ page, perPage, pageCount }) {
+function PaginationRanges({ page = 1, perPage = 50, pageCount = 1 }) {
   const classes = useStyles();
   const dispatch = useDispatch();
   const perPageSizes = [10, 25, 50, 75, 120];
@@ -31,6 +31,14 @@ function PaginationRanges({ page, perPage, pageCount }) {
     numPerPage: perPage,
     numPageCount: pageCount,
   });
+
+  React.useEffect(() => {
+    setPageData({
+      numPage: page,
+      numPerPage: perPage,
+      numPageCount: pageCount,
+    });
+  }, [page, pageCount, perPage]);
 
   const handlePageChange = (e, value) => {
     setPageData(s => ({ ...s, numPerPage: perPage, numPage: value }));

@@ -111,7 +111,6 @@ const initialState = productAdapter.getInitialState({
   currentId: null,
   pagination: null,
   properties: [],
-  filters: {},
   searchResults: [],
 });
 
@@ -145,15 +144,6 @@ const productSlice = createSlice({
     },
     setCurrentId: (state, { payload }) => {
       state.currentId = payload;
-    },
-    setFilters: (state, { payload }) => {
-      state.filters = payload;
-    },
-    setpPriceFilter: (state, { payload }) => {
-      state.filters.price = [...payload];
-    },
-    clearSearchResults: state => {
-      state.searchResults = [];
     },
   },
   extraReducers: {

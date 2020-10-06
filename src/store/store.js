@@ -9,6 +9,7 @@ import orderSlice from './order/orderSlice';
 import productSlice from './product/productSlice';
 import productImageSlice from './product_image/productImageSlice';
 import reviewSlice from './review/reviewSlice';
+import searchSlice from './search/searchSlice';
 import tagSlice from './tag/tagSlice';
 import toastSlice from './toast/toastSlice';
 import uiReducer from './ui';
@@ -26,6 +27,7 @@ const rootReducer = combineReducers({
   [orderSlice.name]: orderSlice.reducer,
   [reviewSlice.name]: reviewSlice.reducer,
   [productImageSlice.name]: productImageSlice.reducer,
+  [searchSlice.name]: searchSlice.reducer,
 });
 
 const persistConfig = {

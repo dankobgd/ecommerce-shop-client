@@ -4,7 +4,7 @@ import { makeStyles } from '@material-ui/core';
 import { useSelector } from 'react-redux';
 
 import ProductCard from '../../../components/ProductCard/ProductCard';
-import { selectPaginationMeta } from '../../../store/product/productSlice';
+import { selectPaginationMeta } from '../../../store/search/searchSlice';
 import { calculatePaginationStartEndPosition } from '../../../utils/pagination';
 import PaginationRanges from '../Pagination/Pagination';
 

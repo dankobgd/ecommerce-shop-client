@@ -6,12 +6,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import ScrollTopButton from '../../components/ScrollTop/ScrollTopButton';
 import { brandGetAll, selectAllBrands } from '../../store/brand/brandSlice';
 import { categoryGetAll, selectAllCategories } from '../../store/category/categorySlice';
-import {
-  productGetAll,
-  productGetProperties,
-  selectAllProducts,
-  selectProductVariants,
-} from '../../store/product/productSlice';
+import { productGetProperties, selectProductVariants } from '../../store/product/productSlice';
+import { filterProducts, selectAllSearchProducts } from '../../store/search/searchSlice';
 import { tagGetAll, selectAllTags } from '../../store/tag/tagSlice';
 import Header from '../Home/Header/Header';
 import ProductsGrid from './ProductsGrid/ProductsGrid';
@@ -33,7 +29,7 @@ function Shop() {
   const brands = useSelector(selectAllBrands);
   const tags = useSelector(selectAllTags);
   const categories = useSelector(selectAllCategories);
-  const products = useSelector(selectAllProducts);
+  const searchProducts = useSelector(selectAllSearchProducts);
   const variants = useSelector(selectProductVariants);
 
   React.useEffect(() => {
@@ -49,10 +45,10 @@ function Shop() {
     if (variants.length === 0) {
       dispatch(productGetProperties());
     }
-    if (products.length === 0) {
-      dispatch(productGetAll());
+    if (searchProducts.length === 0) {
+      dispatch(filterProducts());
     }
-  }, [dispatch, brands.length, tags.length, categories.length, variants.length, products.length]);
+  }, [dispatch, brands.length, tags.length, categories.length, variants.length, searchProducts.length]);
 
   return (
     <div>
@@ -62,7 +58,7 @@ function Shop() {
           <Sidebar variants={variants} tags={tags} brands={brands} categories={categories} />
         </section>
         <section className={classes.main}>
-          <ProductsGrid products={products} />
+          <ProductsGrid products={searchProducts} />
         </section>
       </Container>
 

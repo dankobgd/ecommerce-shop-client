@@ -16,9 +16,9 @@ import CheckBoxIcon from '@material-ui/icons/CheckBox';
 import CheckBoxOutlineBlankIcon from '@material-ui/icons/CheckBoxOutlineBlank';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import { nanoid } from '@reduxjs/toolkit';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 
-import productSlice from '../../../store/product/productSlice';
+import searchSlice, { filterProducts, selectFilterQueryString } from '../../../store/search/searchSlice';
 
 const useStyles = makeStyles(() => ({
   sideBarOuter: {
@@ -50,7 +50,7 @@ function SpecificCategoryFilters({ formState, setFormState, variants }) {
   const handleChange = e => {
     const { name, value } = e.target;
     const [category, property] = name.split('_');
-    const propertyItems = formState[category][property];
+    const propertyItems = formState[category] && formState[category][property];
 
     const items = propertyItems?.includes(value)
       ? propertyItems.filter(x => x === value)
@@ -128,15 +128,13 @@ const getFiltersFormFormat = arr =>
 function SideBar({ tags, brands, categories, variants }) {
   const classes = useStyles();
   const dispatch = useDispatch();
-
-  const filterProps = getFiltersFormFormat(transformVariants(variants));
+  const filtersQuery = useSelector(selectFilterQueryString);
 
   const [formState, setFormState] = useState({
     tags: [],
     brands: [],
     categories: [],
     // price: [0, 1000],
-    ...filterProps,
   });
 
   const handleChange = e => {
@@ -153,8 +151,42 @@ function SideBar({ tags, brands, categories, variants }) {
   };
 
   React.useEffect(() => {
-    dispatch(productSlice.actions.setFilters(formState));
+    const filterProps = getFiltersFormFormat(transformVariants(variants));
+    setFormState(state => ({
+      ...state,
+      ...filterProps,
+    }));
+  }, [variants]);
+
+  React.useEffect(() => {
+    const { tags: tagsArr, brands: brandsArr, categories: categoriesArr, ...rest } = formState;
+    const params = new URLSearchParams();
+
+    tagsArr.forEach(x => {
+      params.append('tag', x);
+    });
+    brandsArr.forEach(x => {
+      params.append('brand', x);
+    });
+    categoriesArr.forEach(x => {
+      params.append('category', x);
+    });
+
+    Object.keys(rest).forEach(cat => {
+      Object.entries(formState[cat]).forEach(([prop, val]) => {
+        val.filter(Boolean).forEach(v => {
+          params.append(`${cat}_${prop}`, v);
+        });
+      });
+    });
+
+    dispatch(searchSlice.actions.setFilterQueryString(params.toString()));
   }, [dispatch, formState]);
+
+  React.useEffect(() => {
+    const params = new URLSearchParams(filtersQuery);
+    dispatch(filterProducts(params));
+  }, [dispatch, filtersQuery]);
 
   return (
     <div className={classes.sideBarOuter}>
@@ -267,9 +299,9 @@ function PriceSlider() {
     setState([...value]);
   };
 
-  React.useEffect(() => {
-    dispatch(productSlice.actions.setpPriceFilter(state));
-  }, [dispatch, state]);
+  // React.useEffect(() => {
+  //   dispatch(productSlice.actions.setPriceFilter(state));
+  // }, [dispatch, state]);
 
   return <Slider min={0} max={1000} step={1} value={state} onChange={onChange} valueLabelDisplay='auto' />;
 }
