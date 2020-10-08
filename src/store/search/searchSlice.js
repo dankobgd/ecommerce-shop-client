@@ -40,9 +40,6 @@ const searchSlice = createSlice({
     setFilterQueryString: (state, { payload }) => {
       state.filterQueryString = payload;
     },
-    clearSearchResults: state => {
-      state.searchResults = [];
-    },
   },
   extraReducers: {
     [filterProducts.fulfilled]: (state, { payload }) => {

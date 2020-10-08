@@ -50,6 +50,16 @@ function Search() {
       onChange={onChange}
       getOptionLabel={getOptionLabel}
       getOptionSelected={getOptionSelected}
+      renderOption={option => (
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <img
+            src={option?.imageUrl || ''}
+            alt={option?.name || ''}
+            style={{ width: 60, height: 60, objectFit: 'cover', marginRight: '1rem' }}
+          />
+          <span>{option?.name || ''}</span>
+        </div>
+      )}
       renderInput={params => (
         <TextField
           {...params}

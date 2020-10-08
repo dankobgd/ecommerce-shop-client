@@ -145,6 +145,9 @@ const productSlice = createSlice({
     setCurrentId: (state, { payload }) => {
       state.currentId = payload;
     },
+    clearSearchResults: state => {
+      state.searchResults = [];
+    },
   },
   extraReducers: {
     [productCreate.fulfilled]: productAdapter.addOne,
