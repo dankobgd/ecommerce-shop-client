@@ -45,10 +45,8 @@ function Shop() {
     if (variants.length === 0) {
       dispatch(productGetProperties());
     }
-    if (searchProducts.length === 0) {
-      dispatch(filterProducts());
-    }
-  }, [dispatch, brands.length, tags.length, categories.length, variants.length, searchProducts.length]);
+    dispatch(filterProducts());
+  }, [dispatch, brands.length, tags.length, categories.length, variants.length]);
 
   return (
     <div>

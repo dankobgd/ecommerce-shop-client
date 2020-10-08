@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 
 import {
   Accordion,
@@ -9,16 +9,20 @@ import {
   FormGroup,
   makeStyles,
   Paper,
-  Slider,
+  TextField,
   Typography,
 } from '@material-ui/core';
 import CheckBoxIcon from '@material-ui/icons/CheckBox';
 import CheckBoxOutlineBlankIcon from '@material-ui/icons/CheckBoxOutlineBlank';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import { nanoid } from '@reduxjs/toolkit';
+import { debounce } from 'lodash';
+import NumberFormat from 'react-number-format';
 import { useDispatch, useSelector } from 'react-redux';
 
 import searchSlice, { filterProducts, selectFilterQueryString } from '../../../store/search/searchSlice';
+import PropFilters from './PropFilters';
+import { getFiltersFormFormat, transformVariants } from './util';
 
 const useStyles = makeStyles(() => ({
   sideBarOuter: {
@@ -29,10 +33,11 @@ const useStyles = makeStyles(() => ({
       margin: 0,
     },
   },
-  accordionDetails: {
-    flexDirection: 'column',
-    maxHeight: '300px',
-    overflowY: 'auto',
+  priceWrapper: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    justifyContent: 'center',
+    gap: '1rem',
   },
   pricePaper: {
     padding: '10px 1rem',
@@ -43,87 +48,33 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
-function SpecificCategoryFilters({ formState, setFormState, variants }) {
-  const classes = useStyles();
-  const opts = variants.filter(v => v.category === formState.categories?.find(c => c === v.category));
-
-  const handleChange = e => {
-    const { name, value } = e.target;
-    const [category, property] = name.split('_');
-    const propertyItems = formState[category] && formState[category][property];
-
-    const items = propertyItems?.includes(value)
-      ? propertyItems.filter(x => x === value)
-      : [...(propertyItems ?? []), value];
-
-    setFormState(state => ({
-      ...state,
-      [category]: {
-        ...state[category],
-        [property]: items,
-      },
-    }));
-  };
-
-  return opts.map(({ category, props }) => (
-    <div key={nanoid()}>
-      {Object.keys(props).map(prop => (
-        <Accordion key={nanoid()}>
-          <AccordionSummary
-            expandIcon={<ExpandMoreIcon />}
-            aria-controls={`${category}-${prop}-filter`}
-            id={`${category}-${prop}-filter`}
-          >
-            <Typography>
-              {category} {prop}
-            </Typography>
-          </AccordionSummary>
-          <AccordionDetails className={classes.accordionDetails}>
-            <FormGroup>
-              {props[prop].map(p => (
-                <div key={nanoid()}>
-                  <FormControlLabel
-                    key={nanoid()}
-                    control={
-                      <Checkbox
-                        icon={<CheckBoxOutlineBlankIcon fontSize='small' />}
-                        checkedIcon={<CheckBoxIcon fontSize='small' />}
-                        name={`${category}_${prop}`}
-                        value={p}
-                        checked={formState[category][prop]?.includes(p)}
-                        onChange={handleChange}
-                      />
-                    }
-                    label={p}
-                  />
-                </div>
-              ))}
-            </FormGroup>
-          </AccordionDetails>
-        </Accordion>
-      ))}
-    </div>
-  ));
+function NumberField({
+  name,
+  label,
+  placeholder,
+  margin = 'normal',
+  variant = 'outlined',
+  prefix,
+  value,
+  thousandSeparator = true,
+  onValueChange,
+}) {
+  return (
+    <NumberFormat
+      name={name}
+      margin={margin}
+      placeholder={placeholder}
+      variant={variant}
+      thousandSeparator={thousandSeparator}
+      label={label}
+      prefix={prefix}
+      customInput={p => <TextField {...p} size='small' variant='outlined' />}
+      allowNegative={false}
+      value={value}
+      onValueChange={onValueChange}
+    />
+  );
 }
-
-const transformVariants = arr =>
-  arr.map(({ category, props }) => {
-    const obj = Object.keys(props).reduce((categoryName, propName) => {
-      categoryName[propName] = [];
-      return categoryName;
-    }, {});
-
-    return {
-      key: category,
-      value: obj,
-    };
-  });
-
-const getFiltersFormFormat = arr =>
-  arr.reduce((acc, item) => {
-    acc[item.key] = item.value;
-    return acc;
-  }, {});
 
 function SideBar({ tags, brands, categories, variants }) {
   const classes = useStyles();
@@ -134,8 +85,20 @@ function SideBar({ tags, brands, categories, variants }) {
     tags: [],
     brands: [],
     categories: [],
-    // price: [0, 1000],
+    priceMin: '',
+    priceMax: '',
   });
+
+  const updatePriceState = (name, values) => {
+    setFormState(state => ({ ...state, [name]: values.value }));
+  };
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const debouncePriceFilter = useCallback(debounce(updatePriceState, 1000), []);
+
+  const handlePriceChange = (name, values) => {
+    debouncePriceFilter(name, values);
+  };
 
   const handleChange = e => {
     const { name, value } = e.target;
@@ -159,8 +122,15 @@ function SideBar({ tags, brands, categories, variants }) {
   }, [variants]);
 
   React.useEffect(() => {
-    const { tags: tagsArr, brands: brandsArr, categories: categoriesArr, ...rest } = formState;
+    const { priceMin, priceMax, tags: tagsArr, brands: brandsArr, categories: categoriesArr, ...rest } = formState;
     const params = new URLSearchParams();
+
+    if (priceMin) {
+      params.append('price_min', priceMin);
+    }
+    if (priceMax) {
+      params.append('price_max', priceMax);
+    }
 
     tagsArr.forEach(x => {
       params.append('tag', x);
@@ -271,12 +241,27 @@ function SideBar({ tags, brands, categories, variants }) {
 
         <Paper className={classes.pricePaper}>
           <Typography className={classes.heading}>Price</Typography>
-          <PriceSlider />
+          <div className={classes.priceWrapper}>
+            <NumberField
+              name='priceMin'
+              value={formState.priceMin}
+              onValueChange={values => handlePriceChange('priceMin', values)}
+              label='min'
+              prefix='$'
+            />
+            <NumberField
+              name='priceMax'
+              value={formState.priceMax}
+              onValueChange={values => handlePriceChange('priceMax', values)}
+              label='max'
+              prefix='$'
+            />
+          </div>
         </Paper>
 
         {(categories.length > 0 || brands.length > 0 || tags.length > 0) && (
           <div className={classes.specificFilters}>
-            <SpecificCategoryFilters
+            <PropFilters
               formState={formState}
               setFormState={setFormState}
               variants={variants}
@@ -290,18 +275,3 @@ function SideBar({ tags, brands, categories, variants }) {
 }
 
 export default SideBar;
-
-function PriceSlider() {
-  const dispatch = useDispatch();
-  const [state, setState] = useState([0, 1000]);
-
-  const onChange = (_, value) => {
-    setState([...value]);
-  };
-
-  // React.useEffect(() => {
-  //   dispatch(productSlice.actions.setPriceFilter(state));
-  // }, [dispatch, state]);
-
-  return <Slider min={0} max={1000} step={1} value={state} onChange={onChange} valueLabelDisplay='auto' />;
-}

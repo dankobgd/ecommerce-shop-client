@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { makeStyles } from '@material-ui/core';
+import { makeStyles, Typography } from '@material-ui/core';
 import { useSelector } from 'react-redux';
 
 import ProductCard from '../../../components/ProductCard/ProductCard';
@@ -19,7 +19,7 @@ const useStyles = makeStyles(() => ({
     display: 'grid',
     justifyItems: 'space-between',
     alignItems: 'flex-start',
-    gridTemplateColumns: 'repeat(auto-fit,minmax(250px, 1fr))',
+    gridTemplateColumns: 'repeat(auto-fill,minmax(250px, 1fr))',
     gridGap: '1rem',
   },
   paginationArea: {
@@ -43,9 +43,17 @@ function ProductsGrid({ products }) {
         {paginationMeta &&
           products.length > 0 &&
           products.slice(start, end).map(product => <ProductCard key={product.sku} product={product} />)}
+        {products.length === 0 && (
+          <div style={{ padding: '2rem' }}>
+            <Typography variant='h4'>No products found matching the search criteria</Typography>
+            <Typography variant='subtitle2' style={{ marginTop: '10px' }}>
+              Try broadening the search filters to get better results
+            </Typography>
+          </div>
+        )}
       </div>
 
-      {paginationMeta && (
+      {paginationMeta && paginationMeta.totalCount !== -1 && paginationMeta.pageCount !== 1 && (
         <div className={classes.paginationArea}>
           <PaginationRanges
             page={paginationMeta.page}

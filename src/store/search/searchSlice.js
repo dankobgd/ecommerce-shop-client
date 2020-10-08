@@ -46,8 +46,8 @@ const searchSlice = createSlice({
   },
   extraReducers: {
     [filterProducts.fulfilled]: (state, { payload }) => {
-      searchAdapter.setAll(state, payload.entities.products);
-      state.pagination = payload.meta;
+      searchAdapter.setAll(state, payload?.entities?.products || {});
+      state.pagination = payload?.meta || null;
     },
   },
 });
