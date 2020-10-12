@@ -102,4 +102,9 @@ export const selectCurrentEditBrand = createSelector(
   (entities, editId) => entities[editId]
 );
 
+export const selectCurrentProductBrand = createSelector(
+  [state => state.products.entities[state.products.currentId]?.brand, selectBrandEntities],
+  (id, entities) => entities[id]
+);
+
 export default brandSlice;

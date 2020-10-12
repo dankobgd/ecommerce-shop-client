@@ -218,7 +218,7 @@ function ShoppingCart({ anchor = 'right' }) {
             </div>
 
             <Link
-              to='checkout'
+              to='/checkout'
               style={{ textDecoration: 'none', display: 'flex', justifyContent: 'center', width: '100%' }}
               onClick={toggleDrawer}
             >

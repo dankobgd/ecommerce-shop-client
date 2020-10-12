@@ -20,7 +20,7 @@ import { useFormServerErrors } from '../../../hooks/useFormServerErrors';
 import { selectAllBrands, brandGetAll } from '../../../store/brand/brandSlice';
 import { selectAllCategories, categoryGetAll } from '../../../store/category/categorySlice';
 import { productCreate, selectCurrentEditProduct } from '../../../store/product/productSlice';
-import { selectAllTags, tagGetAll, selectManyTags, tagGetAllForProduct } from '../../../store/tag/tagSlice';
+import { selectAllTags, tagGetAll, selectCurrentProductTags, tagGetAllForProduct } from '../../../store/tag/tagSlice';
 import { selectUIState } from '../../../store/ui';
 import { rules } from '../../../utils/validation';
 
@@ -74,7 +74,7 @@ function EditProductForm() {
   const categoryList = useSelector(selectAllCategories);
   const product = useSelector(selectCurrentEditProduct);
   const { loading, error } = useSelector(selectUIState(productCreate));
-  const tags = useSelector(selectManyTags(product?.tags || []));
+  const tags = useSelector(selectCurrentProductTags);
 
   const methods = useForm(formOpts(product));
   const { handleSubmit, setError } = methods;

@@ -10,6 +10,7 @@ import PeopleIcon from '@material-ui/icons/People';
 import RateReviewIcon from '@material-ui/icons/RateReview';
 import SettingsIcon from '@material-ui/icons/Settings';
 import ShoppingBasketIcon from '@material-ui/icons/ShoppingBasket';
+import StarsIcon from '@material-ui/icons/Stars';
 import StoreIcon from '@material-ui/icons/Store';
 import { makeStyles } from '@material-ui/styles';
 import clsx from 'clsx';
@@ -89,6 +90,11 @@ function Sidebar(props) {
       title: 'Reviews',
       href: '/reviews',
       icon: <RateReviewIcon />,
+    },
+    {
+      title: 'Wishlist',
+      href: '/wishlist',
+      icon: <StarsIcon />,
     },
     {
       title: 'Settings',

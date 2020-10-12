@@ -29,6 +29,7 @@ import { useDispatch, useSelector } from 'react-redux';
 
 import productSlice, { productDelete, selectPaginationMeta, productGetAll } from '../../../store/product/productSlice';
 import { calculatePaginationStartEndPosition } from '../../../utils/pagination';
+import { truncateText } from '../../../utils/truncateText';
 
 const useStyles = makeStyles(theme => ({
   root: {},
@@ -167,7 +168,7 @@ const ProductsTable = props => {
                     <TableCell>{product.id}</TableCell>
                     <TableCell>{product.slug}</TableCell>
                     <TableCell>{product.price}</TableCell>
-                    <TableCell>{product.description}</TableCell>
+                    <TableCell>{truncateText(product.description, 50)}</TableCell>
                     <TableCell>{product.sku}</TableCell>
                     <TableCell>{product.isFeatured.toString()}</TableCell>
                     <TableCell>{product.inStock.toString()}</TableCell>

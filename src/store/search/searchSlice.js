@@ -2,6 +2,7 @@ import { createSlice, createAsyncThunk, createEntityAdapter } from '@reduxjs/too
 import { normalize, schema } from 'normalizr';
 
 import api from '../../api';
+import productSlice from '../product/productSlice';
 
 const brandSchema = new schema.Entity('brands');
 const categorySchema = new schema.Entity('categories');
@@ -12,19 +13,19 @@ const productSchema = new schema.Entity('products', {
 
 export const sliceName = 'search';
 
-export const filterProducts = createAsyncThunk(`${sliceName}/filterProducts`, async (params, { rejectWithValue }) => {
-  try {
-    const products = await api.products.getAll(params);
-    const { entities } = normalize(products.data, [productSchema]);
-
-    return {
-      entities,
-      meta: products.meta,
-    };
-  } catch (error) {
-    return rejectWithValue(error);
+export const filterProducts = createAsyncThunk(
+  `${sliceName}/filterProducts`,
+  async (params, { dispatch, rejectWithValue }) => {
+    try {
+      const products = await api.products.getAll(params);
+      const { entities } = normalize(products.data, [productSchema]);
+      dispatch(productSlice.actions.upsertMany(entities.products));
+      return { entities, meta: products.meta };
+    } catch (error) {
+      return rejectWithValue(error);
+    }
   }
-});
+);
 
 export const searchAdapter = createEntityAdapter();
 

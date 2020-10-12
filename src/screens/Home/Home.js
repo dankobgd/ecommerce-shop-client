@@ -8,6 +8,7 @@ import ScrollTopButton from '../../components/ScrollTop/ScrollTopButton';
 import { selectAllBrands, brandGetAll } from '../../store/brand/brandSlice';
 import { selectFeaturedCategories, categoryGetAll } from '../../store/category/categorySlice';
 import { selectFeaturedProducts, productGetFeatured } from '../../store/product/productSlice';
+import { wishlistGetProducts } from '../../store/user/userSlice';
 import Header from './Header/Header';
 import PopularProductsSection from './PopularProductsSection/PopularProductsSection';
 import ShowcaseBrands from './ShowcaseBrands/ShowcaseBrands';
@@ -28,6 +29,8 @@ function Home() {
   const featuredProducts = useSelector(selectFeaturedProducts);
 
   React.useEffect(() => {
+    dispatch(wishlistGetProducts());
+
     if (featuredProducts.length === 0) {
       dispatch(productGetFeatured());
     }
@@ -46,7 +49,7 @@ function Home() {
       <Link style={{ display: 'flex', marginTop: '3rem' }} to='shop'>
         Shop Page
       </Link>
-      <Link style={{ display: 'flex' }} to='checkout'>
+      <Link style={{ display: 'flex' }} to='/checkout'>
         Checkout Page
       </Link>
 

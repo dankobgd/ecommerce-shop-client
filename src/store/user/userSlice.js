@@ -132,11 +132,60 @@ export const userUpdateProfileDetails = createAsyncThunk(
   }
 );
 
+export const wishlistAddProduct = createAsyncThunk(
+  `${sliceName}/wishlistAddProduct`,
+  async (details, { dispatch, rejectWithValue }) => {
+    try {
+      await api.users.wishlistAdd(details);
+      dispatch(toastSlice.actions.addToast(successToast('Product added to wishlist')));
+      return details;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+export const wishlistGetProducts = createAsyncThunk(
+  `${sliceName}/wishlistGetProducts`,
+  async (params, { rejectWithValue }) => {
+    try {
+      const wishlist = await api.users.wishlistGet(params);
+      return wishlist;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+export const wishlistDeleteProduct = createAsyncThunk(
+  `${sliceName}/wishlistDeleteProduct`,
+  async (details, { dispatch, rejectWithValue }) => {
+    try {
+      await api.users.wishlistDelete(details);
+      dispatch(toastSlice.actions.addToast(successToast('Product removed from wishlist')));
+      return details;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+export const wishlistClear = createAsyncThunk(
+  `${sliceName}/wishlistClear`,
+  async (details, { dispatch, rejectWithValue }) => {
+    try {
+      const msg = await api.users.wishlistClear(details);
+      dispatch(toastSlice.actions.addToast(successToast('Wishlist cleared')));
+      return msg;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
 const userSlice = createSlice({
   name: sliceName,
   initialState: {
     profile: null,
     isAuthenticated: false,
+    wishlist: [],
   },
   reducers: {},
   extraReducers: {
@@ -173,10 +222,25 @@ const userSlice = createSlice({
       state.profile.avatarUrl = null;
       state.profile.publicId = null;
     },
+    [wishlistAddProduct.fulfilled]: (state, { payload }) => {
+      state.wishlist.push(payload.productId);
+    },
+    [wishlistGetProducts.fulfilled]: (state, { payload }) => {
+      const ids = payload.map(x => x.id);
+      state.wishlist = [...new Set([...state.wishlist, ...ids])];
+    },
+    [wishlistDeleteProduct.fulfilled]: (state, { payload }) => {
+      const idx = state.wishlist.findIndex(x => x === payload.productId);
+      state.wishlist.splice(idx, 1);
+    },
+    [wishlistClear.fulfilled]: state => {
+      state.wishlist = [];
+    },
   },
 });
 
-export const selectUserProfile = state => state.user.profile;
-export const selectIsUserAuthenticated = state => state.user.isAuthenticated;
+export const selectUserProfile = state => state[sliceName].profile;
+export const selectIsUserAuthenticated = state => state[sliceName].isAuthenticated;
+export const selectWishlistProductIds = state => state[sliceName].wishlist;
 
 export default userSlice;

@@ -23,6 +23,7 @@ import ReviewRoutes from './screens/Reviews/ReviewRoutes';
 import Shop from './screens/Shop/Shop';
 import TagRoutes from './screens/Tags/TagRoutes';
 import UserRoutes from './screens/Users/UserRoutes';
+import Wishlist from './screens/Wishlist/Wishlist';
 
 function AppRoutes() {
   return (
@@ -38,6 +39,7 @@ function AppRoutes() {
       <AuthRoute path='/checkout' access='private' component={Checkout} layout={Minimal} />
       <AuthRoute path='/checkout/order' access='private' component={Order} layout={Minimal} />
       <AuthRoute path='/product/:productId/:productSlug' access='public' component={ProductSingle} layout={Minimal} />
+      <AuthRoute path='/wishlist' access='private' component={Wishlist} layout={Main} />
       <AuthRoute path='/users/*' access='private' allowed={['admin']} component={UserRoutes} layout={Main} />
       <AuthRoute path='/products/*' access='private' allowed={['admin']} component={ProductRoutes} layout={Main} />
       <AuthRoute path='/reviews/*' access='private' allowed={['admin']} component={ReviewRoutes} layout={Main} />

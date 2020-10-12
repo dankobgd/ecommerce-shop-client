@@ -56,7 +56,9 @@ export const productGetAll = createAsyncThunk(`${sliceName}/getAll`, async (para
 export const productGet = createAsyncThunk(`${sliceName}/get`, async (id, { rejectWithValue }) => {
   try {
     const product = await api.products.get(id);
-    return product;
+
+    const { entities } = normalize(product, productSchema);
+    return Object.values(entities.products)[0];
   } catch (error) {
     return rejectWithValue(error);
   }
@@ -118,25 +120,28 @@ const productSlice = createSlice({
   name: sliceName,
   initialState,
   reducers: {
+    upsertMany: (state, { payload }) => {
+      productAdapter.upsertMany(state, payload);
+    },
     setTagIds: (state, { payload }) => {
-      const idx = payload[0]?.productId;
-      const idsArr = payload.map(x => x.id);
-      if (idsArr.length > 0) {
-        state.entities[idx].tags = idsArr;
+      if (payload.length > 0) {
+        const idx = payload[0]?.productId;
+        const idsList = payload.map(x => x.id);
+        state.entities[idx].tags = idsList;
       }
     },
     setImageIds: (state, { payload }) => {
-      const idx = payload[0]?.productId;
-      const idsArr = payload.map(x => x.id);
-      if (idsArr.length > 0) {
-        state.entities[idx].images = idsArr;
+      if (payload.length > 0) {
+        const idx = payload[0]?.productId;
+        const idsList = payload.map(x => x.id);
+        state.entities[idx].images = idsList;
       }
     },
     setReviewIds: (state, { payload }) => {
-      const idx = payload[0]?.productId;
-      const idsArr = payload.map(x => x.id);
-      if (idsArr.length > 0) {
-        state.entities[idx].reviews = idsArr;
+      if (payload.length > 0) {
+        const idx = payload[0]?.productId;
+        const idsList = payload.map(x => x.id);
+        state.entities[idx].reviews = idsList;
       }
     },
     setEditId: (state, { payload }) => {
@@ -200,6 +205,11 @@ export const selectCurrentEditProduct = createSelector(
 
 export const selectFeaturedProducts = createSelector(selectAllProducts, products =>
   products.filter(x => x.isFeatured === true)
+);
+
+export const selectCurrentUserWishlist = createSelector(
+  [state => state.user.wishlist, selectProductEntities],
+  (ids, entities) => ids.map(id => entities[id])
 );
 
 export const selectTopFeaturedProducts = createSelector(selectFeaturedProducts, products => products.slice(0, 3));

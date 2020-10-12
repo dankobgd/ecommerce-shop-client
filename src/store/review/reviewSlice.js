@@ -116,12 +116,25 @@ export const selectCurrentEditReview = createSelector(
   (entities, editId) => entities[editId]
 );
 
-export const selectManyReviews = ids => createSelector(selectReviewEntities, entities => ids.map(id => entities[id]));
+export const selectCurrentProductReviews = createSelector(
+  [state => state.products.currentId, selectAllReviews],
+  (id, reviews) => reviews.filter(rev => rev.productId === id)
+);
 
-export const selectAverageProductRating = ids =>
-  createSelector(selectReviewEntities, entities => {
-    const arr = ids.map(id => entities[id]);
-    return arr.length > 0 ? arr.reduce((sum, val) => sum + val?.rating, 0) / arr.length : null;
-  });
+export const selectUserReview = createSelector(
+  [state => state.user.profile.id, selectCurrentProductReviews],
+  (id, revs) => revs.find(rev => rev.userId === id)
+);
+
+export const selectAverageProductRating = createSelector(
+  [state => state.products.entities[state.products.currentId]?.reviews, selectReviewEntities],
+  (ids, entities) => {
+    if (ids && ids.length > 0) {
+      const arr = ids.map(id => entities[id]);
+      return arr.length > 0 ? arr.reduce((sum, val) => sum + val?.rating, 0) / arr.length : null;
+    }
+    return null;
+  }
+);
 
 export default reviewSlice;

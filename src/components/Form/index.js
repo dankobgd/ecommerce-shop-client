@@ -9,3 +9,4 @@ export { default as FormAutoComplete } from './MaterialUI/AutoComplete';
 export { default as FormNumberField } from './MaterialUI/NumberFormat/NumberFormat';
 export { default as FormDropzone } from './ReactDropzone/ReactDropzone';
 export { default as FormSubmitButton } from './MaterialUI/SubmitButton';
+export { default as FormRating } from './MaterialUI/Rating';
