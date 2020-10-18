@@ -29,8 +29,9 @@ export const reviewUpdate = createAsyncThunk(
   }
 );
 
-export const reviewGetAll = createAsyncThunk(`${sliceName}/getAll`, async (params, { rejectWithValue }) => {
+export const reviewGetAll = createAsyncThunk(`${sliceName}/getAll`, async (qs, { rejectWithValue }) => {
   try {
+    const params = new URLSearchParams(qs);
     const reviews = await api.reviews.getAll(params);
     return reviews;
   } catch (error) {

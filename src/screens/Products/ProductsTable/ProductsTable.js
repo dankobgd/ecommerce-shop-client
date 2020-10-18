@@ -102,12 +102,12 @@ const ProductsTable = props => {
 
   const handlePageChange = (e, page) => {
     const params = new URLSearchParams({ per_page: paginationMeta.perPage, page: page + 1 });
-    dispatch(productGetAll(params));
+    dispatch(productGetAll(`${params}`));
   };
 
   const handleRowsPerPageChange = e => {
     const params = new URLSearchParams({ per_page: e.target.value });
-    dispatch(productGetAll(params));
+    dispatch(productGetAll(`${params}`));
   };
 
   const { start, end } = calculatePaginationStartEndPosition(paginationMeta?.page, paginationMeta?.perPage);

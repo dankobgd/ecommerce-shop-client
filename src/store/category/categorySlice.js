@@ -31,8 +31,9 @@ export const categoryUpdate = createAsyncThunk(
   }
 );
 
-export const categoryGetAll = createAsyncThunk(`${sliceName}/getAll`, async (params, { rejectWithValue }) => {
+export const categoryGetAll = createAsyncThunk(`${sliceName}/getAll`, async (qs, { rejectWithValue }) => {
   try {
+    const params = new URLSearchParams(qs);
     const categories = await api.categories.getAll(params);
     return categories;
   } catch (error) {
@@ -40,8 +41,9 @@ export const categoryGetAll = createAsyncThunk(`${sliceName}/getAll`, async (par
   }
 });
 
-export const categoryGetFeatured = createAsyncThunk(`${sliceName}/getFeatured`, async (params, { rejectWithValue }) => {
+export const categoryGetFeatured = createAsyncThunk(`${sliceName}/getFeatured`, async (qs, { rejectWithValue }) => {
   try {
+    const params = new URLSearchParams(qs);
     const featured = await api.categories.getFeatured(params);
     return featured;
   } catch (error) {

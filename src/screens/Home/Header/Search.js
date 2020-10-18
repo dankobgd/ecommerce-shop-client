@@ -18,7 +18,7 @@ function Search() {
     const params = new URLSearchParams({ q: searchValue });
 
     if (searchValue) {
-      await dispatch(productSearch(params));
+      await dispatch(productSearch(`${params}`));
     }
   };
 

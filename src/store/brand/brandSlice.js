@@ -28,8 +28,9 @@ export const brandUpdate = createAsyncThunk(
   }
 );
 
-export const brandGetAll = createAsyncThunk(`${sliceName}/getAll`, async (params, { rejectWithValue }) => {
+export const brandGetAll = createAsyncThunk(`${sliceName}/getAll`, async (qs, { rejectWithValue }) => {
   try {
+    const params = new URLSearchParams(qs);
     const brands = await api.brands.getAll(params);
     return brands;
   } catch (error) {

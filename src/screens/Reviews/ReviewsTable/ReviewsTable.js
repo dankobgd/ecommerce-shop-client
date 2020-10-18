@@ -100,12 +100,12 @@ const ReviewsTable = props => {
 
   const handlePageChange = (e, page) => {
     const params = new URLSearchParams({ per_page: paginationMeta.perPage, page: page + 1 });
-    dispatch(reviewGetAll(params));
+    dispatch(reviewGetAll(`${params}`));
   };
 
   const handleRowsPerPageChange = e => {
     const params = new URLSearchParams({ per_page: e.target.value });
-    dispatch(reviewGetAll(params));
+    dispatch(reviewGetAll(`${params}`));
   };
 
   const { start, end } = calculatePaginationStartEndPosition(paginationMeta?.page, paginationMeta?.perPage);

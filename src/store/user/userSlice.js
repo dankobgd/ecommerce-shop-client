@@ -146,8 +146,9 @@ export const wishlistAddProduct = createAsyncThunk(
 );
 export const wishlistGetProducts = createAsyncThunk(
   `${sliceName}/wishlistGetProducts`,
-  async (params, { rejectWithValue }) => {
+  async (qs, { rejectWithValue }) => {
     try {
+      const params = new URLSearchParams(qs);
       const wishlist = await api.users.wishlistGet(params);
       return wishlist;
     } catch (error) {

@@ -100,12 +100,12 @@ const TagsTable = props => {
 
   const handlePageChange = (e, page) => {
     const params = new URLSearchParams({ per_page: paginationMeta.perPage, page: page + 1 });
-    dispatch(tagGetAll(params));
+    dispatch(tagGetAll(`${params}`));
   };
 
   const handleRowsPerPageChange = e => {
     const params = new URLSearchParams({ per_page: e.target.value });
-    dispatch(tagGetAll(params));
+    dispatch(tagGetAll(`${params}`));
   };
 
   const { start, end } = calculatePaginationStartEndPosition(paginationMeta?.page, paginationMeta?.perPage);

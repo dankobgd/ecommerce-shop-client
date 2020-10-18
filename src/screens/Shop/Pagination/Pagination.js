@@ -43,13 +43,13 @@ function PaginationRanges({ page = 1, perPage = 50, pageCount = 1 }) {
   const handlePageChange = (e, value) => {
     setPageData(s => ({ ...s, numPerPage: perPage, numPage: value }));
     const params = new URLSearchParams({ per_page: perPage, page: value });
-    dispatch(productGetFeatured(params));
+    dispatch(productGetFeatured(`${params}`));
   };
 
   const handleRowsPerPageChange = e => {
     setPageData(s => ({ ...s, numPerPage: e.target.value, numPage: 1 }));
     const params = new URLSearchParams({ per_page: e.target.value });
-    dispatch(productGetFeatured(params));
+    dispatch(productGetFeatured(`${params}`));
   };
 
   return (

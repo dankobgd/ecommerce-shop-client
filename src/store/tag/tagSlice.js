@@ -29,8 +29,9 @@ export const tagUpdate = createAsyncThunk(
   }
 );
 
-export const tagGetAll = createAsyncThunk(`${sliceName}/getAll`, async (params, { rejectWithValue }) => {
+export const tagGetAll = createAsyncThunk(`${sliceName}/getAll`, async (qs, { rejectWithValue }) => {
   try {
+    const params = new URLSearchParams(qs);
     const tags = await api.tags.getAll(params);
     return tags;
   } catch (error) {

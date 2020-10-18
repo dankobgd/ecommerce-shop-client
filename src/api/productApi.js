@@ -38,7 +38,7 @@ export default {
   },
 
   async getProperties() {
-    return apiClient.get(`v1/products/properties`);
+    return apiClient.get(`v1/products/properties`, {}, { skipTransformResponse: true });
   },
 
   async getFeatured(params) {

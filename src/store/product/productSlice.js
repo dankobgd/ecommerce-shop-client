@@ -39,8 +39,9 @@ export const productUpdate = createAsyncThunk(
   }
 );
 
-export const productGetAll = createAsyncThunk(`${sliceName}/getAll`, async (params, { rejectWithValue }) => {
+export const productGetAll = createAsyncThunk(`${sliceName}/getAll`, async (qs, { rejectWithValue }) => {
   try {
+    const params = new URLSearchParams(qs);
     const products = await api.products.getAll(params);
     const { entities } = normalize(products.data, [productSchema]);
 
@@ -83,8 +84,9 @@ export const productGetProperties = createAsyncThunk(`${sliceName}/getProperties
   }
 });
 
-export const productGetFeatured = createAsyncThunk(`${sliceName}/getFeatured`, async (params, { rejectWithValue }) => {
+export const productGetFeatured = createAsyncThunk(`${sliceName}/getFeatured`, async (qs, { rejectWithValue }) => {
   try {
+    const params = new URLSearchParams(qs);
     const featured = await api.products.getFeatured(params);
     const { entities } = normalize(featured.data, [productSchema]);
 
@@ -97,8 +99,9 @@ export const productGetFeatured = createAsyncThunk(`${sliceName}/getFeatured`, a
   }
 });
 
-export const productSearch = createAsyncThunk(`${sliceName}/search`, async (params, { rejectWithValue }) => {
+export const productSearch = createAsyncThunk(`${sliceName}/search`, async (qs, { rejectWithValue }) => {
   try {
+    const params = new URLSearchParams(qs);
     const products = await api.products.search(params);
     return products;
   } catch (error) {
@@ -112,7 +115,7 @@ const initialState = productAdapter.getInitialState({
   editId: null,
   currentId: null,
   pagination: null,
-  properties: [],
+  properties: {},
   searchResults: [],
 });
 
@@ -121,7 +124,9 @@ const productSlice = createSlice({
   initialState,
   reducers: {
     upsertMany: (state, { payload }) => {
-      productAdapter.upsertMany(state, payload);
+      if (payload) {
+        productAdapter.upsertMany(state, payload);
+      }
     },
     setTagIds: (state, { payload }) => {
       if (payload.length > 0) {

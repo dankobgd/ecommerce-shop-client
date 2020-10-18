@@ -31,7 +31,7 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
-function ProductsGrid({ products }) {
+function ProductsGrid({ products, hasSearched }) {
   const classes = useStyles();
   const paginationMeta = useSelector(selectPaginationMeta);
 
@@ -43,7 +43,16 @@ function ProductsGrid({ products }) {
         {paginationMeta &&
           products.length > 0 &&
           products.slice(start, end).map(product => <ProductCard key={product.sku} product={product} />)}
-        {products.length === 0 && (
+
+        {products.length === 0 && !hasSearched && (
+          <div style={{ padding: '2rem' }}>
+            <Typography variant='h4'>Choose filters from the sidebar to search products</Typography>
+            <Typography variant='subtitle2' style={{ marginTop: '10px' }}>
+              Filter by category, tags, brands, price as well as product specific variants
+            </Typography>
+          </div>
+        )}
+        {products.length === 0 && hasSearched && (
           <div style={{ padding: '2rem' }}>
             <Typography variant='h4'>No products found matching the search criteria</Typography>
             <Typography variant='subtitle2' style={{ marginTop: '10px' }}>

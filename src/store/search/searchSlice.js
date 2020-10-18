@@ -15,8 +15,9 @@ export const sliceName = 'search';
 
 export const filterProducts = createAsyncThunk(
   `${sliceName}/filterProducts`,
-  async (params, { dispatch, rejectWithValue }) => {
+  async (qs, { dispatch, rejectWithValue }) => {
     try {
+      const params = new URLSearchParams(qs);
       const products = await api.products.getAll(params);
       const { entities } = normalize(products.data, [productSchema]);
       dispatch(productSlice.actions.upsertMany(entities.products));
@@ -31,21 +32,39 @@ export const searchAdapter = createEntityAdapter();
 
 const initialState = searchAdapter.getInitialState({
   pagination: null,
-  filterQueryString: '',
+  filters: {
+    tags: [],
+    brands: [],
+    categories: [],
+    priceMin: '',
+    priceMax: '',
+  },
 });
 
 const searchSlice = createSlice({
   name: sliceName,
   initialState,
   reducers: {
-    setFilterQueryString: (state, { payload }) => {
-      state.filterQueryString = payload;
+    setFilters: (state, { payload }) => {
+      state.filters = {
+        ...state.filters,
+        ...payload,
+      };
     },
   },
   extraReducers: {
     [filterProducts.fulfilled]: (state, { payload }) => {
-      searchAdapter.setAll(state, payload?.entities?.products || {});
-      state.pagination = payload?.meta || null;
+      const result = payload?.entities?.products;
+      const meta = payload?.meta;
+
+      if (!result) {
+        state.entities = {};
+        state.ids = [];
+        state.pagination = meta;
+      } else {
+        searchAdapter.setAll(state, result);
+        state.pagination = meta;
+      }
     },
   },
 });
@@ -59,6 +78,6 @@ export const {
 } = searchAdapter.getSelectors(state => state[sliceName]);
 
 export const selectPaginationMeta = state => state[sliceName].pagination;
-export const selectFilterQueryString = state => state[sliceName].filterQueryString;
+export const selectFilters = state => state[sliceName].filters;
 
 export default searchSlice;
