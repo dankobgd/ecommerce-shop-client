@@ -76,18 +76,23 @@ const searchSlice = createSlice({
         [name]: items,
       };
     },
-    setPriceFilters: (state, { payload }) => {
-      const { name, values } = payload;
+    setPriceMinFilter: (state, { payload }) => {
       state.priceFilters = {
         ...state.priceFilters,
-        [name]: values.value,
+        priceMin: payload,
+      };
+    },
+    setPriceMaxFilter: (state, { payload }) => {
+      state.priceFilters = {
+        ...state.priceFilters,
+        priceMax: payload,
       };
     },
     setPriceValues: (state, { payload }) => {
-      const { name, values } = payload;
+      const { name, value } = payload;
       state.priceValues = {
         ...state.priceValues,
-        [name]: values.value,
+        [name]: value,
       };
     },
 

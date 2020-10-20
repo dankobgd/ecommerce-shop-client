@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useEffect } from 'react';
 
 import {
   Accordion,
@@ -8,7 +8,6 @@ import {
   FormControlLabel,
   FormGroup,
   makeStyles,
-  Paper,
   Typography,
 } from '@material-ui/core';
 import CheckBoxIcon from '@material-ui/icons/CheckBox';
@@ -23,9 +22,8 @@ import searchSlice, {
   selectMainFilters,
   selectPriceFilters,
   selectSpecificFilters,
-  selectPriceValues,
 } from '../../../store/search/searchSlice';
-import PriceField from './PriceField';
+import PriceFilters from './PriceFilters';
 import PropFilters from './PropFilters';
 
 const useStyles = makeStyles(() => ({
@@ -56,26 +54,11 @@ function Filter({ tagsList, brandsList, categoriesList, variants }) {
   const specificFilters = useSelector(selectSpecificFilters, shallowEqual);
   const priceFilters = useSelector(selectPriceFilters, shallowEqual);
 
-  // need separate price state because i debounce price filters which actually trigger fetch query and rerender
-  // but i don't debounce actual onchange set price state
-  const priceValues = useSelector(selectPriceValues, shallowEqual);
-
   const handleChange = event => {
     const { name, value } = event.target;
     const arr = mainFilters[name];
     const items = arr?.includes(value) ? arr.filter(x => x !== value) : [...(arr ?? []), value];
     dispatch(searchSlice.actions.setMainFilters({ name, items }));
-  };
-
-  const updatePriceFilter = (name, values) => {
-    dispatch(searchSlice.actions.setPriceFilters({ name, values }));
-  };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const debouncePrice = useCallback(_.debounce(updatePriceFilter, 1000), []);
-
-  const handlePriceChange = (name, values) => {
-    dispatch(searchSlice.actions.setPriceValues({ name, values }));
-    debouncePrice(name, values);
   };
 
   useEffect(() => {
@@ -168,25 +151,7 @@ function Filter({ tagsList, brandsList, categoriesList, variants }) {
           </Accordion>
         ))}
 
-        <Paper className={classes.pricePaper}>
-          <Typography className={classes.heading}>Price</Typography>
-          <div className={classes.priceWrapper}>
-            <PriceField
-              name='priceMin'
-              value={priceValues.priceMin || ''}
-              onValueChange={values => handlePriceChange('priceMin', values)}
-              label='min'
-              prefix='$'
-            />
-            <PriceField
-              name='priceMax'
-              value={priceValues.priceMax || ''}
-              onValueChange={values => handlePriceChange('priceMax', values)}
-              label='max'
-              prefix='$'
-            />
-          </div>
-        </Paper>
+        <PriceFilters />
 
         <PropFilters variants={variants} />
       </form>

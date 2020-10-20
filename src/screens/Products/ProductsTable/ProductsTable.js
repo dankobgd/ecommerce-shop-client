@@ -176,7 +176,7 @@ const ProductsTable = props => {
                     <TableCell>{product.createdAt}</TableCell>
                     <TableCell>{product.updatedAt}</TableCell>
                     <TableCell>
-                      <Link to={`/${product.id}/${product.slug}/edit`} style={{ textDecoration: 'none' }}>
+                      <Link to={`${product.id}/${product.slug}/edit`} style={{ textDecoration: 'none' }}>
                         <Button
                           variant='outlined'
                           color='secondary'
