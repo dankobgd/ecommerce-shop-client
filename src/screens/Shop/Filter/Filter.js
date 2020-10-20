@@ -14,11 +14,17 @@ import {
 import CheckBoxIcon from '@material-ui/icons/CheckBox';
 import CheckBoxOutlineBlankIcon from '@material-ui/icons/CheckBoxOutlineBlank';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
-import { debounce } from 'lodash';
+import _ from 'lodash';
 import { nanoid } from 'nanoid';
-import { useDispatch, useSelector } from 'react-redux';
+import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 
-import searchSlice, { filterProducts, selectFilters } from '../../../store/search/searchSlice';
+import searchSlice, {
+  filterProducts,
+  selectMainFilters,
+  selectPriceFilters,
+  selectSpecificFilters,
+  selectPriceValues,
+} from '../../../store/search/searchSlice';
 import PriceField from './PriceField';
 import PropFilters from './PropFilters';
 
@@ -43,43 +49,41 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
-function Filter({
-  tagsList,
-  brandsList,
-  categoriesList,
-  variants,
-  mainFilters,
-  priceFilters,
-  setPriceFilters,
-  handleChange,
-  setHasSearched,
-}) {
+function Filter({ tagsList, brandsList, categoriesList, variants }) {
   const classes = useStyles();
   const dispatch = useDispatch();
-  const filtersObject = useSelector(selectFilters);
+  const mainFilters = useSelector(selectMainFilters, shallowEqual);
+  const specificFilters = useSelector(selectSpecificFilters, shallowEqual);
+  const priceFilters = useSelector(selectPriceFilters, shallowEqual);
 
-  const updatePriceFilter = vals => {
-    dispatch(searchSlice.actions.setFilters(vals));
+  // need separate price state because i debounce price filters which actually trigger fetch query and rerender
+  // but i don't debounce actual onchange set price state
+  const priceValues = useSelector(selectPriceValues, shallowEqual);
+
+  const handleChange = event => {
+    const { name, value } = event.target;
+    const arr = mainFilters[name];
+    const items = arr?.includes(value) ? arr.filter(x => x !== value) : [...(arr ?? []), value];
+    dispatch(searchSlice.actions.setMainFilters({ name, items }));
   };
 
+  const updatePriceFilter = (name, values) => {
+    dispatch(searchSlice.actions.setPriceFilters({ name, values }));
+  };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const debouncePrice = useCallback(debounce(updatePriceFilter, 1000), []);
+  const debouncePrice = useCallback(_.debounce(updatePriceFilter, 1000), []);
 
   const handlePriceChange = (name, values) => {
-    setPriceFilters(state => ({ ...state, [name]: values.value }));
+    dispatch(searchSlice.actions.setPriceValues({ name, values }));
     debouncePrice(name, values);
   };
 
   useEffect(() => {
-    dispatch(searchSlice.actions.setFilters(mainFilters));
-  }, [mainFilters, dispatch]);
-
-  useEffect(() => {
-    debouncePrice(priceFilters);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [priceFilters]);
-
-  useEffect(() => {
+    const filtersObject = {
+      ...mainFilters,
+      ...priceFilters,
+      ...specificFilters,
+    };
     const valid = ['categories', 'tags', 'brands', 'priceMin', 'priceMax'];
     const filtered = Object.keys(filtersObject)
       .filter(key => {
@@ -117,17 +121,18 @@ function Filter({
       });
     }
 
-    Object.keys(restFilters).forEach(key => {
-      restFilters[key].forEach(val => {
+    const sfilters = _.pickBy(restFilters, v => v.length > 0);
+    Object.keys(sfilters).forEach(key => {
+      sfilters[key].forEach(val => {
         params.append(key, val);
       });
     });
 
     if (priceMin || priceMax || brands?.length > 0 || tags?.length > 0 || categories?.length > 0) {
       dispatch(filterProducts(`${params}`));
-      setHasSearched(true);
+      dispatch(searchSlice.actions.setHasSearched(true));
     }
-  }, [filtersObject, dispatch, setHasSearched]);
+  }, [dispatch, mainFilters, priceFilters, specificFilters]);
 
   const mainChoices = ['categories', 'tags', 'brands'];
   const mapping = { categories: categoriesList, brands: brandsList, tags: tagsList };
@@ -151,7 +156,7 @@ function Filter({
                         checkedIcon={<CheckBoxIcon fontSize='small' />}
                         name={opt}
                         value={x.name}
-                        checked={mainFilters[opt] && mainFilters[opt].includes(x.name)}
+                        checked={mainFilters && mainFilters[opt] && mainFilters[opt].includes(x.name)}
                         onChange={handleChange}
                       />
                     }
@@ -168,14 +173,14 @@ function Filter({
           <div className={classes.priceWrapper}>
             <PriceField
               name='priceMin'
-              value={priceFilters.priceMin}
+              value={priceValues.priceMin || ''}
               onValueChange={values => handlePriceChange('priceMin', values)}
               label='min'
               prefix='$'
             />
             <PriceField
               name='priceMax'
-              value={priceFilters.priceMax}
+              value={priceValues.priceMax || ''}
               onValueChange={values => handlePriceChange('priceMax', values)}
               label='max'
               prefix='$'
@@ -183,7 +188,7 @@ function Filter({
           </div>
         </Paper>
 
-        <PropFilters variants={variants} chosenOptions={mainFilters} />
+        <PropFilters variants={variants} />
       </form>
     </div>
   );

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 
 import {
   Accordion,
@@ -14,9 +14,9 @@ import CheckBoxIcon from '@material-ui/icons/CheckBox';
 import CheckBoxOutlineBlankIcon from '@material-ui/icons/CheckBoxOutlineBlank';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import _ from 'lodash';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 
-import searchSlice from '../../../store/search/searchSlice';
+import searchSlice, { selectMainFilters, selectSpecificFilters } from '../../../store/search/searchSlice';
 
 const useStyles = makeStyles(() => ({
   expanded: {
@@ -34,10 +34,11 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
-function PropFilters({ chosenOptions, variants }) {
+function PropFilters({ variants }) {
   const classes = useStyles();
   const dispatch = useDispatch();
-  const [filters, setFilters] = useState({});
+  const mainFilters = useSelector(selectMainFilters);
+  const specificFilters = useSelector(selectSpecificFilters);
 
   const filterProps = Object.keys(variants).reduce((obj, key) => {
     const [cat, prop] = key.split('_');
@@ -46,30 +47,26 @@ function PropFilters({ chosenOptions, variants }) {
   }, {});
 
   const filtered = Object.keys(filterProps)
-    .filter(key => chosenOptions.categories?.includes(key))
+    .filter(key => mainFilters?.categories?.includes(key))
     .reduce((obj, key) => {
       obj[key] = filterProps[key];
       return obj;
     }, {});
 
   useEffect(() => {
-    const tmp = {};
-    Object.keys(variants).forEach(key => {
-      tmp[key] = [];
-    });
-    setFilters(state => ({ ...state, ...tmp }));
-  }, [variants]);
+    const obj = Object.keys(variants).reduce((acc, key) => {
+      acc[key] = [];
+      return acc;
+    }, {});
 
-  useEffect(() => {
-    const nonEmpty = _.pickBy(filters, v => v.length > 0);
-    dispatch(searchSlice.actions.setFilters(nonEmpty));
-  }, [filters, dispatch]);
+    dispatch(searchSlice.actions.initSpecificFilters(obj));
+  }, [dispatch, variants]);
 
   const handleChange = event => {
     const { name, value } = event.target;
-    const arr = filters[name];
-    const items = arr && arr?.includes(value) ? arr.filter(x => x === value) : [...(arr ?? []), value];
-    setFilters(state => ({ ...state, [name]: items }));
+    const arr = specificFilters[name];
+    const items = arr?.includes(value) ? arr.filter(x => x !== value) : [...(arr ?? []), value];
+    dispatch(searchSlice.actions.setSpecificFilters({ name, items }));
   };
 
   return (
@@ -99,7 +96,7 @@ function PropFilters({ chosenOptions, variants }) {
                               checkedIcon={<CheckBoxIcon fontSize='small' />}
                               name={`${category}_${prop}`}
                               value={p}
-                              checked={filters[`${category}_${prop}`]?.includes(p)}
+                              checked={specificFilters && specificFilters[`${category}_${prop}`]?.includes(p)}
                               onChange={handleChange}
                             />
                           }

@@ -32,24 +32,83 @@ export const searchAdapter = createEntityAdapter();
 
 const initialState = searchAdapter.getInitialState({
   pagination: null,
-  filters: {
+  hasSearched: false,
+  mainFilters: {
     tags: [],
     brands: [],
     categories: [],
+  },
+  priceFilters: {
     priceMin: '',
     priceMax: '',
   },
+  priceValues: {
+    priceMin: '',
+    priceMax: '',
+  },
+  specificFilters: {},
 });
 
 const searchSlice = createSlice({
   name: sliceName,
   initialState,
   reducers: {
-    setFilters: (state, { payload }) => {
-      state.filters = {
-        ...state.filters,
+    setHasSearched: (state, { payload }) => {
+      state.hasSearched = payload;
+    },
+    setMainFilters: (state, { payload }) => {
+      const { name, items } = payload;
+      state.mainFilters = {
+        ...state.mainFilters,
+        [name]: items,
+      };
+    },
+    initSpecificFilters: (state, { payload }) => {
+      state.specificFilters = {
+        ...state.specificFilters,
         ...payload,
       };
+    },
+    setSpecificFilters: (state, { payload }) => {
+      const { name, items } = payload;
+      state.specificFilters = {
+        ...state.specificFilters,
+        [name]: items,
+      };
+    },
+    setPriceFilters: (state, { payload }) => {
+      const { name, values } = payload;
+      state.priceFilters = {
+        ...state.priceFilters,
+        [name]: values.value,
+      };
+    },
+    setPriceValues: (state, { payload }) => {
+      const { name, values } = payload;
+      state.priceValues = {
+        ...state.priceValues,
+        [name]: values.value,
+      };
+    },
+
+    filterChoiceClicked: (state, { payload }) => {
+      const { name, value } = payload;
+      state.mainFilters = {
+        ...{
+          tags: [],
+          brands: [],
+          categories: [],
+        },
+        ...{
+          [name]: [value],
+        },
+      };
+      state.specificFilters = Object.keys(state.specificFilters).reduce((acc, key) => {
+        acc[key] = [];
+        return acc;
+      }, {});
+      state.priceFilters = { priceMin: '', priceMax: '' };
+      state.priceValues = { priceMin: '', priceMax: '' };
     },
   },
   extraReducers: {
@@ -79,5 +138,10 @@ export const {
 
 export const selectPaginationMeta = state => state[sliceName].pagination;
 export const selectFilters = state => state[sliceName].filters;
+export const selectHasSearched = state => state[sliceName].hasSearched;
+export const selectMainFilters = state => state[sliceName].mainFilters;
+export const selectSpecificFilters = state => state[sliceName].specificFilters;
+export const selectPriceFilters = state => state[sliceName].priceFilters;
+export const selectPriceValues = state => state[sliceName].priceValues;
 
 export default searchSlice;

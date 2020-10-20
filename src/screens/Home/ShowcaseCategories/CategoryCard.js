@@ -1,6 +1,10 @@
 import React from 'react';
 
 import { makeStyles } from '@material-ui/core';
+import { Link } from '@reach/router';
+import { useDispatch } from 'react-redux';
+
+import searchSlice from '../../../store/search/searchSlice';
 
 const useStyles = makeStyles(() => ({
   figure: {
@@ -81,14 +85,21 @@ const useStyles = makeStyles(() => ({
 
 function CategoryCard({ category }) {
   const classes = useStyles();
+  const dispatch = useDispatch();
+
+  const handleCategoryChoice = () => {
+    dispatch(searchSlice.actions.filterChoiceClicked({ name: 'categories', value: category.name }));
+  };
 
   return (
-    <figure className={classes.figure}>
-      <img className={classes.img} src={category.logo} alt={category.name} />
-      <figcaption className={classes.figcaption}>
-        <h2 className={classes.h2}>{category.name}</h2>
-      </figcaption>
-    </figure>
+    <Link to='/shop' onClick={handleCategoryChoice}>
+      <figure className={classes.figure}>
+        <img className={classes.img} src={category.logo} alt={category.name} />
+        <figcaption className={classes.figcaption}>
+          <h2 className={classes.h2}>{category.name}</h2>
+        </figcaption>
+      </figure>
+    </Link>
   );
 }
 

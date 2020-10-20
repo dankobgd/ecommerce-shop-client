@@ -1,15 +1,19 @@
 import React from 'react';
 
 import { makeStyles } from '@material-ui/core';
+import { Link } from '@reach/router';
+import { useDispatch } from 'react-redux';
 import Slider from 'react-slick';
+
+import searchSlice from '../../../store/search/searchSlice';
 
 const useStyles = makeStyles(() => ({
   gallery: {
     margin: '5rem 0',
   },
   imgDiv: {
-    width: 160,
-    height: 120,
+    width: 120,
+    height: 80,
   },
   img: {
     width: '100%',
@@ -82,11 +86,18 @@ function BrandsGrid({ brands }) {
 
 function BrandSlide({ brand }) {
   const classes = useStyles();
+  const dispatch = useDispatch();
+
+  const handleBrandChoice = () => {
+    dispatch(searchSlice.actions.filterChoiceClicked({ name: 'brands', value: brand.name }));
+  };
 
   return (
-    <div className={classes.imgDiv}>
-      <img className={classes.img} src={brand.logo} alt={brand.name} />
-    </div>
+    <Link to='/shop' onClick={handleBrandChoice}>
+      <div className={classes.imgDiv}>
+        <img className={classes.img} src={brand.logo} alt={brand.name} />
+      </div>
+    </Link>
   );
 }
 
