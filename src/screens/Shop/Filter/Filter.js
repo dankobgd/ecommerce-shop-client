@@ -47,7 +47,7 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
-function Filter({ tagsList, brandsList, categoriesList, variants }) {
+function Filter({ tagsList, brandsList, categoriesList }) {
   const classes = useStyles();
   const dispatch = useDispatch();
   const mainFilters = useSelector(selectMainFilters, shallowEqual);
@@ -60,6 +60,12 @@ function Filter({ tagsList, brandsList, categoriesList, variants }) {
     const items = arr?.includes(value) ? arr.filter(x => x !== value) : [...(arr ?? []), value];
     dispatch(searchSlice.actions.setMainFilters({ name, items }));
   };
+
+  useEffect(() => {
+    const obj = _.pickBy(specificFilters, (v, k) => mainFilters.categories.includes(k.split('_')[0]) && v.length > 0);
+    dispatch(searchSlice.actions.updateSpecificFilters(obj));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mainFilters]);
 
   useEffect(() => {
     const filtersObject = {
@@ -153,7 +159,7 @@ function Filter({ tagsList, brandsList, categoriesList, variants }) {
 
         <PriceFilters />
 
-        <PropFilters variants={variants} />
+        <PropFilters />
       </form>
     </div>
   );

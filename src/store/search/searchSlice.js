@@ -1,4 +1,5 @@
-import { createSlice, createAsyncThunk, createEntityAdapter } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, createEntityAdapter, createSelector } from '@reduxjs/toolkit';
+import _ from 'lodash';
 import { normalize, schema } from 'normalizr';
 
 import api from '../../api';
@@ -27,6 +28,21 @@ export const filterProducts = createAsyncThunk(
     }
   }
 );
+
+const getEmptyMainFilters = () => ({
+  tags: [],
+  brands: [],
+  categories: [],
+});
+const getEmptyPriceFilters = () => ({
+  priceMin: '',
+  priceMax: '',
+});
+const getEmptySpecificFilters = obj =>
+  Object.keys(obj).reduce((acc, key) => {
+    acc[key] = [];
+    return acc;
+  }, {});
 
 export const searchAdapter = createEntityAdapter();
 
@@ -76,6 +92,12 @@ const searchSlice = createSlice({
         [name]: items,
       };
     },
+    updateSpecificFilters: (state, { payload }) => {
+      state.specificFilters = {
+        ...getEmptySpecificFilters(state.specificFilters),
+        ...payload,
+      };
+    },
     setPriceMinFilter: (state, { payload }) => {
       state.priceFilters = {
         ...state.priceFilters,
@@ -95,25 +117,31 @@ const searchSlice = createSlice({
         [name]: value,
       };
     },
-
+    clearPriceMin: state => {
+      state.priceFilters = { ...state.priceFilters, priceMin: '' };
+      state.priceValues = { ...state.priceValues, priceMin: '' };
+    },
+    clearPriceMax: state => {
+      state.priceFilters = { ...state.priceFilters, priceMax: '' };
+      state.priceValues = { ...state.priceValues, priceMax: '' };
+    },
+    clearAllFilters: state => {
+      state.mainFilters = getEmptyMainFilters();
+      state.specificFilters = getEmptySpecificFilters(state.specificFilters);
+      state.priceFilters = getEmptyPriceFilters();
+      state.priceValues = getEmptyPriceFilters();
+    },
     filterChoiceClicked: (state, { payload }) => {
       const { name, value } = payload;
       state.mainFilters = {
-        ...{
-          tags: [],
-          brands: [],
-          categories: [],
-        },
+        ...getEmptyMainFilters(),
         ...{
           [name]: [value],
         },
       };
-      state.specificFilters = Object.keys(state.specificFilters).reduce((acc, key) => {
-        acc[key] = [];
-        return acc;
-      }, {});
-      state.priceFilters = { priceMin: '', priceMax: '' };
-      state.priceValues = { priceMin: '', priceMax: '' };
+      state.specificFilters = getEmptySpecificFilters(state.specificFilters);
+      state.priceFilters = getEmptyPriceFilters();
+      state.priceValues = getEmptyPriceFilters();
     },
   },
   extraReducers: {
@@ -148,5 +176,48 @@ export const selectMainFilters = state => state[sliceName].mainFilters;
 export const selectSpecificFilters = state => state[sliceName].specificFilters;
 export const selectPriceFilters = state => state[sliceName].priceFilters;
 export const selectPriceValues = state => state[sliceName].priceValues;
+
+export const selectHasFilters = createSelector(
+  [selectMainFilters, selectPriceFilters, selectSpecificFilters],
+  (main, price, specific) => {
+    const x = _.pickBy(main, v => v.length > 0);
+    const y = _.pickBy(price, v => v.length > 0);
+    const z = _.pickBy(specific, v => v.length > 0);
+    return Object.keys(x).length > 0 || Object.keys(y).length > 0 || Object.keys(z).length > 0;
+  }
+);
+
+export const selectHasSpecificFilters = createSelector(selectSpecificFilters, filters => {
+  const obj = _.pickBy(filters, v => v.length > 0);
+  return Object.keys(obj).length > 0;
+});
+
+export const selectChipFilters = createSelector(
+  [selectMainFilters, selectPriceFilters, selectSpecificFilters],
+  (main, price, specific) => {
+    const chipData = [];
+
+    Object.entries(main).forEach(([key, val]) => {
+      val.forEach(v => {
+        chipData.push({ key: `${key}_${v}`, label: v, name: key, values: val, value: v });
+      });
+    });
+    Object.entries(price).forEach(([key, val]) => {
+      const label = `${key.slice(5).charAt(0).toLowerCase() + key.slice(5).slice(1)}: $${val}`;
+      if (val) {
+        chipData.push({ key, label, name: key, values: val });
+      }
+    });
+
+    const nonEmptySpecific = _.pickBy(specific, v => v.length > 0);
+    Object.entries(nonEmptySpecific).forEach(([key, val]) => {
+      val.forEach(v => {
+        chipData.push({ key: `${key}_${v}`, label: `${key}: ${v}`, name: key, values: val, value: v });
+      });
+    });
+
+    return chipData;
+  }
+);
 
 export default searchSlice;

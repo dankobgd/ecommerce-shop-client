@@ -53,7 +53,7 @@ function Shop() {
       <Header />
       <Container className={classes.shop}>
         <section className={classes.filter}>
-          <Filter variants={variants} tagsList={tags} brandsList={brands} categoriesList={categories} />
+          <Filter tagsList={tags} brandsList={brands} categoriesList={categories} />
         </section>
         <section className={classes.main}>
           <ProductsGrid products={searchProducts} hasSearched={hasSearched} />

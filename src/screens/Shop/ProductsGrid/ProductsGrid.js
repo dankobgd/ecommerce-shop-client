@@ -7,6 +7,7 @@ import ProductCard from '../../../components/ProductCard/ProductCard';
 import { selectPaginationMeta } from '../../../store/search/searchSlice';
 import { calculatePaginationStartEndPosition } from '../../../utils/pagination';
 import PaginationRanges from '../Pagination/Pagination';
+import ChipsSection from './ChipsSection';
 
 const useStyles = makeStyles(() => ({
   outer: {
@@ -15,7 +16,15 @@ const useStyles = makeStyles(() => ({
     alignItems: 'space-between',
     border: '1px solid #eee',
   },
-  productArea: {
+  mainArea: {
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  chipsArea: {
+    marginBottom: '1rem',
+    padding: '0 1rem',
+  },
+  productAre: {
     display: 'grid',
     justifyItems: 'space-between',
     alignItems: 'flex-start',
@@ -39,10 +48,16 @@ function ProductsGrid({ products, hasSearched }) {
 
   return (
     <div className={classes.outer}>
-      <div className={classes.productArea}>
-        {paginationMeta &&
-          products.length > 0 &&
-          products.slice(start, end).map(product => <ProductCard key={product.sku} product={product} />)}
+      <div className={classes.mainArea}>
+        <div className={classes.chipsArea}>
+          <ChipsSection />
+        </div>
+
+        <div className={classes.productAre}>
+          {paginationMeta &&
+            products.length > 0 &&
+            products.slice(start, end).map(product => <ProductCard key={product.sku} product={product} />)}
+        </div>
 
         {products.length === 0 && !hasSearched && (
           <div style={{ padding: '2rem' }}>
@@ -61,7 +76,6 @@ function ProductsGrid({ products, hasSearched }) {
           </div>
         )}
       </div>
-
       {paginationMeta && paginationMeta.totalCount !== -1 && paginationMeta.pageCount !== 1 && (
         <div className={classes.paginationArea}>
           <PaginationRanges

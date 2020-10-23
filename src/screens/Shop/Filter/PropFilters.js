@@ -16,7 +16,12 @@ import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import _ from 'lodash';
 import { useDispatch, useSelector } from 'react-redux';
 
-import searchSlice, { selectMainFilters, selectSpecificFilters } from '../../../store/search/searchSlice';
+import { selectProductVariants } from '../../../store/product/productSlice';
+import searchSlice, {
+  selectMainFilters,
+  selectSpecificFilters,
+  selectHasSpecificFilters,
+} from '../../../store/search/searchSlice';
 
 const useStyles = makeStyles(() => ({
   expanded: {
@@ -34,11 +39,13 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
-function PropFilters({ variants }) {
+function PropFilters() {
   const classes = useStyles();
   const dispatch = useDispatch();
+  const variants = useSelector(selectProductVariants);
   const mainFilters = useSelector(selectMainFilters);
   const specificFilters = useSelector(selectSpecificFilters);
+  const hasSpecificFilters = useSelector(selectHasSpecificFilters);
 
   const filterProps = Object.keys(variants).reduce((obj, key) => {
     const [cat, prop] = key.split('_');
@@ -59,8 +66,10 @@ function PropFilters({ variants }) {
       return acc;
     }, {});
 
-    dispatch(searchSlice.actions.initSpecificFilters(obj));
-  }, [dispatch, variants]);
+    if (!hasSpecificFilters) {
+      dispatch(searchSlice.actions.initSpecificFilters(obj));
+    }
+  }, [dispatch, hasSpecificFilters, variants]);
 
   const handleChange = event => {
     const { name, value } = event.target;
