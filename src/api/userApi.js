@@ -25,12 +25,6 @@ export default {
   async update(details) {
     return apiClient.patch(`v1/users`, { data: details });
   },
-  async updateAddress(details) {
-    return apiClient.patch(`v1/users/address`, { data: details });
-  },
-  async deleteAddress() {
-    return apiClient.patch(`v1/users/address`);
-  },
   async uploadAvatar(formData) {
     return apiClient.post(`v1/users/avatar`, { data: formData, headers: { 'Content-Type': 'multipart/form-data' } });
   },
@@ -51,5 +45,20 @@ export default {
   },
   async wishlistClear(details) {
     return apiClient.delete(`v1/users/wishlist/clear`, { data: details });
+  },
+  async createAddress(details) {
+    return apiClient.post(`v1/users/addresses`, { data: details });
+  },
+  async getAddress(id) {
+    return apiClient.get(`v1/users/addresses/${id}`);
+  },
+  async getAddresses() {
+    return apiClient.get(`v1/users/addresses`);
+  },
+  async updateAddress(id, details) {
+    return apiClient.patch(`v1/users/addresses/${id}`, { data: details });
+  },
+  async deleteAddress(id) {
+    return apiClient.delete(`v1/users/addresses/${id}`);
   },
 };

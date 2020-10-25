@@ -1,5 +1,5 @@
 import { navigate } from '@reach/router';
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, createSelector } from '@reduxjs/toolkit';
 
 import api from '../../api';
 import toastSlice, { successToast } from '../toast/toastSlice';
@@ -181,14 +181,77 @@ export const wishlistClear = createAsyncThunk(
   }
 );
 
+export const createAddress = createAsyncThunk(
+  `${sliceName}/createAddress`,
+  async (details, { dispatch, rejectWithValue }) => {
+    try {
+      const address = await api.users.createAddress(details);
+      dispatch(toastSlice.actions.addToast(successToast('Address cleared')));
+      return address;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const getAddress = createAsyncThunk(`${sliceName}/getAddress`, async (id, { rejectWithValue }) => {
+  try {
+    const address = await api.users.getAddress(id);
+    return address;
+  } catch (error) {
+    return rejectWithValue(error);
+  }
+});
+
+export const getAddresses = createAsyncThunk(`${sliceName}/getAddresses`, async (_, { rejectWithValue }) => {
+  try {
+    const addresses = await api.users.getAddresses();
+    return addresses;
+  } catch (error) {
+    return rejectWithValue(error);
+  }
+});
+
+export const updateAddress = createAsyncThunk(
+  `${sliceName}/updateAddress`,
+  async ({ id, details }, { dispatch, rejectWithValue }) => {
+    try {
+      const address = await api.users.updateAddress(id, details);
+      dispatch(toastSlice.actions.addToast(successToast('Address updated')));
+      return address;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const deleteAddress = createAsyncThunk(
+  `${sliceName}/deleteAddress`,
+  async (id, { dispatch, rejectWithValue }) => {
+    try {
+      const msg = await api.users.deleteAddress(id);
+      dispatch(toastSlice.actions.addToast(successToast('Address deleted')));
+      return msg;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
 const userSlice = createSlice({
   name: sliceName,
   initialState: {
     profile: null,
     isAuthenticated: false,
     wishlist: [],
+    addresses: [],
+    editAddressId: null,
   },
-  reducers: {},
+  reducers: {
+    setEditAddressId: (state, { payload }) => {
+      state.editAddressId = payload;
+    },
+  },
   extraReducers: {
     [getCurrentUser.rejected]: state => {
       state.profile = null;
@@ -237,11 +300,40 @@ const userSlice = createSlice({
     [wishlistClear.fulfilled]: state => {
       state.wishlist = [];
     },
+
+    [createAddress.fulfilled]: (state, { payload }) => {
+      state.addresses.push(payload);
+    },
+    [getAddress.fulfilled]: (state, { payload }) => {
+      const exists = state.addresses.some(x => x.id === payload.id);
+      if (!exists) {
+        state.addresses.push(payload);
+      }
+    },
+    [getAddresses.fulfilled]: (state, { payload }) => {
+      state.addresses = payload;
+    },
+    [updateAddress.fulfilled]: (state, { payload }) => {
+      const idx = state.addresses.findIndex(x => x.id === payload.id);
+      state.addresses[idx] = payload;
+    },
+    [deleteAddress.fulfilled]: (state, { payload }) => {
+      const idx = state.addresses.findIndex(x => x === payload);
+      state.addresses.splice(idx, 1);
+    },
   },
 });
 
 export const selectUserProfile = state => state[sliceName].profile;
 export const selectIsUserAuthenticated = state => state[sliceName].isAuthenticated;
 export const selectWishlistProductIds = state => state[sliceName].wishlist;
+
+export const selectUserAddresses = state => state[sliceName].addresses ?? [];
+export const selectEditAddressId = state => state[sliceName].editAddressId;
+
+export const selectCurrentEditAddress = createSelector(
+  [selectUserAddresses, selectEditAddressId],
+  (addresses, editId) => addresses.find(x => x.id === editId)
+);
 
 export default userSlice;

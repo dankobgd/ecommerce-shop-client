@@ -3,6 +3,7 @@ import React from 'react';
 import { Grid } from '@material-ui/core';
 import { makeStyles } from '@material-ui/styles';
 
+import AccountAddress from './AccountAddress/AccountAddress';
 import AccountAvatar from './AccountAvatar/AccountAvatar';
 import AccountDetails from './AccountDetails/AccountDetails';
 import AccountPassword from './AccountPassword/AccountPassword';
@@ -27,8 +28,13 @@ const Account = () => {
         </Grid>
       </Grid>
       <Grid container spacing={4}>
-        <Grid item>
+        <Grid item xs={12}>
           <AccountDetails />
+        </Grid>
+      </Grid>
+      <Grid container spacing={4}>
+        <Grid item xs={12}>
+          <AccountAddress />
         </Grid>
       </Grid>
     </div>
