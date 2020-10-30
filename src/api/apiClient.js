@@ -63,7 +63,12 @@ function checkTransformData(config, data) {
   if (config.skipTransformRequest) {
     return data;
   }
-  return transformKeysToSnakeCase(data);
+  const withISODate = Object.keys(data).reduce((acc, key) => {
+    acc[key] = typeof data[key].getMonth === 'function' ? data[key].toISOString() : data[key];
+    return acc;
+  }, {});
+
+  return transformKeysToSnakeCase(withISODate);
 }
 
 function transform(config, data) {

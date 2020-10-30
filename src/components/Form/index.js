@@ -10,3 +10,4 @@ export { default as FormNumberField } from './MaterialUI/NumberFormat/NumberForm
 export { default as FormDropzone } from './ReactDropzone/ReactDropzone';
 export { default as FormSubmitButton } from './MaterialUI/SubmitButton';
 export { default as FormRating } from './MaterialUI/Rating';
+export { default as FormDateTimePicker } from './MaterialUI/DateTimePicker';

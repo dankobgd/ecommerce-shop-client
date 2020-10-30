@@ -2,7 +2,7 @@ import React from 'react';
 
 import { yupResolver } from '@hookform/resolvers';
 import { Avatar, CircularProgress, Container, Typography } from '@material-ui/core';
-import ShoppingBasketIcon from '@material-ui/icons/ShoppingBasket';
+import ClassIcon from '@material-ui/icons/Class';
 import { makeStyles } from '@material-ui/styles';
 import { FormProvider, useForm } from 'react-hook-form';
 import { useDispatch, useSelector } from 'react-redux';
@@ -39,7 +39,7 @@ const schema = Yup.object({
   slug: Yup.string().required(),
   type: Yup.string().required(),
   description: Yup.string().required(),
-  email: rules.emailRule,
+  email: rules.email,
   websiteUrl: Yup.string().required(),
 });
 
@@ -75,7 +75,7 @@ function EditBrandForm() {
     <Container component='main' maxWidth='xs'>
       <div className={classes.paper}>
         <Avatar className={classes.avatar}>
-          <ShoppingBasketIcon />
+          <ClassIcon />
         </Avatar>
         <Typography component='h1' variant='h5'>
           Edit Brand

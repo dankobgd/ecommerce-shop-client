@@ -23,7 +23,7 @@ const schema = Yup.object({
   firstName: Yup.string().required(),
   lastName: Yup.string().required(),
   username: Yup.string().required(),
-  email: rules.emailRule,
+  email: rules.email,
   locale: Yup.string().required(),
 });
 

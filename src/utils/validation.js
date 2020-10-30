@@ -13,9 +13,9 @@ export const supportedFileFormats = ['image/jpg', 'image/jpeg', 'image/gif', 'im
 export const rules = {
   username: Yup.string().required('Username is required'),
 
-  emailRule: Yup.string().email('Enter a valid email').required('Email is required'),
+  email: Yup.string().email('Enter a valid email').required('Email is required'),
 
-  passwordRule: Yup.string()
+  password: Yup.string()
     .min(3, 'Password must contain atleast 3 characters')
     .matches(regexes.uppercase, 'one uppercase character required')
     .matches(regexes.lowercase, 'one lowercase character required')
@@ -23,13 +23,22 @@ export const rules = {
     .matches(regexes.symbol, 'one symbol required')
     .required('Password is required'),
 
-  imageRule: Yup.mixed()
+  image: Yup.mixed()
     .test('required', 'File is required', value => !!value)
     .test('fileSize', 'File size is too large', value => value.size <= maxFileSize)
     .test('fileType', 'Unsupported file format', value => supportedFileFormats.includes(value.type)),
 
-  confirmPasswordRule: fieldName =>
+  confirmPassword: pwdRef =>
     Yup.string()
-      .oneOf([Yup.ref(fieldName), null], 'Passwords must match')
+      .oneOf([Yup.ref(pwdRef), null], 'Passwords must match')
       .required(),
+
+  startDate: Yup.date().required().nullable().default(undefined),
+
+  endDate: startRef =>
+    Yup.date()
+      .min(Yup.ref(startRef), () => 'End date needs to be before start date')
+      .required()
+      .nullable()
+      .default(undefined),
 };

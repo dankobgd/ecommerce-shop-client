@@ -15,3 +15,10 @@ export function transformKeysToCamelCase(obj) {
     acc[camelKey] = _.isObject(value) ? transformKeysToCamelCase(value) : value; // eslint-disable-line
   });
 }
+
+export function transformValuesToNumbers(obj, keysArr) {
+  return Object.keys(obj).reduce((acc, key) => {
+    acc[key] = keysArr.includes(key) ? Number.parseFloat(obj[key]) : obj[key];
+    return acc;
+  }, {});
+}

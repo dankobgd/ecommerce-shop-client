@@ -8,6 +8,7 @@ import categorySlice from './category/categorySlice';
 import orderSlice from './order/orderSlice';
 import productSlice from './product/productSlice';
 import productImageSlice from './product_image/productImageSlice';
+import promotionSlice from './promotion/promotionSlice';
 import reviewSlice from './review/reviewSlice';
 import searchSlice from './search/searchSlice';
 import tagSlice from './tag/tagSlice';
@@ -28,6 +29,7 @@ const rootReducer = combineReducers({
   [reviewSlice.name]: reviewSlice.reducer,
   [productImageSlice.name]: productImageSlice.reducer,
   [searchSlice.name]: searchSlice.reducer,
+  [promotionSlice.name]: promotionSlice.reducer,
 });
 
 const persistConfig = {

@@ -23,7 +23,7 @@ import { categoryGetAll, selectAllCategories } from '../../../store/category/cat
 import { productCreate, productGetProperties, selectProductVariants } from '../../../store/product/productSlice';
 import { tagGetAll, selectAllTags } from '../../../store/tag/tagSlice';
 import { selectUIState } from '../../../store/ui';
-import { transformKeysToSnakeCase } from '../../../utils/transformObjectKeys';
+import { transformKeysToSnakeCase, transformValuesToNumbers } from '../../../utils/transformObjectKeys';
 import { rules } from '../../../utils/validation';
 import { ProductImagesDropzoneField, ProductThumbnailUploadField } from './FileUploadInputs';
 
@@ -59,7 +59,7 @@ const schema = Yup.object({
   price: Yup.string().required(),
   inStock: Yup.boolean().required(),
   isFeatured: Yup.boolean().required(),
-  image: rules.imageRule,
+  image: rules.image,
 });
 
 const formOpts = {
@@ -84,7 +84,7 @@ const formOpts = {
 };
 
 function renderCategoryProperties(chosenCategory, variants) {
-  const opts = variants.find(prop => prop.category === chosenCategory?.name);
+  const opts = variants[chosenCategory?.name];
   const createLabel = name => `${chosenCategory?.name.charAt(0).toUpperCase() + chosenCategory?.name.slice(1)} ${name}`;
 
   return (
@@ -129,7 +129,9 @@ function CreateProductForm() {
   const onSubmit = async data => {
     const { brandId, categoryId, tags, image, images, properties, ...rest } = data;
     const formData = new FormData();
-    const fields = transformKeysToSnakeCase(rest);
+
+    const transformed = transformValuesToNumbers(rest, ['price']);
+    const fields = transformKeysToSnakeCase(transformed);
 
     formData.append('image', image);
     formData.append('brand_id', brandId.id);

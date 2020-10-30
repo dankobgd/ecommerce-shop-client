@@ -36,7 +36,7 @@ const useStyles = makeStyles(theme => ({
 }));
 
 const schema = Yup.object({
-  email: rules.emailRule,
+  email: rules.email,
 });
 
 const formOpts = {

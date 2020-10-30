@@ -2,7 +2,7 @@ import React from 'react';
 
 import { yupResolver } from '@hookform/resolvers';
 import { Avatar, CircularProgress, Container, Typography } from '@material-ui/core';
-import ShoppingBasketIcon from '@material-ui/icons/ShoppingBasket';
+import LabelIcon from '@material-ui/icons/Label';
 import { makeStyles } from '@material-ui/styles';
 import { FormProvider, useForm } from 'react-hook-form';
 import { useDispatch, useSelector } from 'react-redux';
@@ -68,7 +68,7 @@ function EditTagForm() {
     <Container component='main' maxWidth='xs'>
       <div className={classes.paper}>
         <Avatar className={classes.avatar}>
-          <ShoppingBasketIcon />
+          <LabelIcon />
         </Avatar>
         <Typography component='h1' variant='h5'>
           Edit Tag

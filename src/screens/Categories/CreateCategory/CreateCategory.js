@@ -2,7 +2,7 @@ import React from 'react';
 
 import { yupResolver } from '@hookform/resolvers';
 import { Avatar, CircularProgress, Container, Typography } from '@material-ui/core';
-import ShoppingBasketIcon from '@material-ui/icons/ShoppingBasket';
+import CategoryIcon from '@material-ui/icons/Category';
 import { makeStyles } from '@material-ui/styles';
 import { FormProvider, useForm } from 'react-hook-form';
 import { useDispatch, useSelector } from 'react-redux';
@@ -39,7 +39,7 @@ const schema = Yup.object({
   name: Yup.string().required(),
   slug: Yup.string().required(),
   description: Yup.string().required(),
-  logo: rules.imageRule,
+  logo: rules.image,
 });
 
 const formOpts = {
@@ -79,7 +79,7 @@ function CreateCategoryForm() {
     <Container component='main' maxWidth='xs'>
       <div className={classes.paper}>
         <Avatar className={classes.avatar}>
-          <ShoppingBasketIcon />
+          <CategoryIcon />
         </Avatar>
         <Typography component='h1' variant='h5'>
           Create Category

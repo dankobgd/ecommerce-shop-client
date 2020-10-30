@@ -37,8 +37,8 @@ const useStyles = makeStyles(theme => ({
 }));
 
 const schema = Yup.object({
-  password: rules.passwordRule,
-  confirmPassword: rules.confirmPasswordRule('password'),
+  password: rules.password,
+  confirmPassword: rules.confirmPassword('password'),
 });
 
 const formOpts = {

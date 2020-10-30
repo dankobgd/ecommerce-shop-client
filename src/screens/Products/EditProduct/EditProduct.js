@@ -44,8 +44,8 @@ const useStyles = makeStyles(theme => ({
 }));
 
 const schema = Yup.object({
-  email: rules.emailRule,
-  password: rules.passwordRule,
+  email: rules.email,
+  password: rules.password,
 });
 
 const formOpts = product => ({

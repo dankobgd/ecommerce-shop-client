@@ -1,5 +1,6 @@
 import React from 'react';
 
+import { yupResolver } from '@hookform/resolvers';
 import { Button, Container, Divider, IconButton, Tooltip, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import AddIcon from '@material-ui/icons/Add';
@@ -8,8 +9,12 @@ import DeleteIcon from '@material-ui/icons/Delete';
 import RemoveIcon from '@material-ui/icons/Remove';
 import { withStyles } from '@material-ui/styles';
 import { Link, navigate } from '@reach/router';
+import { FormProvider, useForm } from 'react-hook-form';
 import { useDispatch, useSelector } from 'react-redux';
+import * as Yup from 'yup';
 
+import { FormSubmitButton, FormTextField } from '../../components/Form';
+import { useFormServerErrors } from '../../hooks/useFormServerErrors';
 import cartSlice, {
   selectCartItems,
   selectCartLength,
@@ -17,6 +22,7 @@ import cartSlice, {
   selectCartTotalQuantity,
 } from '../../store/cart/cartSlice';
 import productSlice from '../../store/product/productSlice';
+import { selectUIState } from '../../store/ui';
 
 const useStyles = makeStyles({
   summaryContent: {
@@ -121,6 +127,19 @@ const useStyles = makeStyles({
   },
 });
 
+const schema = Yup.object({
+  promoCode: Yup.string(),
+});
+
+const formOpts = {
+  mode: 'onChange',
+  reValidateMode: 'onChange',
+  defaultValues: {
+    promoCode: '',
+  },
+  resolver: yupResolver(schema),
+};
+
 function Checkout() {
   const classes = useStyles();
   const dispatch = useDispatch();
@@ -128,12 +147,23 @@ function Checkout() {
   const cartTotalQuantity = useSelector(selectCartTotalQuantity);
   const cartLength = useSelector(selectCartLength);
   const cartItems = useSelector(selectCartItems);
+  const methods = useForm(formOpts);
+  const { handleSubmit, setError } = methods;
+  // const { loading, error } = useSelector(selectUIState(null));
+  const error = null;
 
   React.useEffect(() => {
     if (cartLength === 0) {
       navigate('/');
     }
   }, [cartLength]);
+
+  const onSubmit = async data => {
+    console.log(data);
+    // await dispatch(xxx(data));
+  };
+
+  useFormServerErrors(error, setError);
 
   return (
     <Container>
@@ -182,11 +212,24 @@ function Checkout() {
         )}
       </div>
 
-      <Link to='order' className={classes.link}>
-        <Button color='primary' variant='contained'>
-          Proceed with checkout
-        </Button>
-      </Link>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <FormProvider {...methods}>
+          <form
+            style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+            onSubmit={handleSubmit(onSubmit)}
+            noValidate
+          >
+            <FormTextField name='promo_code' />
+            <FormSubmitButton style={{ marginLeft: '4px' }}>Redeem</FormSubmitButton>
+          </form>
+        </FormProvider>
+
+        <Link to='order' className={classes.link}>
+          <Button color='primary' variant='contained'>
+            Proceed with checkout
+          </Button>
+        </Link>
+      </div>
     </Container>
   );
 }

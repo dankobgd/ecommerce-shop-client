@@ -11,6 +11,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { selectBrandById } from '../../store/brand/brandSlice';
 import cartSlice from '../../store/cart/cartSlice';
 import productSlice from '../../store/product/productSlice';
+import toastSlice, { successToast } from '../../store/toast/toastSlice';
 
 const useStyles = makeStyles(theme => ({
   cardOuter: {
@@ -86,6 +87,7 @@ function ProductCard({ product }) {
 
   const handleAddToCart = () => {
     dispatch(cartSlice.actions.addProductToCart(product));
+    dispatch(toastSlice.actions.addToast(successToast('Product added to cart')));
   };
 
   return (

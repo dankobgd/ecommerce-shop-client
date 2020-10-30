@@ -2,18 +2,25 @@ import React from 'react';
 
 import { yupResolver } from '@hookform/resolvers';
 import { Avatar, CircularProgress, Container, Typography } from '@material-ui/core';
-import RateReviewIcon from '@material-ui/icons/RateReview';
+import LoyaltyIcon from '@material-ui/icons/Loyalty';
 import { makeStyles } from '@material-ui/styles';
 import { FormProvider, useForm } from 'react-hook-form';
 import { useDispatch, useSelector } from 'react-redux';
 import * as Yup from 'yup';
 
-import { FormTextField, FormSubmitButton, FormRadioGroup } from '../../../components/Form';
+import {
+  FormTextField,
+  FormSubmitButton,
+  FormRadioGroup,
+  FormDateTimePicker,
+  FormNumberField,
+} from '../../../components/Form';
 import ErrorMessage from '../../../components/Message/ErrorMessage';
 import { useFormServerErrors } from '../../../hooks/useFormServerErrors';
-import { reviewCreate } from '../../../store/review/reviewSlice';
+import { promotionCreate } from '../../../store/promotion/promotionSlice';
 import { selectUIState } from '../../../store/ui';
-import { selectUserProfile } from '../../../store/user/userSlice';
+import { transformValuesToNumbers } from '../../../utils/transformObjectKeys';
+import { rules } from '../../../utils/validation';
 
 const useStyles = makeStyles(theme => ({
   paper: {
@@ -35,47 +42,55 @@ const useStyles = makeStyles(theme => ({
 }));
 
 const schema = Yup.object({
-  productId: Yup.string().required(),
-  rating: Yup.string().required(),
-  comment: Yup.string().required(),
+  promoCode: Yup.string().required(),
+  type: Yup.string().required(),
+  amount: Yup.string().required(),
+  description: Yup.string(),
+  startsAt: rules.startDate,
+  endsAt: rules.endDate('startsAt'),
 });
 
 const formOpts = {
   mode: 'onChange',
   reValidateMode: 'onChange',
   defaultValues: {
-    productId: '',
-    rating: '',
-    comment: '',
+    promoCode: '',
+    type: '',
+    amount: '',
+    description: '',
+    startsAt: null,
+    endsAt: null,
   },
   resolver: yupResolver(schema),
 };
 
-function CreateReviewForm() {
+function CreatePromotionForm() {
   const classes = useStyles();
   const dispatch = useDispatch();
   const methods = useForm(formOpts);
-  const { handleSubmit, setError } = methods;
-  const { loading, error } = useSelector(selectUIState(reviewCreate));
-  const user = useSelector(selectUserProfile);
+  const { handleSubmit, setError, watch } = methods;
+  const { loading, error } = useSelector(selectUIState(promotionCreate));
 
   const onSubmit = async data => {
-    data.rating = Number.parseInt(data.rating, 10);
-    data.productId = Number.parseInt(data.productId, 10);
-    data.user_id = user.id;
-    await dispatch(reviewCreate(data));
+    const transformed = transformValuesToNumbers(data, ['amount']);
+    await dispatch(promotionCreate(transformed));
   };
 
   useFormServerErrors(error, setError);
+
+  const isAllowedAmountValue = (values, type) => {
+    const val = !type || type === 'fixed' ? 9999 : 100;
+    return values.formattedValue === '' || values.floatValue <= val;
+  };
 
   return (
     <Container component='main' maxWidth='xs'>
       <div className={classes.paper}>
         <Avatar className={classes.avatar}>
-          <RateReviewIcon />
+          <LoyaltyIcon />
         </Avatar>
         <Typography component='h1' variant='h5'>
-          Create Review
+          Create Promotion
         </Typography>
 
         {loading && <CircularProgress />}
@@ -83,23 +98,27 @@ function CreateReviewForm() {
 
         <FormProvider {...methods}>
           <form onSubmit={handleSubmit(onSubmit)} noValidate>
-            <p style={{ marginBottom: 0, paddingBottom: 0 }}>rating</p>
-            <FormTextField name='productId' fullWidth />
+            <FormTextField name='promoCode' fullWidth />
             <FormRadioGroup
               row
-              name='rating'
+              name='type'
               options={[
-                { label: '1', value: '1' },
-                { label: '2', value: '2' },
-                { label: '3', value: '3' },
-                { label: '4', value: '4' },
-                { label: '5', value: '5' },
+                { label: 'percentage', value: 'percentage' },
+                { label: 'fixed', value: 'fixed' },
               ]}
             />
-            <FormTextField name='comment' multiline rowsMax={6} fullWidth />
+            <FormNumberField
+              name='amount'
+              fullWidth
+              isAllowed={values => isAllowedAmountValue(values, watch('type'))}
+            />
+            <FormTextField name='description' fullWidth />
+
+            <FormDateTimePicker name='startsAt' fullWidth minutesStep={1} disablePast />
+            <FormDateTimePicker name='endsAt' fullWidth minutesStep={1} disablePast />
 
             <FormSubmitButton className={classes.submit} fullWidth>
-              Add Review
+              Create Promotion
             </FormSubmitButton>
           </form>
         </FormProvider>
@@ -108,4 +127,4 @@ function CreateReviewForm() {
   );
 }
 
-export default CreateReviewForm;
+export default CreatePromotionForm;

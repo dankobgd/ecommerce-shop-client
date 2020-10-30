@@ -2,7 +2,7 @@ import React from 'react';
 
 import { yupResolver } from '@hookform/resolvers';
 import { Avatar, CircularProgress, Container, Typography } from '@material-ui/core';
-import ShoppingBasketIcon from '@material-ui/icons/ShoppingBasket';
+import RateReviewIcon from '@material-ui/icons/RateReview';
 import { makeStyles } from '@material-ui/styles';
 import { FormProvider, useForm } from 'react-hook-form';
 import { useDispatch, useSelector } from 'react-redux';
@@ -67,7 +67,7 @@ function EditReviewForm() {
     <Container component='main' maxWidth='xs'>
       <div className={classes.paper}>
         <Avatar className={classes.avatar}>
-          <ShoppingBasketIcon />
+          <RateReviewIcon />
         </Avatar>
         <Typography component='h1' variant='h5'>
           Edit Review

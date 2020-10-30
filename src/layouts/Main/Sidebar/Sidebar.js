@@ -6,6 +6,7 @@ import CategoryIcon from '@material-ui/icons/Category';
 import ClassIcon from '@material-ui/icons/Class';
 import DashboardIcon from '@material-ui/icons/Dashboard';
 import LabelIcon from '@material-ui/icons/Label';
+import LoyaltyIcon from '@material-ui/icons/Loyalty';
 import PeopleIcon from '@material-ui/icons/People';
 import RateReviewIcon from '@material-ui/icons/RateReview';
 import SettingsIcon from '@material-ui/icons/Settings';
@@ -95,6 +96,11 @@ function Sidebar(props) {
       title: 'Wishlist',
       href: '/wishlist',
       icon: <StarsIcon />,
+    },
+    {
+      title: 'Promotions',
+      href: '/promotions',
+      icon: <LoyaltyIcon />,
     },
     {
       title: 'Settings',

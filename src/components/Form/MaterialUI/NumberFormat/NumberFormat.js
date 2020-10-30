@@ -14,6 +14,8 @@ export default function FormNumberField({
   variant = 'outlined',
   prefix,
   thousandSeparator = true,
+  inputProps,
+  isAllowed,
   ...rest
 }) {
   const { control, errors, setValue, trigger } = useFormContext();
@@ -27,6 +29,7 @@ export default function FormNumberField({
         {...rest}
         render={props => (
           <ReactNumberFormat
+            isAllowed={isAllowed}
             margin={margin}
             placeholder={placeholder}
             variant={variant}
@@ -35,6 +38,7 @@ export default function FormNumberField({
             prefix={prefix}
             customInput={TextField}
             value={props.value}
+            inputProps={inputProps}
             onValueChange={target => {
               props.onChange();
               setValue(name, target.value);

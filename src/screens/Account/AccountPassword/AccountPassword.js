@@ -20,9 +20,9 @@ const useStyles = makeStyles(() => ({
 }));
 
 const schema = Yup.object({
-  oldPassword: rules.passwordRule,
-  newPassword: rules.passwordRule,
-  confirmPassword: rules.confirmPasswordRule('newPassword'),
+  oldPassword: rules.password,
+  newPassword: rules.password,
+  confirmPassword: rules.confirmPassword('newPassword'),
 });
 
 const formOpts = {
