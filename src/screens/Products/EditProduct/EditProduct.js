@@ -19,9 +19,10 @@ import ErrorMessage from '../../../components/Message/ErrorMessage';
 import { useFormServerErrors } from '../../../hooks/useFormServerErrors';
 import { selectAllBrands, brandGetAll } from '../../../store/brand/brandSlice';
 import { selectAllCategories, categoryGetAll } from '../../../store/category/categorySlice';
-import { productCreate, selectCurrentEditProduct } from '../../../store/product/productSlice';
+import { productCreate, productUpdate, selectCurrentEditProduct } from '../../../store/product/productSlice';
 import { selectAllTags, tagGetAll, selectCurrentProductTags, tagGetAllForProduct } from '../../../store/tag/tagSlice';
 import { selectUIState } from '../../../store/ui';
+import { formatPriceForDisplay, priceToLowestCurrencyDenomination } from '../../../utils/priceFormat';
 import { rules } from '../../../utils/validation';
 
 const useStyles = makeStyles(theme => ({
@@ -58,7 +59,7 @@ const formOpts = product => ({
     name: product?.name || '',
     slug: product?.slug || '',
     description: product?.description || '',
-    price: product?.price || '',
+    price: (product && formatPriceForDisplay(product.price)) || '',
     inStock: product?.inStock || false,
     isFeatured: product?.isFeatured || false,
     tags: [],
@@ -91,7 +92,8 @@ function EditProductForm() {
   }, [methods, tags]);
 
   const onSubmit = async data => {
-    dispatch(productCreate(data));
+    data.price = priceToLowestCurrencyDenomination(data.price);
+    dispatch(productUpdate({ id: product.id, details: data }));
   };
 
   useFormServerErrors(error, setError);

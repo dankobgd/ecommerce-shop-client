@@ -42,20 +42,29 @@ export const promotionGetAll = createAsyncThunk(`${sliceName}/getAll`, async (qs
   }
 });
 
-export const promotionGet = createAsyncThunk(`${sliceName}/get`, async (id, { rejectWithValue }) => {
+export const promotionGet = createAsyncThunk(`${sliceName}/get`, async (code, { rejectWithValue }) => {
   try {
-    const promotion = await api.promotions.get(id);
+    const promotion = await api.promotions.get(code);
     return promotion;
   } catch (error) {
     return rejectWithValue(error);
   }
 });
 
-export const promotionDelete = createAsyncThunk(`${sliceName}/delete`, async (id, { dispatch, rejectWithValue }) => {
+export const promotionDelete = createAsyncThunk(`${sliceName}/delete`, async (code, { dispatch, rejectWithValue }) => {
   try {
-    await api.promotions.delete(id);
+    await api.promotions.delete(code);
     dispatch(toastSlice.actions.addToast(successToast('Promotion deleted')));
-    return id;
+    return code;
+  } catch (error) {
+    return rejectWithValue(error);
+  }
+});
+
+export const promotionGetStatus = createAsyncThunk(`${sliceName}/getStatus`, async (code, { rejectWithValue }) => {
+  try {
+    const status = await api.promotions.getStatus(code);
+    return status;
   } catch (error) {
     return rejectWithValue(error);
   }
@@ -104,6 +113,11 @@ export const selectPaginationMeta = state => state[sliceName].pagination;
 export const selectCurrentEditPromotion = createSelector(
   [selectPromotionEntities, selectEditId],
   (entities, editId) => entities[editId]
+);
+
+export const selectPromotionForCart = createSelector(
+  [selectPromotionEntities, state => state.cart.promotion],
+  (entities, code) => (code ? entities[code] : null)
 );
 
 export default promotionSlice;

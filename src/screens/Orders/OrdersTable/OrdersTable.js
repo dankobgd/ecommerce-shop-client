@@ -29,6 +29,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import orderSlice, { orderGetAll, orderGetAllForUser, selectPaginationMeta } from '../../../store/order/orderSlice';
 import { selectUserProfile } from '../../../store/user/userSlice';
 import { calculatePaginationStartEndPosition } from '../../../utils/pagination';
+import { formatPriceForDisplay } from '../../../utils/priceFormat';
 
 const useStyles = makeStyles(theme => ({
   root: {},
@@ -137,6 +138,7 @@ const OrdersTable = props => {
                 </TableCell>
                 <TableCell>ID</TableCell>
                 <TableCell>Status</TableCell>
+                <TableCell>Subtotal</TableCell>
                 <TableCell>Total</TableCell>
                 <TableCell>ShippedAt</TableCell>
                 <TableCell>Billing Line1 </TableCell>
@@ -178,7 +180,8 @@ const OrdersTable = props => {
                     </TableCell>
                     <TableCell>{order.id}</TableCell>
                     <TableCell>{order.status}</TableCell>
-                    <TableCell>${order.total}</TableCell>
+                    <TableCell>${formatPriceForDisplay(order.subtotal)}</TableCell>
+                    <TableCell>${formatPriceForDisplay(order.total)}</TableCell>
                     <TableCell>{order.shippedAt}</TableCell>
                     <TableCell>{order.billingAddressLine1}</TableCell>
                     <TableCell>{order.billingAddressLine2}</TableCell>

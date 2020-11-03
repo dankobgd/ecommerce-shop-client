@@ -5,12 +5,12 @@ import { Autocomplete } from '@material-ui/lab';
 import { debounce } from 'lodash';
 import { useDispatch, useSelector } from 'react-redux';
 
-import productSlice, { productSearch } from '../../../store/product/productSlice';
+import productSlice, { productSearch, selectSearchResults } from '../../../store/product/productSlice';
 import { selectUIState } from '../../../store/ui';
 
 function Search() {
   const dispatch = useDispatch();
-  const results = useSelector(s => s.products.searchResults);
+  const results = useSelector(selectSearchResults);
   const [search, setSearch] = useState(null);
   const { loading } = useSelector(selectUIState(productSearch));
 

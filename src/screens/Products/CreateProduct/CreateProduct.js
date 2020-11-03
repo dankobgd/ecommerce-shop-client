@@ -23,7 +23,8 @@ import { categoryGetAll, selectAllCategories } from '../../../store/category/cat
 import { productCreate, productGetProperties, selectProductVariants } from '../../../store/product/productSlice';
 import { tagGetAll, selectAllTags } from '../../../store/tag/tagSlice';
 import { selectUIState } from '../../../store/ui';
-import { transformKeysToSnakeCase, transformValuesToNumbers } from '../../../utils/transformObjectKeys';
+import { priceToLowestCurrencyDenomination } from '../../../utils/priceFormat';
+import { transformKeysToSnakeCase } from '../../../utils/transformObjectKeys';
 import { rules } from '../../../utils/validation';
 import { ProductImagesDropzoneField, ProductThumbnailUploadField } from './FileUploadInputs';
 
@@ -127,12 +128,12 @@ function CreateProductForm() {
   }, [dispatch]);
 
   const onSubmit = async data => {
-    const { brandId, categoryId, tags, image, images, properties, ...rest } = data;
+    const { brandId, categoryId, tags, image, images, properties, price, ...rest } = data;
     const formData = new FormData();
 
-    const transformed = transformValuesToNumbers(rest, ['price']);
-    const fields = transformKeysToSnakeCase(transformed);
+    const fields = transformKeysToSnakeCase(rest);
 
+    formData.append('price', priceToLowestCurrencyDenomination(Number.parseFloat(price)));
     formData.append('image', image);
     formData.append('brand_id', brandId.id);
     formData.append('category_id', categoryId.id);

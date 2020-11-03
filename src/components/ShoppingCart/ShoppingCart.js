@@ -15,11 +15,12 @@ import { useDispatch, useSelector } from 'react-redux';
 import cartSlice, {
   selectCartItems,
   selectCartLength,
-  selectCartTotalPrice,
+  selectCartSubtotalPrice,
   selectCartTotalQuantity,
   selectDrawerOpen,
 } from '../../store/cart/cartSlice';
 import productSlice from '../../store/product/productSlice';
+import { formatPriceForDisplay, formatPriceUnitSum } from '../../utils/priceFormat';
 
 const useStyles = makeStyles({
   cartContent: {
@@ -151,7 +152,7 @@ function ShoppingCart({ anchor = 'right' }) {
   const classes = useStyles();
   const dispatch = useDispatch();
   const drawerOpen = useSelector(selectDrawerOpen);
-  const cartTotalPrice = useSelector(selectCartTotalPrice);
+  const cartSubotalPrice = useSelector(selectCartSubtotalPrice);
   const cartTotalQuantity = useSelector(selectCartTotalQuantity);
   const cartItems = useSelector(selectCartItems);
   const cartLength = useSelector(selectCartLength);
@@ -213,7 +214,7 @@ function ShoppingCart({ anchor = 'right' }) {
                 Total Quantity: {cartTotalQuantity}
               </Typography>
               <Typography component='span' variant='subtitle2' color='textPrimary'>
-                Total Price: <strong>${cartTotalPrice}</strong>
+                Subtotal Price: <strong>${formatPriceForDisplay(cartSubotalPrice)}</strong>
               </Typography>
             </div>
 
@@ -283,9 +284,9 @@ function CartListItem({ product, quantity }) {
                 </Typography>
               </Link>
               <Typography className={classes.listItemPrice} component='span' variant='body2'>
-                <span className={classes.pricePart}>${product.price}</span>
+                <span className={classes.pricePart}>${formatPriceForDisplay(product.price)}</span>
                 <span className={classes.qtyPart}>x{quantity}</span>
-                <span className={classes.sumPart}>${product.price * quantity}</span>
+                <span className={classes.sumPart}>${formatPriceUnitSum(product.price, quantity)}</span>
               </Typography>
             </div>
             {isHover && (

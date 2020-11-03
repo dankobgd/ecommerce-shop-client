@@ -3,6 +3,7 @@ import { createSlice, createAsyncThunk, createSelector, createEntityAdapter } fr
 import api from '../../api';
 import productSlice from '../product/productSlice';
 import toastSlice, { successToast } from '../toast/toastSlice';
+import userSlice from '../user/userSlice';
 
 export const sliceName = 'reviews';
 
@@ -118,17 +119,17 @@ export const selectCurrentEditReview = createSelector(
 );
 
 export const selectCurrentProductReviews = createSelector(
-  [state => state.products.currentId, selectAllReviews],
+  [state => state[productSlice.name].currentId, selectAllReviews],
   (id, reviews) => reviews.filter(rev => rev.productId === id)
 );
 
 export const selectUserReview = createSelector(
-  [state => state.user.profile.id, selectCurrentProductReviews],
+  [state => state[userSlice.name].profile.id, selectCurrentProductReviews],
   (id, revs) => revs.find(rev => rev.userId === id)
 );
 
 export const selectAverageProductRating = createSelector(
-  [state => state.products.entities[state.products.currentId]?.reviews, selectReviewEntities],
+  [state => state[productSlice.name].entities[state[productSlice.name].currentId]?.reviews, selectReviewEntities],
   (ids, entities) => {
     if (ids && ids.length > 0) {
       const arr = ids.map(id => entities[id]);

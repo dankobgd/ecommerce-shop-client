@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk, createSelector, createEntityAdapter } from '@reduxjs/toolkit';
 
 import api from '../../api';
+import productSlice from '../product/productSlice';
 import toastSlice, { successToast } from '../toast/toastSlice';
 
 export const sliceName = 'brands';
@@ -104,7 +105,7 @@ export const selectCurrentEditBrand = createSelector(
 );
 
 export const selectCurrentProductBrand = createSelector(
-  [state => state.products.entities[state.products.currentId]?.brand, selectBrandEntities],
+  [state => state[productSlice.name].entities[state.products.currentId]?.brand, selectBrandEntities],
   (id, entities) => entities[id]
 );
 

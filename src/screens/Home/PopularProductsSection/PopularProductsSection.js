@@ -12,6 +12,7 @@ import productSlice, {
   selectMostSoldProducts,
   selectTopFeaturedProducts,
 } from '../../../store/product/productSlice';
+import { formatPriceForDisplay } from '../../../utils/priceFormat';
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -146,7 +147,7 @@ function ProductListCard({ product }) {
               <Typography className={classes.name} component='h5' variant='subtitle2'>
                 {product.name}
               </Typography>
-              <div className={classes.price}>${product.price}</div>
+              <div className={classes.price}>${formatPriceForDisplay(product.price)}</div>
             </div>
           </div>
         </div>

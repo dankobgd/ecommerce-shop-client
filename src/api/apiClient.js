@@ -64,7 +64,7 @@ function checkTransformData(config, data) {
     return data;
   }
   const withISODate = Object.keys(data).reduce((acc, key) => {
-    acc[key] = typeof data[key].getMonth === 'function' ? data[key].toISOString() : data[key];
+    acc[key] = data[key] instanceof Date ? data[key].toISOString() : data[key];
     return acc;
   }, {});
 

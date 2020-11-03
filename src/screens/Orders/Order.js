@@ -2,6 +2,7 @@ import React from 'react';
 
 import { yupResolver } from '@hookform/resolvers';
 import { Button, Container } from '@material-ui/core';
+import { unwrapResult } from '@reduxjs/toolkit';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 import { FormProvider, useForm } from 'react-hook-form';
@@ -9,7 +10,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import * as Yup from 'yup';
 
 import { FormCheckbox, FormNumberField, FormSelect, FormTextField } from '../../components/Form';
-import { selectCartItems, selectCartTotalPrice } from '../../store/cart/cartSlice';
+import cartSlice, { selectCartItems, selectCartPromoCode, selectCartTotalPrice } from '../../store/cart/cartSlice';
 import { orderCreate } from '../../store/order/orderSlice';
 import { getAddresses, selectUserAddresses } from '../../store/user/userSlice';
 import { rules } from '../../utils/validation';
@@ -54,6 +55,7 @@ function CheckoutForm() {
   const cartTotalPrice = useSelector(selectCartTotalPrice);
   const cartItems = useSelector(selectCartItems);
   const addresses = useSelector(selectUserAddresses);
+  const cartPromoCode = useSelector(selectCartPromoCode);
   const methods = useForm(formOpts);
   const { watch } = methods;
 
@@ -80,6 +82,7 @@ function CheckoutForm() {
 
     if (error) {
       console.log(error);
+      dispatch(cartSlice.actions.setCartPromoCode(null));
     } else {
       const orderPayload = {
         paymentMethodId: paymentMethod.id,
@@ -91,8 +94,19 @@ function CheckoutForm() {
         billingAddressId: data.billingAddressId,
         sameShippingAsBilling: data.sameShippingAsBilling,
       };
+      if (cartPromoCode) {
+        orderPayload.promoCode = cartPromoCode;
+      }
 
-      await dispatch(orderCreate(orderPayload));
+      try {
+        const result = await dispatch(orderCreate(orderPayload));
+        unwrapResult(result);
+      } catch (error) {
+        console.log(error);
+      } finally {
+        dispatch(cartSlice.actions.setCartPromoCode(null));
+        dispatch(cartSlice.actions.setCartPromoCodeError(false));
+      }
     }
   };
 

@@ -5,6 +5,8 @@ export const sliceName = 'cart';
 const initialState = {
   items: [],
   drawerOpen: false,
+  promotion: null,
+  promoCodeError: false,
 };
 
 const cartSlice = createSlice({
@@ -45,18 +47,55 @@ const cartSlice = createSlice({
     clearCartItems: state => {
       state.items = [];
     },
+
+    setCartPromoCode: (state, { payload }) => {
+      state.promotion = payload;
+    },
+    setCartPromoCodeError: (state, { payload }) => {
+      state.promoCodeError = payload;
+    },
   },
 });
 
 export const selectCartItems = state => state[sliceName].items;
+
+export const selectCartPromoCode = state => state[sliceName].promotion;
+
+export const selectCartPromoCodeError = state => state[sliceName].promoCodeError;
+
 export const selectDrawerOpen = state => state[sliceName].drawerOpen;
+
 export const selectCartLength = createSelector(selectCartItems, items => items?.length);
-export const selectCartTotalPrice = createSelector(selectCartItems, items =>
-  items.reduce((total, item) => total + item.product.price * item.quantity, 0)
-);
+
+export const selectCartProducts = createSelector(selectCartItems, items => items.map(x => x.product));
+
 export const selectCartTotalQuantity = createSelector(selectCartItems, items =>
   items.reduce((total, item) => total + item.quantity, 0)
 );
-export const selectCartProducts = createSelector(selectCartItems, items => items.map(x => x.product));
+
+export const selectCartSubtotalPrice = createSelector(selectCartItems, items =>
+  items.reduce((total, item) => total + item.product.price * item.quantity, 0)
+);
+
+const cpromo = createSelector([s => s.promotions.entities, state => state.cart.promotion], (entities, code) =>
+  code ? entities[code] : null
+);
+export const selectCartTotalPrice = createSelector([selectCartSubtotalPrice, cpromo], (subtotal, promo) => {
+  let cartTotal = 0;
+
+  if (!promo) {
+    cartTotal = subtotal;
+  }
+
+  if (promo?.type === 'percentage') {
+    const val = subtotal - (promo?.amount / 100) * subtotal;
+    cartTotal = Number.parseFloat(val.toFixed(2));
+  } else if (promo?.type === 'fixed') {
+    const val = subtotal - promo?.amount;
+    cartTotal = val < 0 ? 0 : val;
+  }
+
+  return cartTotal;
+});
 
 export default cartSlice;

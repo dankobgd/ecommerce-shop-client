@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { yupResolver } from '@hookform/resolvers';
-import { Button, Container, Divider, IconButton, Tooltip, Typography } from '@material-ui/core';
+import { Button, Chip, Container, Divider, IconButton, Tooltip, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import AddIcon from '@material-ui/icons/Add';
 import ClearAllIcon from '@material-ui/icons/ClearAll';
@@ -9,20 +9,27 @@ import DeleteIcon from '@material-ui/icons/Delete';
 import RemoveIcon from '@material-ui/icons/Remove';
 import { withStyles } from '@material-ui/styles';
 import { Link, navigate } from '@reach/router';
+import { unwrapResult } from '@reduxjs/toolkit';
 import { FormProvider, useForm } from 'react-hook-form';
 import { useDispatch, useSelector } from 'react-redux';
 import * as Yup from 'yup';
 
 import { FormSubmitButton, FormTextField } from '../../components/Form';
+import ErrorMessage from '../../components/Message/ErrorMessage';
 import { useFormServerErrors } from '../../hooks/useFormServerErrors';
 import cartSlice, {
   selectCartItems,
   selectCartLength,
+  selectCartSubtotalPrice,
   selectCartTotalPrice,
   selectCartTotalQuantity,
+  selectCartPromoCode,
+  selectCartPromoCodeError,
 } from '../../store/cart/cartSlice';
 import productSlice from '../../store/product/productSlice';
+import { promotionGet, promotionGetStatus, selectPromotionForCart } from '../../store/promotion/promotionSlice';
 import { selectUIState } from '../../store/ui';
+import { formatPriceForDisplay, formatPriceUnitSum } from '../../utils/priceFormat';
 
 const useStyles = makeStyles({
   summaryContent: {
@@ -54,7 +61,10 @@ const useStyles = makeStyles({
     width: '100%',
   },
   totalQty: {
-    fontSize: '18px',
+    fontSize: '16px',
+  },
+  subtotalPrice: {
+    fontSize: '16px',
   },
   totalPrice: {
     fontSize: '18px',
@@ -143,14 +153,17 @@ const formOpts = {
 function Checkout() {
   const classes = useStyles();
   const dispatch = useDispatch();
+  const cartSubtotalPrice = useSelector(selectCartSubtotalPrice);
   const cartTotalPrice = useSelector(selectCartTotalPrice);
   const cartTotalQuantity = useSelector(selectCartTotalQuantity);
   const cartLength = useSelector(selectCartLength);
   const cartItems = useSelector(selectCartItems);
+  const cartPromoCode = useSelector(selectCartPromoCode);
+  const cartPromotion = useSelector(selectPromotionForCart);
+  const cartPromoCodeError = useSelector(selectCartPromoCodeError);
   const methods = useForm(formOpts);
-  const { handleSubmit, setError } = methods;
-  // const { loading, error } = useSelector(selectUIState(null));
-  const error = null;
+  const { handleSubmit, setError, reset } = methods;
+  const { error } = useSelector(selectUIState(promotionGetStatus));
 
   React.useEffect(() => {
     if (cartLength === 0) {
@@ -158,9 +171,22 @@ function Checkout() {
     }
   }, [cartLength]);
 
+  React.useEffect(() => {
+    if (!cartPromoCodeError && cartPromoCode) {
+      reset({ promoCode: cartPromoCode });
+      dispatch(promotionGet(cartPromoCode));
+    }
+  }, [cartPromoCode, dispatch, reset, cartPromoCodeError]);
+
   const onSubmit = async data => {
-    console.log(data);
-    // await dispatch(xxx(data));
+    try {
+      const result = await dispatch(promotionGetStatus(data.promoCode));
+      unwrapResult(result);
+      dispatch(cartSlice.actions.setCartPromoCode(data.promoCode));
+      dispatch(cartSlice.actions.setCartPromoCodeError(false));
+    } catch (error) {
+      dispatch(cartSlice.actions.setCartPromoCodeError(true));
+    }
   };
 
   useFormServerErrors(error, setError);
@@ -193,6 +219,24 @@ function Checkout() {
               Clear Cart
             </Button>
 
+            {cartPromoCode && cartPromotion && (
+              <>
+                <Divider
+                  variant='middle'
+                  orientation='horizontal'
+                  className={classes.divider}
+                  style={{ marginBottom: '1rem' }}
+                />
+
+                <div className={classes.promoCodeSummary}>
+                  <Typography component='span' variant='subtitle2' color='textPrimary' className={classes.promoCode}>
+                    Promo Code: {cartPromoCode}
+                  </Typography>
+                  <Chip label={`-${cartPromotion.amount}${cartPromotion.type === 'percentage' ? '%' : '$'}`} />
+                </div>
+              </>
+            )}
+
             <Divider
               variant='middle'
               orientation='horizontal'
@@ -204,8 +248,11 @@ function Checkout() {
               <Typography component='span' variant='subtitle2' color='textPrimary' className={classes.totalQty}>
                 Total Quantity: {cartTotalQuantity}
               </Typography>
+              <Typography component='span' variant='subtitle2' color='textPrimary' className={classes.subtotalPrice}>
+                Subtotal: <strong>${formatPriceForDisplay(cartSubtotalPrice)}</strong>
+              </Typography>
               <Typography component='span' variant='subtitle2' color='textPrimary' className={classes.totalPrice}>
-                Total Price: <strong>${cartTotalPrice}</strong>
+                Total Price: <strong>${formatPriceForDisplay(cartTotalPrice)}</strong>
               </Typography>
             </div>
           </>
@@ -219,7 +266,8 @@ function Checkout() {
             onSubmit={handleSubmit(onSubmit)}
             noValidate
           >
-            <FormTextField name='promo_code' />
+            {error && <ErrorMessage message={error.message} />}
+            <FormTextField name='promoCode' />
             <FormSubmitButton style={{ marginLeft: '4px' }}>Redeem</FormSubmitButton>
           </form>
         </FormProvider>
@@ -269,13 +317,13 @@ function CartListItem({ product, quantity }) {
         <div className={classes.infoSection}>
           <div className={classes.priceQtySummary}>
             <Typography className={classes.unitPrice} component='span' variant='body2'>
-              ${product.price}
+              ${formatPriceForDisplay(product.price)}
             </Typography>
             <Typography className={classes.unitQuantity} component='span' variant='body2'>
               x{quantity}
             </Typography>
             <Typography className={classes.unitSumPrice} component='span' variant='body2'>
-              ${product.price * quantity}
+              ${formatPriceUnitSum(product.price, quantity)}
             </Typography>
           </div>
           <div className={classes.controls}>

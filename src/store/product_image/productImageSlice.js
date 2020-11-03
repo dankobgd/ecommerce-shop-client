@@ -50,7 +50,7 @@ export const {
 export const selectEditId = state => state[sliceName].editId;
 
 export const selectCurrentProductImages = createSelector(
-  [state => state.products.entities[state.products.currentId]?.images, selectProductImageEntities],
+  [state => state[productSlice.name].entities[state.products.currentId]?.images, selectProductImageEntities],
   (ids, entities) => (ids ? ids.map(id => entities[id]) : [])
 );
 

@@ -20,4 +20,8 @@ export default {
   async delete(code) {
     return apiClient.delete(`v1/promotions/${code}`);
   },
+
+  async getStatus(code) {
+    return apiClient.get(`v1/promotions/${code}/status`);
+  },
 };

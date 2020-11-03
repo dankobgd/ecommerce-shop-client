@@ -3,6 +3,7 @@ import { normalize, schema } from 'normalizr';
 
 import api from '../../api';
 import toastSlice, { successToast } from '../toast/toastSlice';
+import userSlice from '../user/userSlice';
 
 const brandSchema = new schema.Entity('brands');
 const categorySchema = new schema.Entity('categories');
@@ -192,6 +193,7 @@ export const {
 export const selectEditId = state => state[sliceName].editId;
 export const selectCurrentId = state => state[sliceName].currentId;
 export const selectPaginationMeta = state => state[sliceName].pagination;
+export const selectSearchResults = state => state[sliceName].searchResults;
 
 export const selectProductVariants = createSelector(
   state => state[sliceName].properties,
@@ -213,7 +215,7 @@ export const selectFeaturedProducts = createSelector(selectAllProducts, products
 );
 
 export const selectCurrentUserWishlist = createSelector(
-  [state => state.user.wishlist, selectProductEntities],
+  [state => state[userSlice.name].wishlist, selectProductEntities],
   (ids, entities) => ids.map(id => entities[id])
 );
 

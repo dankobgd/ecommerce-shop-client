@@ -47,6 +47,7 @@ import {
   wishlistAddProduct,
   wishlistDeleteProduct,
 } from '../../store/user/userSlice';
+import { formatPriceForDisplay } from '../../utils/priceFormat';
 
 const useStyles = makeStyles(() => ({
   gallerySection: {
@@ -289,7 +290,7 @@ function ProductSingle() {
                 {product?.name}
               </Typography>
 
-              <Typography variant='h4'>${product?.price}</Typography>
+              <Typography variant='h4'>${product && formatPriceForDisplay(product.price)}</Typography>
 
               <div>
                 <Rating name='rating' precision={0.5} value={averageRating || 0} readOnly />

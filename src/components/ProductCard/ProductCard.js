@@ -12,6 +12,7 @@ import { selectBrandById } from '../../store/brand/brandSlice';
 import cartSlice from '../../store/cart/cartSlice';
 import productSlice from '../../store/product/productSlice';
 import toastSlice, { successToast } from '../../store/toast/toastSlice';
+import { formatPriceForDisplay } from '../../utils/priceFormat';
 
 const useStyles = makeStyles(theme => ({
   cardOuter: {
@@ -115,7 +116,7 @@ function ProductCard({ product }) {
           </Typography>
         </Link>
         <Typography variant='subtitle1' className={classes.productPrice}>
-          ${product.price}
+          ${formatPriceForDisplay(product.price)}
         </Typography>
 
         <div className={classes.add}>

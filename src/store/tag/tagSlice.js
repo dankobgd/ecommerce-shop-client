@@ -113,7 +113,7 @@ export const selectEditId = state => state[sliceName].editId;
 export const selectPaginationMeta = state => state[sliceName].pagination;
 
 export const selectCurrentProductTags = createSelector(
-  [state => state.products.entities[state.products.currentId]?.tags, selectTagEntities],
+  [state => state[productSlice.name].entities[state.products.currentId]?.tags, selectTagEntities],
   (ids, entities) => (ids ? ids.map(id => entities[id]) : [])
 );
 
