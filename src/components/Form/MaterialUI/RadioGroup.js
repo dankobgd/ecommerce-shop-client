@@ -6,7 +6,7 @@ import { useFormContext, Controller } from 'react-hook-form';
 
 import { defaultLabel } from '../helpers';
 
-export default function MyRadioGroup({ name, label = defaultLabel(name), row, options }) {
+export default function MyRadioGroup({ name, label = defaultLabel(name), row, options, defaultValue = '' }) {
   const { control, errors } = useFormContext();
 
   return (
@@ -21,6 +21,7 @@ export default function MyRadioGroup({ name, label = defaultLabel(name), row, op
         }
         name={name}
         control={control}
+        defaultValue={defaultValue}
       />
       <FormHelperText error={!!errors[name]} margin='dense' variant='outlined'>
         {errors && errors[name] && errors[name].message}

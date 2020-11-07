@@ -5,13 +5,12 @@ import { useFormContext, Controller } from 'react-hook-form';
 
 import { defaultLabel } from '../helpers';
 
-export default function FormCheckbox({ name, label = defaultLabel(name) }) {
+export default function FormCheckbox({ name, label = defaultLabel(name), defaultValue = false }) {
   const { control, errors } = useFormContext();
 
   return (
     <FormControl>
       <FormControlLabel
-        label={label}
         control={
           <Controller
             name={name}
@@ -19,6 +18,8 @@ export default function FormCheckbox({ name, label = defaultLabel(name) }) {
             render={props => <Checkbox onChange={e => props.onChange(e.target.checked)} checked={props.value} />}
           />
         }
+        label={label}
+        defaultValue={defaultValue}
       />
       <FormHelperText error={!!errors[name]} margin='dense' variant='outlined'>
         {errors && errors[name] && errors[name].message}

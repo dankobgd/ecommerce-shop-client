@@ -13,6 +13,7 @@ export default function AutoComplete({
   margin = 'normal',
   fullWidth,
   options,
+  defaultValue = '',
   ...rest
 }) {
   const { control, errors } = useFormContext();
@@ -32,6 +33,7 @@ export default function AutoComplete({
         )}
         name={name}
         control={control}
+        defaultValue={defaultValue}
       />
       <FormHelperText error={!!errors[name]} margin='dense' variant={variant}>
         {errors && errors[name] && errors[name].message}

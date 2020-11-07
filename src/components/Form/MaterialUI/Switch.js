@@ -5,8 +5,11 @@ import { useFormContext, Controller } from 'react-hook-form';
 
 import { defaultLabel } from '../helpers';
 
-export default function FormSwitch({ name, label = defaultLabel(name) }) {
+export default function FormSwitch({ name, label = defaultLabel(name), error, helperText, defaultValue = false }) {
   const { control, errors } = useFormContext();
+
+  const hasError = error || !!errors[name];
+  const errText = helperText || errors?.[name]?.message;
 
   return (
     <FormControl>
@@ -16,12 +19,13 @@ export default function FormSwitch({ name, label = defaultLabel(name) }) {
           <Controller
             name={name}
             control={control}
+            defaultValue={defaultValue}
             render={props => <Switch onChange={e => props.onChange(e.target.checked)} checked={props.value} />}
           />
         }
       />
-      <FormHelperText error={!!errors[name]} margin='dense' variant='outlined'>
-        {errors && errors[name] && errors[name].message}
+      <FormHelperText error={hasError} margin='dense' variant='outlined'>
+        {errText}
       </FormHelperText>
     </FormControl>
   );

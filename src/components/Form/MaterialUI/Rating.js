@@ -12,6 +12,7 @@ export default function FormNumberField({ name, variant = 'outlined', ...rest })
       <Controller
         name={name}
         control={control}
+        defaultValue={0}
         render={props => (
           <Rating
             name={name}

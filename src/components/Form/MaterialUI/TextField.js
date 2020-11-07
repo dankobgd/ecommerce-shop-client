@@ -11,9 +11,14 @@ export default function FormTextField({
   placeholder,
   margin = 'normal',
   variant = 'outlined',
+  error,
+  helperText,
   ...rest
 }) {
   const { register, errors } = useFormContext();
+
+  const hasError = error || !!errors[name];
+  const errText = helperText || errors?.[name]?.message;
 
   return (
     <TextField
@@ -22,9 +27,9 @@ export default function FormTextField({
       placeholder={placeholder}
       margin={margin}
       variant={variant}
-      error={!!errors[name]}
-      helperText={errors && errors[name] && errors[name].message}
-      inputRef={register}
+      error={hasError}
+      helperText={errText}
+      inputRef={register()}
       {...rest}
     />
   );

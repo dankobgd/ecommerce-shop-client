@@ -41,4 +41,16 @@ export const rules = {
       .required()
       .nullable()
       .default(undefined),
+
+  properties: Yup.array()
+    .of(
+      Yup.object().shape({
+        name: Yup.string().required(),
+        label: Yup.string().required(),
+        type: Yup.string().required(),
+        filterable: Yup.bool().required(),
+      })
+    )
+    .required()
+    .min(1, 'Minimum 1 property required'),
 };

@@ -4,7 +4,7 @@ import { FormControlLabel, Checkbox, FormGroup, FormControl, FormHelperText } fr
 import { nanoid } from 'nanoid';
 import { useFormContext, Controller } from 'react-hook-form';
 
-export default function CheckboxGroup({ name, row, options, getOptionLabel = option => option }) {
+export default function CheckboxGroup({ name, row, options, getOptionLabel = option => option, defaultValue = false }) {
   const { control, errors, watch } = useFormContext();
   const [checkedValues, setCheckedValues] = React.useState(watch(name));
 
@@ -29,6 +29,7 @@ export default function CheckboxGroup({ name, row, options, getOptionLabel = opt
                   <Checkbox checked={checkedValues.includes(opt)} onChange={() => props.onChange(handleSelect(opt))} />
                 )}
                 control={control}
+                defaultValue={defaultValue}
               />
             }
             key={nanoid()}

@@ -35,7 +35,8 @@ const rootReducer = combineReducers({
 const persistConfig = {
   key: 'ecommerce/root',
   storage,
-  blacklist: ['ui', 'toasts'],
+  blacklist: ['ui', toastSlice.name],
+  whitelist: [searchSlice.name],
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

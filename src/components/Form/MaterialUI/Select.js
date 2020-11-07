@@ -12,6 +12,9 @@ export default function MySelect({
   options,
   margin = 'normal',
   variant = 'outlined',
+  error,
+  helperText,
+  defaultValue = '',
   ...rest
 }) {
   const { errors, control } = useFormContext();
@@ -21,6 +24,9 @@ export default function MySelect({
   React.useEffect(() => {
     setLabelWidth(labelRef.current.offsetWidth);
   }, [labelRef]);
+
+  const hasError = error || !!errors[name];
+  const errText = helperText || errors?.[name]?.message;
 
   return (
     <FormControl margin={margin} variant={variant} style={{ minWidth: 115 }} {...rest}>
@@ -43,9 +49,10 @@ export default function MySelect({
         }
         control={control}
         name={name}
+        defaultValue={defaultValue}
       />
-      <FormHelperText error={!!errors[name]} margin='dense' variant={variant}>
-        {errors && errors[name] && errors[name].message}
+      <FormHelperText error={hasError} margin='dense' variant={variant}>
+        {errText}
       </FormHelperText>
     </FormControl>
   );

@@ -16,6 +16,7 @@ export default function FormNumberField({
   thousandSeparator = true,
   inputProps,
   isAllowed,
+  defaultValue = '',
   ...rest
 }) {
   const { control, errors, setValue, trigger } = useFormContext();
@@ -25,7 +26,7 @@ export default function FormNumberField({
       <Controller
         name={name}
         control={control}
-        defaultValue=''
+        defaultValue={defaultValue}
         {...rest}
         render={props => (
           <ReactNumberFormat

@@ -4,6 +4,8 @@ import { CssBaseline } from '@material-ui/core';
 import { MuiThemeProvider } from '@material-ui/core/styles';
 import { LocalizationProvider } from '@material-ui/pickers';
 import DateFnsUtils from '@material-ui/pickers/adapter/date-fns';
+import { DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
 import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 
@@ -28,7 +30,9 @@ function App() {
         <ToastList />
         <MuiThemeProvider theme={theme}>
           <LocalizationProvider dateAdapter={DateFnsUtils}>
-            <AppRoutes />
+            <DndProvider backend={HTML5Backend}>
+              <AppRoutes />
+            </DndProvider>
           </LocalizationProvider>
         </MuiThemeProvider>
       </PersistGate>

@@ -14,6 +14,7 @@ function FormDateTimePicker({
   margin = 'normal',
   variant = 'outlined',
   fullWidth,
+  defaultValue = null,
   ...rest
 }) {
   const { control, errors } = useFormContext();
@@ -31,7 +32,7 @@ function FormDateTimePicker({
             label={label}
           />
         }
-        defaultValue={null}
+        defaultValue={defaultValue}
         control={control}
         name={name}
         placeholder={placeholder}
