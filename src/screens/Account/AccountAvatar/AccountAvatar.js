@@ -65,8 +65,8 @@ function AccountAvatar(props) {
 
   const handleUploadAvatar = async e => {
     e.preventDefault();
-
     const formData = new FormData();
+
     formData.append('avatar', selectedFile);
     try {
       await dispatch(userUploadAvatar(formData));

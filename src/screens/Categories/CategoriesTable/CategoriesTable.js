@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 
 import {
   Card,
@@ -22,17 +22,15 @@ import {
 } from '@material-ui/core';
 import DeleteIcon from '@material-ui/icons/Delete';
 import EditIcon from '@material-ui/icons/Edit';
+import VisibilityIcon from '@material-ui/icons/Visibility';
 import { makeStyles } from '@material-ui/styles';
 import { Link } from '@reach/router';
 import clsx from 'clsx';
 import { nanoid } from 'nanoid';
-import { useDispatch, useSelector } from 'react-redux';
+import { useMutation, useQueryCache } from 'react-query';
 
-import categorySlice, {
-  categoryDelete,
-  selectPaginationMeta,
-  categoryGetAll,
-} from '../../../store/category/categorySlice';
+import api from '../../../api';
+import { ToastContext } from '../../../store/toast/toast';
 import { calculatePaginationStartEndPosition } from '../../../utils/pagination';
 
 const useStyles = makeStyles(theme => ({
@@ -56,12 +54,14 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
-const CategoriesTable = props => {
-  const { className, categories, ...rest } = props;
+const CategoriesTable = ({ className, info, ...rest }) => {
   const classes = useStyles();
-  const dispatch = useDispatch();
-  const paginationMeta = useSelector(selectPaginationMeta);
-  const [selectedCategories, setSelectedCategories] = useState([]);
+  const { data: categories } = info;
+
+  const toast = useContext(ToastContext);
+  const cache = useQueryCache();
+
+  const [selectedData, setSelectedData] = useState([]);
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const handleDialogOpen = () => {
@@ -73,48 +73,64 @@ const CategoriesTable = props => {
   };
 
   const handleSelectAll = event => {
-    let selected;
-
-    if (event.target.checked) {
-      selected = categories.map(category => category.id);
-    } else {
-      selected = [];
-    }
-
-    setSelectedCategories(selected);
+    const selected = event.target.checked ? categories?.data?.map(x => x.id) : [];
+    setSelectedData(selected);
   };
 
   const handleSelectOne = (event, id) => {
-    const selectedIndex = selectedCategories.indexOf(id);
-    let newSelectedCategories = [];
+    const selectedIndex = selectedData.indexOf(id);
+    let newSelectedData = [];
 
     if (selectedIndex === -1) {
-      newSelectedCategories = newSelectedCategories.concat(selectedCategories, id);
+      newSelectedData = newSelectedData.concat(selectedData, id);
     } else if (selectedIndex === 0) {
-      newSelectedCategories = newSelectedCategories.concat(selectedCategories.slice(1));
-    } else if (selectedIndex === selectedCategories.length - 1) {
-      newSelectedCategories = newSelectedCategories.concat(selectedCategories.slice(0, -1));
+      newSelectedData = newSelectedData.concat(selectedData.slice(1));
+    } else if (selectedIndex === selectedData.length - 1) {
+      newSelectedData = newSelectedData.concat(selectedData.slice(0, -1));
     } else if (selectedIndex > 0) {
-      newSelectedCategories = newSelectedCategories.concat(
-        selectedCategories.slice(0, selectedIndex),
-        selectedCategories.slice(selectedIndex + 1)
+      newSelectedData = newSelectedData.concat(
+        selectedData.slice(0, selectedIndex),
+        selectedData.slice(selectedIndex + 1)
       );
     }
 
-    setSelectedCategories(newSelectedCategories);
+    setSelectedData(newSelectedData);
   };
 
   const handlePageChange = (e, page) => {
-    const params = new URLSearchParams({ per_page: paginationMeta.perPage, page: page + 1 });
-    dispatch(categoryGetAll(`${params}`));
+    const params = new URLSearchParams({ per_page: categories?.meta?.perPage, page: page + 1 });
+    // @TODO: use paginated query...
+    // dispatch(categoryGetAll(`${params}`));
   };
 
   const handleRowsPerPageChange = e => {
     const params = new URLSearchParams({ per_page: e.target.value });
-    dispatch(categoryGetAll(`${params}`));
+    // @TODO: use paginated query...
+    // dispatch(categoryGetAll(`${params}`));
   };
 
-  const { start, end } = calculatePaginationStartEndPosition(paginationMeta?.page, paginationMeta?.perPage);
+  const { start, end } = calculatePaginationStartEndPosition(categories?.meta?.page, categories?.meta?.perPage);
+
+  const [deleteCategory] = useMutation(id => api.categories.delete(id), {
+    onMutate: id => {
+      cache.cancelQueries('categories');
+      const previousValue = cache.getQueryData('categories');
+      const filtered = previousValue?.data?.filter(x => x.id !== id);
+      const obj = { ...previousValue, data: [...filtered] };
+      cache.setQueryData('categories', obj);
+      return previousValue;
+    },
+    onSuccess: () => {
+      toast.success('Category deleted');
+    },
+    onError: (_, __, previousValue) => {
+      cache.setQueryData('categories', previousValue);
+      toast.error('Error deleting the category');
+    },
+    onSettled: () => {
+      cache.invalidateQueries('categories');
+    },
+  });
 
   return (
     <Card {...rest} className={clsx(classes.root, className)}>
@@ -125,9 +141,9 @@ const CategoriesTable = props => {
               <TableRow>
                 <TableCell padding='checkbox'>
                   <Checkbox
-                    checked={selectedCategories.length === categories.length}
+                    checked={selectedData?.length === categories?.data?.length}
                     color='primary'
-                    indeterminate={selectedCategories.length > 0 && selectedCategories.length < categories.length}
+                    indeterminate={selectedData?.length > 0 && selectedData?.length < categories?.data?.length}
                     onChange={handleSelectAll}
                   />
                 </TableCell>
@@ -140,18 +156,18 @@ const CategoriesTable = props => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {paginationMeta &&
-                categories.length > 0 &&
-                categories.slice(start, end).map(category => (
+              {categories?.meta &&
+                categories.data.length > 0 &&
+                categories.data.slice(start, end).map(category => (
                   <TableRow
                     className={classes.tableRow}
                     hover
                     key={nanoid()}
-                    selected={selectedCategories.indexOf(category.id) !== -1}
+                    selected={selectedData.indexOf(category.id) !== -1}
                   >
                     <TableCell padding='checkbox'>
                       <Checkbox
-                        checked={selectedCategories.indexOf(category.id) !== -1}
+                        checked={selectedData.indexOf(category.id) !== -1}
                         color='primary'
                         onChange={event => handleSelectOne(event, category.id)}
                         value='true'
@@ -168,12 +184,22 @@ const CategoriesTable = props => {
                     <TableCell>{category.description}</TableCell>
                     <TableCell>{category.logo}</TableCell>
                     <TableCell>
+                      <Link to={`${category.id}/${category.slug}/preview`} style={{ textDecoration: 'none' }}>
+                        <Button
+                          color='secondary'
+                          startIcon={<VisibilityIcon />}
+                          // onClick={() => dispatch(productSlice.actions.setPreviewId(product.id))}
+                        >
+                          View
+                        </Button>
+                      </Link>
+                    </TableCell>
+                    <TableCell>
                       <Link to={`${category.id}/${category.slug}/edit`} style={{ textDecoration: 'none' }}>
                         <Button
-                          variant='outlined'
                           color='secondary'
                           startIcon={<EditIcon />}
-                          onClick={() => dispatch(categorySlice.actions.setEditId(category.id))}
+                          // onClick={() => dispatch(categorySlice.actions.setEditId(category.id))}
                         >
                           Edit
                         </Button>
@@ -181,9 +207,9 @@ const CategoriesTable = props => {
                     </TableCell>
                     <TableCell>
                       <Button
-                        variant='outlined'
+                        style={{ color: 'red' }}
                         color='secondary'
-                        startIcon={<DeleteIcon />}
+                        startIcon={<DeleteIcon style={{ fill: 'red' }} />}
                         onClick={() => handleDialogOpen()}
                       >
                         Delete
@@ -205,9 +231,9 @@ const CategoriesTable = props => {
                             Cancel
                           </Button>
                           <Button
-                            onClick={() => {
+                            onClick={async () => {
                               handleDialogClose();
-                              dispatch(categoryDelete(category.id));
+                              await deleteCategory(category.id);
                             }}
                             color='primary'
                             autoFocus
@@ -224,14 +250,14 @@ const CategoriesTable = props => {
         </div>
       </CardContent>
       <CardActions className={classes.actions}>
-        {paginationMeta && (
+        {categories?.meta && (
           <TablePagination
             component='div'
-            count={paginationMeta.totalCount || -1}
+            count={categories?.meta?.totalCount || -1}
             onChangePage={handlePageChange}
             onChangeRowsPerPage={handleRowsPerPageChange}
-            page={paginationMeta.page - 1 || 0}
-            rowsPerPage={paginationMeta.perPage || 50}
+            page={categories?.meta?.page - 1 || 0}
+            rowsPerPage={categories?.meta?.perPage || 50}
             rowsPerPageOptions={[10, 25, 50, 75, 120]}
           />
         )}

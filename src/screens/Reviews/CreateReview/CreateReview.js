@@ -1,18 +1,19 @@
-import React from 'react';
+import React, { useContext } from 'react';
 
 import { yupResolver } from '@hookform/resolvers';
 import { Avatar, CircularProgress, Container, Typography } from '@material-ui/core';
 import RateReviewIcon from '@material-ui/icons/RateReview';
 import { makeStyles } from '@material-ui/styles';
 import { FormProvider, useForm } from 'react-hook-form';
-import { useDispatch, useSelector } from 'react-redux';
+import { useMutation, useQueryCache } from 'react-query';
+import { useSelector } from 'react-redux';
 import * as Yup from 'yup';
 
+import api from '../../../api';
 import { FormTextField, FormSubmitButton, FormRadioGroup } from '../../../components/Form';
 import ErrorMessage from '../../../components/Message/ErrorMessage';
 import { useFormServerErrors } from '../../../hooks/useFormServerErrors';
-import { reviewCreate } from '../../../store/review/reviewSlice';
-import { selectUIState } from '../../../store/ui';
+import { ToastContext } from '../../../store/toast/toast';
 import { selectUserProfile } from '../../../store/user/userSlice';
 
 const useStyles = makeStyles(theme => ({
@@ -37,6 +38,7 @@ const useStyles = makeStyles(theme => ({
 const schema = Yup.object({
   productId: Yup.string().required(),
   rating: Yup.string().required(),
+  title: Yup.string().required(),
   comment: Yup.string().required(),
 });
 
@@ -46,6 +48,7 @@ const formOpts = {
   defaultValues: {
     productId: '',
     rating: '',
+    title: '',
     comment: '',
   },
   resolver: yupResolver(schema),
@@ -53,17 +56,50 @@ const formOpts = {
 
 function CreateReviewForm() {
   const classes = useStyles();
-  const dispatch = useDispatch();
+  const toast = useContext(ToastContext);
+  const cache = useQueryCache();
+
   const methods = useForm(formOpts);
   const { handleSubmit, setError } = methods;
-  const { loading, error } = useSelector(selectUIState(reviewCreate));
+
+  // @TODO remove this
   const user = useSelector(selectUserProfile);
 
-  const onSubmit = async data => {
-    data.rating = Number.parseInt(data.rating, 10);
-    data.productId = Number.parseInt(data.productId, 10);
-    data.user_id = user.id;
-    await dispatch(reviewCreate(data));
+  const [createReview, { isLoading, isError, error }] = useMutation(values => api.reviews.create(values), {
+    onMutate: formData => {
+      cache.cancelQueries('reviews');
+      const previousValue = cache.getQueryData('reviews');
+      cache.setQueryData('reviews', old => ({
+        ...old,
+        formData,
+      }));
+      return previousValue;
+    },
+    onSuccess: () => {
+      toast.success('Review created');
+    },
+    onError: (_, __, previousValue) => {
+      cache.setQueryData('reviews', previousValue);
+      toast.error('Form has errors, please check the details');
+    },
+    onSettled: () => {
+      cache.invalidateQueries('reviews');
+    },
+  });
+
+  const onSubmit = async values => {
+    const obj = {
+      ...values,
+      rating: Number.parseInt(values.rating, 10),
+      productId: Number.parseInt(values.productId, 10),
+      user_id: user.id,
+    };
+
+    await createReview(obj);
+  };
+
+  const onError = () => {
+    toast.error('Form has errors, please check the details');
   };
 
   useFormServerErrors(error, setError);
@@ -78,11 +114,11 @@ function CreateReviewForm() {
           Create Review
         </Typography>
 
-        {loading && <CircularProgress />}
-        {error && <ErrorMessage message={error.message} />}
+        {isLoading && <CircularProgress />}
+        {isError && <ErrorMessage message={error.message} />}
 
         <FormProvider {...methods}>
-          <form onSubmit={handleSubmit(onSubmit)} noValidate>
+          <form onSubmit={handleSubmit(onSubmit, onError)} noValidate>
             <p style={{ marginBottom: 0, paddingBottom: 0 }}>rating</p>
             <FormTextField name='productId' fullWidth />
             <FormRadioGroup
@@ -96,9 +132,10 @@ function CreateReviewForm() {
                 { label: '5', value: '5' },
               ]}
             />
+            <FormTextField name='title' fullWidth />
             <FormTextField name='comment' multiline rowsMax={6} fullWidth />
 
-            <FormSubmitButton className={classes.submit} fullWidth>
+            <FormSubmitButton className={classes.submit} fullWidth loading={isLoading}>
               Add Review
             </FormSubmitButton>
           </form>

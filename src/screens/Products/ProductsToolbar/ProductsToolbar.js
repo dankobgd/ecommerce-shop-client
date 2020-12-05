@@ -1,6 +1,7 @@
 import React from 'react';
 
 import { Button } from '@material-ui/core';
+import AddIcon from '@material-ui/icons/Add';
 import { makeStyles } from '@material-ui/styles';
 import { Link } from '@reach/router';
 import clsx from 'clsx';
@@ -40,7 +41,7 @@ const ProductsToolbar = props => {
         <Button className={classes.importButton}>Import</Button>
         <Button className={classes.exportButton}>Export</Button>
         <Link to='create' style={{ textDecoration: 'none' }}>
-          <Button color='primary' variant='contained'>
+          <Button startIcon={<AddIcon />} color='primary' variant='contained'>
             Add product
           </Button>
         </Link>

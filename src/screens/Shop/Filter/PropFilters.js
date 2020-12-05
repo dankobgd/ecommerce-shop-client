@@ -13,15 +13,10 @@ import {
 import CheckBoxIcon from '@material-ui/icons/CheckBox';
 import CheckBoxOutlineBlankIcon from '@material-ui/icons/CheckBoxOutlineBlank';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
-import _ from 'lodash';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { selectProductVariants } from '../../../store/product/productSlice';
-import searchSlice, {
-  selectMainFilters,
-  selectSpecificFilters,
-  selectHasSpecificFilters,
-} from '../../../store/search/searchSlice';
+import { selectChosenCategoriesProperties } from '../../../store/category/categorySlice';
+import searchSlice, { selectSpecificFilters, selectHasSpecificFilters } from '../../../store/search/searchSlice';
 
 const useStyles = makeStyles(() => ({
   expanded: {
@@ -42,85 +37,110 @@ const useStyles = makeStyles(() => ({
 function PropFilters() {
   const classes = useStyles();
   const dispatch = useDispatch();
-  const variants = useSelector(selectProductVariants);
-  const mainFilters = useSelector(selectMainFilters);
   const specificFilters = useSelector(selectSpecificFilters);
   const hasSpecificFilters = useSelector(selectHasSpecificFilters);
+  const chosenCategoriesProperties = useSelector(selectChosenCategoriesProperties);
 
-  const filterProps = Object.keys(variants).reduce((obj, key) => {
-    const [cat, prop] = key.split('_');
-    _.set(obj, `${cat}.${prop}`, variants[key]);
-    return obj;
-  }, {});
+  // useEffect(() => {
+  //   const obj = Object.keys(variants).reduce((acc, key) => {
+  //     acc[key] = [];
+  //     return acc;
+  //   }, {});
 
-  const filtered = Object.keys(filterProps)
-    .filter(key => mainFilters?.categories?.includes(key))
-    .reduce((obj, key) => {
-      obj[key] = filterProps[key];
-      return obj;
-    }, {});
+  //   if (!hasSpecificFilters) {
+  //     dispatch(searchSlice.actions.initSpecificFilters(obj));
+  //   }
+  // }, [dispatch, hasSpecificFilters, variants]);
 
-  useEffect(() => {
-    const obj = Object.keys(variants).reduce((acc, key) => {
-      acc[key] = [];
-      return acc;
-    }, {});
+  const handleChangeBoolCheckbox = event => {
+    const { name, value } = event.target;
+    const items = specificFilters[name];
+    dispatch(searchSlice.actions.setSpecificFilters({ name, items }));
+  };
 
-    if (!hasSpecificFilters) {
-      dispatch(searchSlice.actions.initSpecificFilters(obj));
-    }
-  }, [dispatch, hasSpecificFilters, variants]);
-
-  const handleChange = event => {
+  const handleChangeArrayCheckbox = event => {
     const { name, value } = event.target;
     const arr = specificFilters[name];
     const items = arr?.includes(value) ? arr.filter(x => x !== value) : [...(arr ?? []), value];
     dispatch(searchSlice.actions.setSpecificFilters({ name, items }));
   };
 
-  return (
-    Object.keys(filtered).length > 0 && (
-      <div className={classes.specificFilters}>
-        {Object.entries(filtered).map(([category, props]) => (
-          <div key={category} style={{ marginBottom: '1rem' }}>
-            {Object.keys(props).map(prop => (
-              <Accordion key={`${category}-${prop}`} classes={{ expanded: classes.expanded }}>
-                <AccordionSummary
-                  expandIcon={<ExpandMoreIcon />}
-                  aria-controls={`${category}-${prop}-filter`}
-                  id={`${category}-${prop}-filter`}
-                >
-                  <Typography>
-                    {category} {prop}
-                  </Typography>
-                </AccordionSummary>
-                <AccordionDetails className={classes.accordionDetails}>
-                  <FormGroup>
-                    {props[prop].map(p => (
-                      <div key={`${category}-${prop}-${p}`}>
-                        <FormControlLabel
-                          control={
-                            <Checkbox
-                              icon={<CheckBoxOutlineBlankIcon fontSize='small' />}
-                              checkedIcon={<CheckBoxIcon fontSize='small' />}
-                              name={`${category}_${prop}`}
-                              value={p}
-                              checked={specificFilters && specificFilters[`${category}_${prop}`]?.includes(p)}
-                              onChange={handleChange}
-                            />
-                          }
-                          label={p}
-                        />
-                      </div>
-                    ))}
-                  </FormGroup>
-                </AccordionDetails>
-              </Accordion>
-            ))}
+  const renderChoiceInputField = (category, property) => {
+    if (property.filterable === true) {
+      if (property.type === 'bool') {
+        return (
+          <div key={`${category.slug}-${property.label}`}>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  icon={<CheckBoxOutlineBlankIcon fontSize='small' />}
+                  checkedIcon={<CheckBoxIcon fontSize='small' />}
+                  name={`${category.slug}_${property.name}`}
+                  value={property.name}
+                  // checked={false}
+                  checked={specificFilters && specificFilters[`${category.slug}_${property.name}`].length > 0}
+                  onChange={handleChangeBoolCheckbox}
+                />
+              }
+              label={property.label}
+            />
           </div>
-        ))}
-      </div>
-    )
+        );
+      }
+
+      if (property.type === 'text') {
+        if (property.choices) {
+          return property.choices.map(choice => (
+            <div key={`${category.slug}-${property.label}-${choice.label}`}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    icon={<CheckBoxOutlineBlankIcon fontSize='small' />}
+                    checkedIcon={<CheckBoxIcon fontSize='small' />}
+                    name={`${category.slug}_${property.name}`}
+                    value={choice.name}
+                    // checked={false}
+                    checked={
+                      specificFilters && specificFilters[`${category.slug}_${property.slug}`]?.includes(choice.name)
+                    }
+                    onChange={handleChangeArrayCheckbox}
+                  />
+                }
+                label={choice.label}
+              />
+            </div>
+          ));
+        }
+      }
+    }
+
+    return null;
+  };
+
+  return (
+    <div>
+      {chosenCategoriesProperties.map(category => (
+        <div key={category.slug} style={{ border: '1px solid lightblue', marginTop: '1rem' }}>
+          {category.properties.map(property => (
+            <Accordion key={`${category.slug}_${property.label}`} classes={{ expanded: classes.expanded }}>
+              <AccordionSummary
+                expandIcon={<ExpandMoreIcon />}
+                aria-controls={`${category.slug}-${property.label}-filter`}
+                id={`${category.slug}-${property.label}-filter`}
+              >
+                <Typography>
+                  {category.name} {property.label}
+                </Typography>
+              </AccordionSummary>
+
+              <AccordionDetails className={classes.accordionDetails}>
+                <FormGroup>{renderChoiceInputField(category, property)}</FormGroup>
+              </AccordionDetails>
+            </Accordion>
+          ))}
+        </div>
+      ))}
+    </div>
   );
 }
 

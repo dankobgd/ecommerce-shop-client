@@ -112,9 +112,13 @@ function Filter({ tagsList, brandsList, categoriesList }) {
 
     const sfilters = _.pickBy(restFilters, v => v.length > 0);
     Object.keys(sfilters).forEach(key => {
-      sfilters[key].forEach(val => {
-        params.append(key, val);
-      });
+      if (Array.isArray(sfilters[key])) {
+        sfilters[key].forEach(val => {
+          params.append(key, val);
+        });
+      } else {
+        params.append(key, true);
+      }
     });
 
     if (priceMin || priceMax || brands?.length > 0 || tags?.length > 0 || categories?.length > 0) {
@@ -158,7 +162,6 @@ function Filter({ tagsList, brandsList, categoriesList }) {
         ))}
 
         <PriceFilters />
-
         <PropFilters />
       </form>
     </div>

@@ -1,9 +1,9 @@
 import React from 'react';
 
 import { makeStyles } from '@material-ui/styles';
-import { useDispatch, useSelector } from 'react-redux';
+import { useQuery, useQueryCache } from 'react-query';
 
-import { brandGetAll, selectAllBrands } from '../../store/brand/brandSlice';
+import api from '../../api';
 import BrandsTable from './BrandsTable/BrandsTable';
 import BrandsToolbar from './BrandsToolbar/BrandsToolbar';
 
@@ -18,18 +18,17 @@ const useStyles = makeStyles(theme => ({
 
 function Brands() {
   const classes = useStyles();
-  const dispatch = useDispatch();
-  const brands = useSelector(selectAllBrands);
+  const cache = useQueryCache();
 
-  React.useEffect(() => {
-    dispatch(brandGetAll());
-  }, [dispatch]);
+  const info = useQuery('brands', () => api.brands.getAll(), {
+    initialData: () => cache.getQueryData(['brands']),
+  });
 
   return (
     <div className={classes.root}>
       <BrandsToolbar />
       <div className={classes.content}>
-        <BrandsTable brands={brands} />
+        <BrandsTable info={info} />
       </div>
     </div>
   );

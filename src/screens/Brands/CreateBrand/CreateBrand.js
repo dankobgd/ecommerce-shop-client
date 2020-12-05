@@ -1,18 +1,18 @@
-import React from 'react';
+import React, { useContext } from 'react';
 
 import { yupResolver } from '@hookform/resolvers';
 import { Avatar, CircularProgress, Container, Typography } from '@material-ui/core';
 import ClassIcon from '@material-ui/icons/Class';
 import { makeStyles } from '@material-ui/styles';
 import { FormProvider, useForm } from 'react-hook-form';
-import { useDispatch, useSelector } from 'react-redux';
+import { useMutation, useQueryCache } from 'react-query';
 import * as Yup from 'yup';
 
+import api from '../../../api';
 import { FormTextField, FormSubmitButton } from '../../../components/Form';
 import ErrorMessage from '../../../components/Message/ErrorMessage';
 import { useFormServerErrors } from '../../../hooks/useFormServerErrors';
-import { brandCreate } from '../../../store/brand/brandSlice';
-import { selectUIState } from '../../../store/ui';
+import { ToastContext } from '../../../store/toast/toast';
 import { rules } from '../../../utils/validation';
 import { BrandLogoUploadField } from './FileUploadInputs';
 
@@ -39,9 +39,9 @@ const schema = Yup.object({
   name: Yup.string().required(),
   slug: Yup.string().required(),
   type: Yup.string().required(),
-  description: Yup.string().required(),
+  description: Yup.string(),
   email: rules.email,
-  logo: rules.image,
+  logo: rules.requiredImage,
   websiteUrl: Yup.string().required(),
 });
 
@@ -62,13 +62,36 @@ const formOpts = {
 
 function CreateProductForm() {
   const classes = useStyles();
-  const dispatch = useDispatch();
+  const toast = useContext(ToastContext);
+  const cache = useQueryCache();
+
   const methods = useForm(formOpts);
   const { handleSubmit, setError } = methods;
-  const { loading, error } = useSelector(selectUIState(brandCreate));
 
-  const onSubmit = async data => {
-    const { logo, ...rest } = data;
+  const [createBrand, { isLoading, isError, error }] = useMutation(formData => api.brands.create(formData), {
+    onMutate: formData => {
+      cache.cancelQueries('brands');
+      const previousValue = cache.getQueryData('brands');
+      cache.setQueryData('brands', old => ({
+        ...old,
+        formData,
+      }));
+      return previousValue;
+    },
+    onSuccess: () => {
+      toast.success('Brand created');
+    },
+    onError: (_, __, previousValue) => {
+      cache.setQueryData('brands', previousValue);
+      toast.error('Form has errors, please check the details');
+    },
+    onSettled: () => {
+      cache.invalidateQueries('brands');
+    },
+  });
+
+  const onSubmit = async values => {
+    const { logo, ...rest } = values;
     const formData = new FormData();
 
     formData.append('logo', logo);
@@ -76,7 +99,11 @@ function CreateProductForm() {
       formData.append(name, rest[name]);
     });
 
-    await dispatch(brandCreate(formData));
+    await createBrand(formData);
+  };
+
+  const onError = () => {
+    toast.error('Form has errors, please check the details');
   };
 
   useFormServerErrors(error, setError);
@@ -91,11 +118,11 @@ function CreateProductForm() {
           Create Brand
         </Typography>
 
-        {loading && <CircularProgress />}
-        {error && <ErrorMessage message={error.message} />}
+        {isLoading && <CircularProgress />}
+        {isError && <ErrorMessage message={error.message} />}
 
         <FormProvider {...methods}>
-          <form onSubmit={handleSubmit(onSubmit)} noValidate>
+          <form onSubmit={handleSubmit(onSubmit, onError)} noValidate>
             <FormTextField name='name' fullWidth />
             <FormTextField name='slug' fullWidth />
             <FormTextField name='type' fullWidth />
@@ -104,7 +131,7 @@ function CreateProductForm() {
             <FormTextField name='websiteUrl' fullWidth />
             <BrandLogoUploadField name='logo' />
 
-            <FormSubmitButton className={classes.submit} fullWidth>
+            <FormSubmitButton className={classes.submit} fullWidth loading={isLoading}>
               Add Brand
             </FormSubmitButton>
           </form>

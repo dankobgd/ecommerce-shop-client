@@ -1,9 +1,9 @@
 import React from 'react';
 
 import { makeStyles } from '@material-ui/styles';
-import { useSelector, useDispatch } from 'react-redux';
+import { useQuery, useQueryCache } from 'react-query';
 
-import { categoryGetAll, selectAllCategories } from '../../store/category/categorySlice';
+import api from '../../api';
 import CategoriesTable from './CategoriesTable/CategoriesTable';
 import CategoriesToolbar from './CategoriesToolbar/CategoriesToolbar';
 
@@ -18,18 +18,17 @@ const useStyles = makeStyles(theme => ({
 
 function Categories() {
   const classes = useStyles();
-  const dispatch = useDispatch();
-  const categories = useSelector(selectAllCategories);
+  const cache = useQueryCache();
 
-  React.useEffect(() => {
-    dispatch(categoryGetAll());
-  }, [dispatch]);
+  const info = useQuery('categories', () => api.categories.getAll(), {
+    initialData: () => cache.getQueryData(['categories']),
+  });
 
   return (
     <div className={classes.root}>
       <CategoriesToolbar />
       <div className={classes.content}>
-        <CategoriesTable categories={categories} />
+        <CategoriesTable info={info} />
       </div>
     </div>
   );

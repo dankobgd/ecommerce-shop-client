@@ -1,7 +1,6 @@
 import React from 'react';
 
 import { Button, CircularProgress } from '@material-ui/core';
-import { useFormContext } from 'react-hook-form';
 
 export default function SubmitButton({
   children,
@@ -9,23 +8,21 @@ export default function SubmitButton({
   color = 'primary',
   margin = 'normal',
   variant = 'contained',
+  loading,
   ...rest
 }) {
-  const { formState } = useFormContext();
-  const { isSubmitting } = formState;
-
   return (
     <Button
       type='submit'
       color={color}
       margin={margin}
       variant={variant}
-      disabled={isSubmitting}
+      disabled={loading}
       className={className}
       {...rest}
     >
-      {isSubmitting && <CircularProgress size={20} />}
-      {!isSubmitting && children}
+      {loading && <CircularProgress size={20} />}
+      {!loading && children}
     </Button>
   );
 }

@@ -175,7 +175,7 @@ const formOpts2 = rev => ({
   },
 });
 
-function ProductSingle() {
+function ProductSingle({ productId }) {
   const classes = useStyles();
   const dispatch = useDispatch();
   const pid = useSelector(selectCurrentId);
@@ -209,11 +209,13 @@ function ProductSingle() {
   };
 
   React.useEffect(() => {
-    dispatch(productGet(pid));
-    dispatch(reviewGetAllForProduct(pid));
-    dispatch(tagGetAllForProduct(pid));
-    dispatch(imageGetAllForProduct(pid));
-  }, [dispatch, pid]);
+    const id = pid || productId;
+
+    dispatch(productGet(id));
+    dispatch(reviewGetAllForProduct(id));
+    dispatch(tagGetAllForProduct(id));
+    dispatch(imageGetAllForProduct(id));
+  }, [dispatch, pid, productId]);
 
   const methods1 = useForm(formOpts1);
   const { handleSubmit: handleSubmitCreateReview, setError: setErrorCreateReview } = methods1;

@@ -1,28 +1,25 @@
-import React from 'react';
+import React, { useContext } from 'react';
 
 import { yupResolver } from '@hookform/resolvers';
 import { Avatar, CircularProgress, Container, Typography } from '@material-ui/core';
 import ShoppingBasketIcon from '@material-ui/icons/ShoppingBasket';
 import { makeStyles } from '@material-ui/styles';
-import { nanoid } from 'nanoid';
 import { FormProvider, useForm } from 'react-hook-form';
-import { useDispatch, useSelector } from 'react-redux';
+import { useMutation, useQuery, useQueryCache } from 'react-query';
 import * as Yup from 'yup';
 
+import api from '../../../api';
 import {
   FormTextField,
   FormSwitch,
   FormSubmitButton,
   FormAutoComplete,
   FormNumberField,
+  FormCheckbox,
 } from '../../../components/Form';
 import ErrorMessage from '../../../components/Message/ErrorMessage';
 import { useFormServerErrors } from '../../../hooks/useFormServerErrors';
-import { brandGetAll, selectAllBrands } from '../../../store/brand/brandSlice';
-import { categoryGetAll, selectAllCategories } from '../../../store/category/categorySlice';
-import { productCreate, productGetProperties, selectProductVariants } from '../../../store/product/productSlice';
-import { tagGetAll, selectAllTags } from '../../../store/tag/tagSlice';
-import { selectUIState } from '../../../store/ui';
+import { ToastContext } from '../../../store/toast/toast';
 import { priceToLowestCurrencyDenomination } from '../../../utils/priceFormat';
 import { transformKeysToSnakeCase } from '../../../utils/transformObjectKeys';
 import { rules } from '../../../utils/validation';
@@ -56,18 +53,17 @@ const schema = Yup.object({
     .nullable(),
   name: Yup.string().required(),
   slug: Yup.string().required(),
-  description: Yup.string().required(),
+  description: Yup.string(),
   price: Yup.string().required(),
   inStock: Yup.boolean().required(),
   isFeatured: Yup.boolean().required(),
-  image: rules.image,
+  image: rules.requiredImage,
 });
 
 const formOpts = {
   mode: 'onChange',
   reValidateMode: 'onChange',
   defaultValues: {
-    // discountId: '',
     brandId: null,
     categoryId: null,
     name: '',
@@ -76,59 +72,94 @@ const formOpts = {
     price: '',
     inStock: true,
     isFeatured: false,
-    tags: [],
     image: '',
-    images: [],
     properties: null,
+    tags: [],
+    images: [],
   },
   resolver: yupResolver(schema),
 };
 
-function renderCategoryProperties(chosenCategory, variants) {
-  const opts = variants[chosenCategory?.name];
-  const createLabel = name => `${chosenCategory?.name.charAt(0).toUpperCase() + chosenCategory?.name.slice(1)} ${name}`;
-
-  return (
-    opts &&
-    Object.keys(opts.props).map(key => (
+const renderPropertyInputType = property => {
+  if (property.type === 'text') {
+    return (
       <FormAutoComplete
-        getOptionSelected={(option, value) => (value ? option === value : true)}
-        key={nanoid()}
-        name={`properties.${key}`}
-        label={createLabel(key)}
-        options={opts.props[key] || []}
+        key={property.name}
+        name={`properties.${property.name}`}
+        label={property.label}
+        options={property.choices}
+        getOptionLabel={option => option.name || ''}
+        getOptionSelected={(option, value) => option.name === value.name}
         fullWidth
       />
-    ))
+    );
+  }
+  // @TODO: init default form property vals to fix uncontroll field err
+  if (property.type === 'bool') {
+    return <FormCheckbox key={property.name} name={`properties.${property.name}`} label={property.label} fullWidth />;
+  }
+  return null;
+};
+
+const CategoryProperties = ({ chosenCategory }) => {
+  const properties = chosenCategory?.properties
+    ? chosenCategory?.properties.filter(x => Boolean(x.filterable)).sort((a, b) => a.importance - b.importance)
+    : [];
+
+  return (
+    properties.length > 0 && (
+      <div style={{ marginTop: '1rem' }}>
+        <Typography variant='subtitle1'>Properties</Typography>
+        {properties.map(prop => renderPropertyInputType(prop))}
+      </div>
+    )
   );
-}
+};
 
 function CreateProductForm() {
   const classes = useStyles();
-  const dispatch = useDispatch();
+  const toast = useContext(ToastContext);
+  const cache = useQueryCache();
+
   const methods = useForm(formOpts);
   const { handleSubmit, setError, watch } = methods;
-  const { loading, error } = useSelector(selectUIState(productCreate));
-  const tagList = useSelector(selectAllTags);
-  const brandList = useSelector(selectAllBrands);
-  const categoryList = useSelector(selectAllCategories);
-  const variants = useSelector(selectProductVariants);
+
+  const { data: brandsList } = useQuery('brands', () => api.brands.getAll(), {
+    initialData: () => cache.getQueryData(['brands']),
+  });
+  const { data: tagsList } = useQuery('tags', () => api.tags.getAll(), {
+    initialData: () => cache.getQueryData(['tags']),
+  });
+  const { data: categoriesList } = useQuery('categories', () => api.categories.getAll(), {
+    initialData: () => cache.getQueryData(['categories']),
+  });
+
+  const [createProduct, { isLoading, isError, error }] = useMutation(formData => api.products.create(formData), {
+    onMutate: formData => {
+      cache.cancelQueries('products');
+      const previousValue = cache.getQueryData('products');
+      cache.setQueryData('products', old => ({
+        ...old,
+        formData,
+      }));
+      return previousValue;
+    },
+    onSuccess: () => {
+      toast.success('Product created');
+    },
+    onError: (_, __, previousValue) => {
+      cache.setQueryData('products', previousValue);
+      toast.error('Form has errors, please check the details');
+    },
+    onSettled: () => {
+      cache.invalidateQueries('products');
+    },
+  });
+
   const chosenCategory = watch('categoryId');
 
-  React.useEffect(() => {
-    async function fetchDropdownValues() {
-      await Promise.all([
-        dispatch(productGetProperties()),
-        dispatch(brandGetAll()),
-        dispatch(categoryGetAll()),
-        dispatch(tagGetAll()),
-      ]);
-    }
-    fetchDropdownValues();
-  }, [dispatch]);
-
-  const onSubmit = async data => {
-    const { brandId, categoryId, tags, image, images, properties, price, ...rest } = data;
+  const onSubmit = async values => {
+    const { brandId, categoryId, tags, image, images, properties, price, ...rest } = values;
     const formData = new FormData();
 
     const fields = transformKeysToSnakeCase(rest);
@@ -146,9 +177,15 @@ function CreateProductForm() {
     tags.forEach(tag => {
       formData.append('tags', tag.id);
     });
-    formData.append('properties', JSON.stringify(transformKeysToSnakeCase(properties)));
+    if (properties) {
+      formData.append('properties', JSON.stringify(transformKeysToSnakeCase(properties)));
+    }
 
-    await dispatch(productCreate(formData));
+    await createProduct(formData);
+  };
+
+  const onError = () => {
+    toast.error('Form has errors, please check the details');
   };
 
   useFormServerErrors(error, setError);
@@ -163,26 +200,26 @@ function CreateProductForm() {
           Create Product
         </Typography>
 
-        {loading && <CircularProgress />}
-        {error && <ErrorMessage message={error.message} />}
+        {isLoading && <CircularProgress />}
+        {isError && <ErrorMessage message={error.message} />}
 
         <FormProvider {...methods}>
-          <form onSubmit={handleSubmit(onSubmit)} noValidate>
-            <BrandDropdown fullWidth options={brandList} />
-            <CategoryDropdown fullWidth options={categoryList} />
+          <form onSubmit={handleSubmit(onSubmit, onError)} noValidate>
+            <BrandDropdown fullWidth options={brandsList?.data || []} />
+            <CategoryDropdown fullWidth options={categoriesList?.data || []} />
             <FormTextField name='name' fullWidth />
             <FormTextField name='slug' fullWidth />
             <FormTextField name='description' fullWidth />
             <FormNumberField name='price' fullWidth prefix='$' />
             <FormSwitch name='inStock' />
             <FormSwitch name='isFeatured' />
-            <TagsDropdown fullWidth options={tagList} />
             <ProductThumbnailUploadField name='image' />
+            <TagsDropdown fullWidth options={tagsList?.data || []} />
             <ProductImagesDropzoneField name='images' />
 
-            {renderCategoryProperties(chosenCategory, variants)}
+            <CategoryProperties chosenCategory={chosenCategory} />
 
-            <FormSubmitButton className={classes.submit} fullWidth>
+            <FormSubmitButton className={classes.submit} fullWidth loading={isLoading}>
               Add product
             </FormSubmitButton>
           </form>

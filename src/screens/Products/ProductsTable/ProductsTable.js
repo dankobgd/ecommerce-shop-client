@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 
 import {
   Card,
@@ -22,12 +22,14 @@ import {
 } from '@material-ui/core';
 import DeleteIcon from '@material-ui/icons/Delete';
 import EditIcon from '@material-ui/icons/Edit';
+import VisibilityIcon from '@material-ui/icons/Visibility';
 import { makeStyles } from '@material-ui/styles';
 import { Link } from '@reach/router';
 import clsx from 'clsx';
-import { useDispatch, useSelector } from 'react-redux';
+import { useMutation, useQueryCache } from 'react-query';
 
-import productSlice, { productDelete, selectPaginationMeta, productGetAll } from '../../../store/product/productSlice';
+import api from '../../../api';
+import { ToastContext } from '../../../store/toast/toast';
 import { calculatePaginationStartEndPosition } from '../../../utils/pagination';
 import { formatPriceForDisplay } from '../../../utils/priceFormat';
 import { truncateText } from '../../../utils/truncateText';
@@ -53,12 +55,14 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
-const ProductsTable = props => {
-  const { className, products, ...rest } = props;
+const ProductsTable = ({ className, info, ...rest }) => {
   const classes = useStyles();
-  const dispatch = useDispatch();
-  const paginationMeta = useSelector(selectPaginationMeta);
-  const [selectedProducts, setSelectedProducts] = useState([]);
+  const { data: products } = info;
+
+  const toast = useContext(ToastContext);
+  const cache = useQueryCache();
+
+  const [selectedData, setSelectedData] = useState([]);
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const handleDialogOpen = () => {
@@ -70,48 +74,64 @@ const ProductsTable = props => {
   };
 
   const handleSelectAll = event => {
-    let selected;
-
-    if (event.target.checked) {
-      selected = products.map(product => product.id);
-    } else {
-      selected = [];
-    }
-
-    setSelectedProducts(selected);
+    const selected = event.target.checked ? products?.data?.map(x => x.id) : [];
+    setSelectedData(selected);
   };
 
   const handleSelectOne = (event, id) => {
-    const selectedIndex = selectedProducts.indexOf(id);
-    let newSelectedProducts = [];
+    const selectedIndex = selectedData.indexOf(id);
+    let newSelectedData = [];
 
     if (selectedIndex === -1) {
-      newSelectedProducts = newSelectedProducts.concat(selectedProducts, id);
+      newSelectedData = newSelectedData.concat(selectedData, id);
     } else if (selectedIndex === 0) {
-      newSelectedProducts = newSelectedProducts.concat(selectedProducts.slice(1));
-    } else if (selectedIndex === selectedProducts.length - 1) {
-      newSelectedProducts = newSelectedProducts.concat(selectedProducts.slice(0, -1));
+      newSelectedData = newSelectedData.concat(selectedData.slice(1));
+    } else if (selectedIndex === selectedData.length - 1) {
+      newSelectedData = newSelectedData.concat(selectedData.slice(0, -1));
     } else if (selectedIndex > 0) {
-      newSelectedProducts = newSelectedProducts.concat(
-        selectedProducts.slice(0, selectedIndex),
-        selectedProducts.slice(selectedIndex + 1)
+      newSelectedData = newSelectedData.concat(
+        selectedData.slice(0, selectedIndex),
+        selectedData.slice(selectedIndex + 1)
       );
     }
 
-    setSelectedProducts(newSelectedProducts);
+    setSelectedData(newSelectedData);
   };
 
   const handlePageChange = (e, page) => {
-    const params = new URLSearchParams({ per_page: paginationMeta.perPage, page: page + 1 });
-    dispatch(productGetAll(`${params}`));
+    const params = new URLSearchParams({ per_page: products?.meta?.perPage, page: page + 1 });
+    // @TOD: use paginated query...
+    // dispatch(productGetAll(`${params}`));
   };
 
   const handleRowsPerPageChange = e => {
     const params = new URLSearchParams({ per_page: e.target.value });
-    dispatch(productGetAll(`${params}`));
+    // @TOD: use paginated query...
+    // dispatch(productGetAll(`${params}`));
   };
 
-  const { start, end } = calculatePaginationStartEndPosition(paginationMeta?.page, paginationMeta?.perPage);
+  const { start, end } = calculatePaginationStartEndPosition(products?.meta?.page, products?.meta?.perPage);
+
+  const [deleteProduct] = useMutation(id => api.products.delete(id), {
+    onMutate: id => {
+      cache.cancelQueries('products');
+      const previousValue = cache.getQueryData('products');
+      const filtered = previousValue?.data?.filter(x => x.id !== id);
+      const obj = { ...previousValue, data: [...filtered] };
+      cache.setQueryData('products', obj);
+      return previousValue;
+    },
+    onSuccess: () => {
+      toast.success('Product deleted');
+    },
+    onError: (_, __, previousValue) => {
+      cache.setQueryData('products', previousValue);
+      toast.error('Error deleting the product');
+    },
+    onSettled: () => {
+      cache.invalidateQueries('products');
+    },
+  });
 
   return (
     <Card {...rest} className={clsx(classes.root, className)}>
@@ -122,9 +142,9 @@ const ProductsTable = props => {
               <TableRow>
                 <TableCell padding='checkbox'>
                   <Checkbox
-                    checked={selectedProducts.length === products.length}
+                    checked={selectedData?.length === products?.data?.length}
                     color='primary'
-                    indeterminate={selectedProducts.length > 0 && selectedProducts.length < products.length}
+                    indeterminate={selectedData?.length > 0 && selectedData?.length < products?.data?.length}
                     onChange={handleSelectAll}
                   />
                 </TableCell>
@@ -143,18 +163,18 @@ const ProductsTable = props => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {paginationMeta &&
-                products.length > 0 &&
-                products.slice(start, end).map(product => (
+              {products?.meta &&
+                products.data.length > 0 &&
+                products.data.slice(start, end).map(product => (
                   <TableRow
                     className={classes.tableRow}
                     hover
                     key={product.sku}
-                    selected={selectedProducts.indexOf(product.id) !== -1}
+                    selected={selectedData.indexOf(product.id) !== -1}
                   >
                     <TableCell padding='checkbox'>
                       <Checkbox
-                        checked={selectedProducts.indexOf(product.id) !== -1}
+                        checked={selectedData.indexOf(product.id) !== -1}
                         color='primary'
                         onChange={event => handleSelectOne(event, product.id)}
                         value='true'
@@ -177,12 +197,22 @@ const ProductsTable = props => {
                     <TableCell>{product.createdAt}</TableCell>
                     <TableCell>{product.updatedAt}</TableCell>
                     <TableCell>
+                      <Link to={`${product.id}/${product.slug}/preview`} style={{ textDecoration: 'none' }}>
+                        <Button
+                          color='secondary'
+                          startIcon={<VisibilityIcon />}
+                          // onClick={() => dispatch(productSlice.actions.setPreviewId(product.id))}
+                        >
+                          View
+                        </Button>
+                      </Link>
+                    </TableCell>
+                    <TableCell>
                       <Link to={`${product.id}/${product.slug}/edit`} style={{ textDecoration: 'none' }}>
                         <Button
-                          variant='outlined'
                           color='secondary'
                           startIcon={<EditIcon />}
-                          onClick={() => dispatch(productSlice.actions.setEditId(product.id))}
+                          // onClick={() => dispatch(productSlice.actions.setEditId(product.id))}
                         >
                           Edit
                         </Button>
@@ -190,9 +220,9 @@ const ProductsTable = props => {
                     </TableCell>
                     <TableCell>
                       <Button
-                        variant='outlined'
+                        style={{ color: 'red' }}
                         color='secondary'
-                        startIcon={<DeleteIcon />}
+                        startIcon={<DeleteIcon style={{ fill: 'red' }} />}
                         onClick={() => handleDialogOpen()}
                       >
                         Delete
@@ -214,9 +244,9 @@ const ProductsTable = props => {
                             Cancel
                           </Button>
                           <Button
-                            onClick={() => {
+                            onClick={async () => {
                               handleDialogClose();
-                              dispatch(productDelete(product.id));
+                              await deleteProduct(product.id);
                             }}
                             color='primary'
                             autoFocus
@@ -233,14 +263,14 @@ const ProductsTable = props => {
         </div>
       </CardContent>
       <CardActions className={classes.actions}>
-        {paginationMeta && (
+        {products?.meta && (
           <TablePagination
             component='div'
-            count={paginationMeta.totalCount || -1}
+            count={products?.meta?.totalCount || -1}
             onChangePage={handlePageChange}
             onChangeRowsPerPage={handleRowsPerPageChange}
-            page={paginationMeta.page - 1 || 0}
-            rowsPerPage={paginationMeta.perPage || 50}
+            page={products?.meta?.page - 1 || 0}
+            rowsPerPage={products?.meta?.perPage || 50}
             rowsPerPageOptions={[10, 25, 50, 75, 120]}
           />
         )}

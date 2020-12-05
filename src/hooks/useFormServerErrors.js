@@ -1,5 +1,7 @@
 import React from 'react';
 
+import { camelCase } from 'lodash';
+
 // because same key can appear multiple times
 // this -> [{field: 'password', message: 'min 5'}, {field: 'password', message: 'max 50'}, {field: 'password', message: 'required'}]
 // becomes ->  [{field: 'password', message: ['min 5', 'max 50', 'required']}]
@@ -25,8 +27,10 @@ export function useFormServerErrors(error, setError) {
 
         formatted.forEach(err => {
           const { field, message } = err;
+          const [, name] = field.split('.');
+          const fieldName = name ? camelCase(name) : name;
           const errMsg = message.length === 1 ? message : message.join(', ');
-          setError(field, { type: 'server_side', message: errMsg });
+          setError(fieldName, { type: 'server_side', message: errMsg });
         });
       }
     }

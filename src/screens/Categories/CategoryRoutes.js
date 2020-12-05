@@ -7,6 +7,7 @@ import NotFound from '../NotFound/NotFound';
 import Categories from './Categories';
 import CreateCategory from './CreateCategory/CreateCategory';
 import EditCategory from './EditCategory/EditCategory';
+import PreviewCategory from './PreviewCategory/PreviewCategory';
 
 function CategoryRoutes() {
   return (
@@ -18,6 +19,13 @@ function CategoryRoutes() {
         access='private'
         allowed={['admin']}
         component={EditCategory}
+        layout={null}
+      />
+      <AuthRoute
+        path=':categoryId/:categoryName/preview'
+        access='private'
+        allowed={['admin']}
+        component={PreviewCategory}
         layout={null}
       />
       <NotFound default backLink={-1} />

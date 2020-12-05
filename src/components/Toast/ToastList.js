@@ -1,22 +1,19 @@
-import React from 'react';
+import React, { useContext } from 'react';
 
-import { useSelector, useDispatch } from 'react-redux';
-
-import toastSlice, { selectToasts } from '../../store/toast/toastSlice';
+import { ToastContext } from '../../store/toast/toast';
 import Toast from './Toast';
 
 function ToastList() {
-  const dispatch = useDispatch();
-  const toastList = useSelector(selectToasts);
+  const toastCtx = useContext(ToastContext);
 
   return (
     <div>
-      {toastList.map(toast => (
+      {toastCtx.toasts.map(toast => (
         <Toast
           key={toast.id}
           type={toast.type}
           message={toast.message}
-          removeToast={() => dispatch(toastSlice.actions.removeToast(toast.id))}
+          removeToast={() => toastCtx.removeToast(toast.id)}
         />
       ))}
     </div>

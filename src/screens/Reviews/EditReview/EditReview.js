@@ -1,18 +1,19 @@
-import React from 'react';
+import React, { useContext } from 'react';
 
 import { yupResolver } from '@hookform/resolvers';
 import { Avatar, CircularProgress, Container, Typography } from '@material-ui/core';
 import RateReviewIcon from '@material-ui/icons/RateReview';
 import { makeStyles } from '@material-ui/styles';
 import { FormProvider, useForm } from 'react-hook-form';
-import { useDispatch, useSelector } from 'react-redux';
+import { useMutation, useQuery, useQueryCache } from 'react-query';
 import * as Yup from 'yup';
 
+import api from '../../../api';
 import { FormTextField, FormSubmitButton, FormRadioGroup } from '../../../components/Form';
 import ErrorMessage from '../../../components/Message/ErrorMessage';
 import { useFormServerErrors } from '../../../hooks/useFormServerErrors';
-import { reviewUpdate, selectCurrentEditReview } from '../../../store/review/reviewSlice';
-import { selectUIState } from '../../../store/ui';
+import { ToastContext } from '../../../store/toast/toast';
+import { diff } from '../../../utils/diff';
 
 const useStyles = makeStyles(theme => ({
   paper: {
@@ -38,28 +39,81 @@ const schema = Yup.object({
   comment: Yup.string().required(),
 });
 
-const formOpts = review => ({
+const formOpts = {
   mode: 'onChange',
   reValidateMode: 'onChange',
   defaultValues: {
-    rating: review?.rating.toString() || '',
-    comment: review?.comment || '',
+    rating: '',
+    title: '',
+    comment: '',
   },
   resolver: yupResolver(schema),
-});
+};
 
-function EditReviewForm() {
+function EditReviewForm({ reviewId }) {
   const classes = useStyles();
-  const dispatch = useDispatch();
-  const review = useSelector(selectCurrentEditReview);
-  const methods = useForm(formOpts(review));
-  const { handleSubmit, setError } = methods;
-  const { loading, error } = useSelector(selectUIState(reviewUpdate));
+  const cache = useQueryCache();
+  const toast = useContext(ToastContext);
+  const [baseFormObj, setBaseFormObj] = React.useState({});
 
-  const onSubmit = async data => {
-    data.rating = Number.parseInt(data.rating, 10);
-    await dispatch(reviewUpdate({ id: review.id, details: data }));
+  const methods = useForm(formOpts);
+  const { handleSubmit, setError, reset } = methods;
+
+  const { data: review } = useQuery(['reviews', reviewId], () => api.reviews.get(reviewId), {
+    initialData: () => cache.getQueryData('reviews')?.data?.find(x => x.id === reviewId),
+  });
+
+  const [editReview, { isLoading, isError, error }] = useMutation(({ id, values }) => api.reviews.update(id, values), {
+    onMutate: values => {
+      cache.cancelQueries(['reviews', reviewId]);
+      const previousValue = cache.getQueryData(['reviews', reviewId]);
+      cache.setQueryData(['reviews', reviewId], values);
+      return previousValue;
+    },
+    onSuccess: () => {
+      toast.success('Review updated');
+    },
+    onError: (_, __, previousValue) => {
+      cache.setQueryData(['reviews', reviewId], previousValue);
+      toast.error('Form has errors, please check the details');
+    },
+    onSettled: () => {
+      cache.invalidateQueries(['reviews', reviewId]);
+    },
+  });
+
+  const onSubmit = async values => {
+    const changes = diff(baseFormObj, values);
+
+    if (Object.keys(changes).length === 0) {
+      toast.info('No changes applied');
+    }
+
+    if (Object.keys(changes).length > 0) {
+      const obj = {
+        ...values,
+        rating: Number.parseInt(values.rating, 10),
+      };
+
+      await editReview({ id: review.id, values: obj });
+    }
   };
+
+  const onError = () => {
+    toast.error('Form has errors, please check the details');
+  };
+
+  React.useEffect(() => {
+    if (review) {
+      const obj = {
+        ...review,
+        rating: review?.rating?.toString() || '',
+      };
+
+      setBaseFormObj(obj);
+      reset(obj);
+    }
+  }, [review, reset]);
 
   useFormServerErrors(error, setError);
 
@@ -73,11 +127,14 @@ function EditReviewForm() {
           Edit Review
         </Typography>
 
-        {loading && <CircularProgress />}
-        {error && <ErrorMessage message={error.message} />}
+        {isLoading && <CircularProgress />}
+        {isError && <ErrorMessage message={error.message} />}
 
         <FormProvider {...methods}>
-          <form onSubmit={handleSubmit(onSubmit)} noValidate>
+          <form onSubmit={handleSubmit(onSubmit, onError)} noValidate>
+            <FormTextField name='id' fullWidth inputProps={{ readOnly: true }} disabled />
+            <FormTextField name='productId' fullWidth inputProps={{ readOnly: true }} disabled />
+
             <p style={{ marginBottom: 0, paddingBottom: 0 }}>rating</p>
             <FormRadioGroup
               row
@@ -90,9 +147,10 @@ function EditReviewForm() {
                 { label: '5', value: '5' },
               ]}
             />
+            <FormTextField name='title' fullWidth />
             <FormTextField name='comment' multiline rowsMax={6} fullWidth />
 
-            <FormSubmitButton className={classes.submit} fullWidth>
+            <FormSubmitButton className={classes.submit} fullWidth loading={isLoading}>
               Save Changes
             </FormSubmitButton>
           </form>

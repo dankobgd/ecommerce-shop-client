@@ -1,13 +1,14 @@
-import React from 'react';
+import React, { useContext } from 'react';
 
 import { yupResolver } from '@hookform/resolvers';
 import { Avatar, CircularProgress, Container, Typography } from '@material-ui/core';
 import LoyaltyIcon from '@material-ui/icons/Loyalty';
 import { makeStyles } from '@material-ui/styles';
 import { FormProvider, useForm } from 'react-hook-form';
-import { useDispatch, useSelector } from 'react-redux';
+import { useMutation, useQueryCache } from 'react-query';
 import * as Yup from 'yup';
 
+import api from '../../../api';
 import {
   FormTextField,
   FormSubmitButton,
@@ -17,8 +18,7 @@ import {
 } from '../../../components/Form';
 import ErrorMessage from '../../../components/Message/ErrorMessage';
 import { useFormServerErrors } from '../../../hooks/useFormServerErrors';
-import { promotionCreate } from '../../../store/promotion/promotionSlice';
-import { selectUIState } from '../../../store/ui';
+import { ToastContext } from '../../../store/toast/toast';
 import { transformValuesToNumbers } from '../../../utils/transformObjectKeys';
 import { rules } from '../../../utils/validation';
 
@@ -66,14 +66,41 @@ const formOpts = {
 
 function CreatePromotionForm() {
   const classes = useStyles();
-  const dispatch = useDispatch();
+  const toast = useContext(ToastContext);
+  const cache = useQueryCache();
+
   const methods = useForm(formOpts);
   const { handleSubmit, setError, watch } = methods;
-  const { loading, error } = useSelector(selectUIState(promotionCreate));
+
+  const [createPromotion, { isLoading, isError, error }] = useMutation(values => api.promotions.create(values), {
+    onMutate: values => {
+      cache.cancelQueries('promotions');
+      const previousValue = cache.getQueryData('promotions');
+      cache.setQueryData('promotions', old => ({
+        ...old,
+        values,
+      }));
+      return previousValue;
+    },
+    onSuccess: () => {
+      toast.success('Promo Code created');
+    },
+    onError: (_, __, previousValue) => {
+      cache.setQueryData('promotions', previousValue);
+      toast.error('Form has errors, please check the details');
+    },
+    onSettled: () => {
+      cache.invalidateQueries('promotions');
+    },
+  });
 
   const onSubmit = async data => {
     const transformed = transformValuesToNumbers(data, ['amount']);
-    await dispatch(promotionCreate(transformed));
+    await createPromotion(transformed);
+  };
+
+  const onError = () => {
+    toast.error('Form has errors, please check the details');
   };
 
   useFormServerErrors(error, setError);
@@ -93,11 +120,11 @@ function CreatePromotionForm() {
           Create Promotion
         </Typography>
 
-        {loading && <CircularProgress />}
-        {error && <ErrorMessage message={error.message} />}
+        {isLoading && <CircularProgress />}
+        {isError && <ErrorMessage message={error.message} />}
 
         <FormProvider {...methods}>
-          <form onSubmit={handleSubmit(onSubmit)} noValidate>
+          <form onSubmit={handleSubmit(onSubmit, onError)} noValidate>
             <FormTextField name='promoCode' fullWidth />
             <FormRadioGroup
               row
@@ -117,7 +144,7 @@ function CreatePromotionForm() {
             <FormDateTimePicker name='startsAt' fullWidth minutesStep={1} disablePast />
             <FormDateTimePicker name='endsAt' fullWidth minutesStep={1} disablePast />
 
-            <FormSubmitButton className={classes.submit} fullWidth>
+            <FormSubmitButton className={classes.submit} fullWidth loading={isLoading}>
               Create Promotion
             </FormSubmitButton>
           </form>

@@ -37,10 +37,6 @@ export default {
     return apiClient.get(`v1/products/${id}/reviews`);
   },
 
-  async getProperties() {
-    return apiClient.get(`v1/products/properties`, {}, { skipTransformResponse: true });
-  },
-
   async getFeatured(params) {
     return apiClient.get(`v1/products/featured`, { params });
   },

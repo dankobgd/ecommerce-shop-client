@@ -14,6 +14,7 @@ export default function MySelect({
   variant = 'outlined',
   error,
   helperText,
+  fullWidth,
   defaultValue = '',
   ...rest
 }) {
@@ -25,11 +26,11 @@ export default function MySelect({
     setLabelWidth(labelRef.current.offsetWidth);
   }, [labelRef]);
 
-  const hasError = error || !!errors[name];
+  const hasError = error || !!errors?.[name];
   const errText = helperText || errors?.[name]?.message;
 
   return (
-    <FormControl margin={margin} variant={variant} style={{ minWidth: 115 }} {...rest}>
+    <FormControl margin={margin} variant={variant} style={{ minWidth: 115 }} {...rest} fullWidth={fullWidth}>
       <InputLabel ref={labelRef} htmlFor={`${name}-outlined-select-label`}>
         {label}
       </InputLabel>

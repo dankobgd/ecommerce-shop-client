@@ -1,9 +1,9 @@
 import React from 'react';
 
 import { makeStyles } from '@material-ui/styles';
-import { useDispatch, useSelector } from 'react-redux';
+import { useQuery } from 'react-query';
 
-import { reviewGetAll, selectAllReviews } from '../../store/review/reviewSlice';
+import api from '../../api';
 import ReviewsTable from './ReviewsTable/ReviewsTable';
 import ReviewsToolbar from './ReviewsToolbar/ReviewsToolbar';
 
@@ -18,18 +18,13 @@ const useStyles = makeStyles(theme => ({
 
 function Reviews() {
   const classes = useStyles();
-  const dispatch = useDispatch();
-  const reviews = useSelector(selectAllReviews);
-
-  React.useEffect(() => {
-    dispatch(reviewGetAll());
-  }, [dispatch]);
+  const info = useQuery('reviews', () => api.reviews.getAll());
 
   return (
     <div className={classes.root}>
       <ReviewsToolbar />
       <div className={classes.content}>
-        <ReviewsTable reviews={reviews} />
+        <ReviewsTable info={info} />
       </div>
     </div>
   );

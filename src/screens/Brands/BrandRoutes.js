@@ -7,6 +7,7 @@ import NotFound from '../NotFound/NotFound';
 import Brands from './Brands';
 import CreateProduct from './CreateBrand/CreateBrand';
 import EditBrand from './EditBrand/EditBrand';
+import PreviewBrand from './PreviewBrand/PreviewBrand';
 
 function BrandROutes() {
   return (
@@ -18,6 +19,13 @@ function BrandROutes() {
         access='private'
         allowed={['admin']}
         component={EditBrand}
+        layout={null}
+      />
+      <AuthRoute
+        path=':brandId/:brandName/preview'
+        access='private'
+        allowed={['admin']}
+        component={PreviewBrand}
         layout={null}
       />
       <NotFound default backLink={-1} />

@@ -6,7 +6,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import ScrollTopButton from '../../components/ScrollTop/ScrollTopButton';
 import { brandGetAll, selectAllBrands } from '../../store/brand/brandSlice';
 import { categoryGetAll, selectAllCategories } from '../../store/category/categorySlice';
-import { productGetProperties, selectProductVariants } from '../../store/product/productSlice';
 import { selectAllSearchProducts, selectHasSearched } from '../../store/search/searchSlice';
 import { tagGetAll, selectAllTags } from '../../store/tag/tagSlice';
 import Header from '../Home/Header/Header';
@@ -30,7 +29,6 @@ function Shop() {
   const tags = useSelector(selectAllTags);
   const categories = useSelector(selectAllCategories);
   const searchProducts = useSelector(selectAllSearchProducts);
-  const variants = useSelector(selectProductVariants);
   const hasSearched = useSelector(selectHasSearched);
 
   React.useEffect(() => {
@@ -43,10 +41,7 @@ function Shop() {
     if (tags.length === 0) {
       dispatch(tagGetAll());
     }
-    if (Object.keys(variants).length === 0) {
-      dispatch(productGetProperties());
-    }
-  }, [brands.length, categories.length, dispatch, tags.length, variants]);
+  }, [brands.length, categories.length, dispatch, tags.length]);
 
   return (
     <div>

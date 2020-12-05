@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 
 import {
   Card,
@@ -20,13 +20,15 @@ import {
 } from '@material-ui/core';
 import DeleteIcon from '@material-ui/icons/Delete';
 import EditIcon from '@material-ui/icons/Edit';
+import VisibilityIcon from '@material-ui/icons/Visibility';
 import { makeStyles } from '@material-ui/styles';
 import { Link } from '@reach/router';
 import clsx from 'clsx';
 import { nanoid } from 'nanoid';
-import { useDispatch, useSelector } from 'react-redux';
+import { useMutation, useQueryCache } from 'react-query';
 
-import tagSlice, { tagDelete, tagGetAll, selectPaginationMeta } from '../../../store/tag/tagSlice';
+import api from '../../../api';
+import { ToastContext } from '../../../store/toast/toast';
 import { calculatePaginationStartEndPosition } from '../../../utils/pagination';
 
 const useStyles = makeStyles(theme => ({
@@ -50,12 +52,14 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
-const TagsTable = props => {
-  const { className, tags, ...rest } = props;
+const TagsTable = ({ className, info, ...rest }) => {
   const classes = useStyles();
-  const dispatch = useDispatch();
-  const paginationMeta = useSelector(selectPaginationMeta);
-  const [selectedTags, setSelectedTags] = useState([]);
+  const { data: tags } = info;
+
+  const toast = useContext(ToastContext);
+  const cache = useQueryCache();
+
+  const [selectedData, setSelectedData] = useState([]);
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const handleDialogOpen = () => {
@@ -67,48 +71,64 @@ const TagsTable = props => {
   };
 
   const handleSelectAll = event => {
-    let selected;
-
-    if (event.target.checked) {
-      selected = tags.map(tag => tag.id);
-    } else {
-      selected = [];
-    }
-
-    setSelectedTags(selected);
+    const selected = event.target.checked ? tags?.data?.map(x => x.id) : [];
+    setSelectedData(selected);
   };
 
   const handleSelectOne = (event, id) => {
-    const selectedIndex = selectedTags.indexOf(id);
-    let newSelectedTags = [];
+    const selectedIndex = selectedData.indexOf(id);
+    let newSelectedData = [];
 
     if (selectedIndex === -1) {
-      newSelectedTags = newSelectedTags.concat(selectedTags, id);
+      newSelectedData = newSelectedData.concat(selectedData, id);
     } else if (selectedIndex === 0) {
-      newSelectedTags = newSelectedTags.concat(selectedTags.slice(1));
-    } else if (selectedIndex === selectedTags.length - 1) {
-      newSelectedTags = newSelectedTags.concat(selectedTags.slice(0, -1));
+      newSelectedData = newSelectedData.concat(selectedData.slice(1));
+    } else if (selectedIndex === selectedData.length - 1) {
+      newSelectedData = newSelectedData.concat(selectedData.slice(0, -1));
     } else if (selectedIndex > 0) {
-      newSelectedTags = newSelectedTags.concat(
-        selectedTags.slice(0, selectedIndex),
-        selectedTags.slice(selectedIndex + 1)
+      newSelectedData = newSelectedData.concat(
+        selectedData.slice(0, selectedIndex),
+        selectedData.slice(selectedIndex + 1)
       );
     }
 
-    setSelectedTags(newSelectedTags);
+    setSelectedData(newSelectedData);
   };
 
   const handlePageChange = (e, page) => {
-    const params = new URLSearchParams({ per_page: paginationMeta.perPage, page: page + 1 });
-    dispatch(tagGetAll(`${params}`));
+    const params = new URLSearchParams({ per_page: tags?.meta?.perPage, page: page + 1 });
+    // @TODO: use paginated query...
+    // dispatch(tagGetAll(`${params}`));
   };
 
   const handleRowsPerPageChange = e => {
     const params = new URLSearchParams({ per_page: e.target.value });
-    dispatch(tagGetAll(`${params}`));
+    // @TODO: use paginated query...
+    // dispatch(tagGetAll(`${params}`));
   };
 
-  const { start, end } = calculatePaginationStartEndPosition(paginationMeta?.page, paginationMeta?.perPage);
+  const { start, end } = calculatePaginationStartEndPosition(tags?.meta?.page, tags?.meta?.perPage);
+
+  const [deleteTag] = useMutation(id => api.tags.delete(id), {
+    onMutate: id => {
+      cache.cancelQueries('tags');
+      const previousValue = cache.getQueryData('tags');
+      const filtered = previousValue?.data?.filter(x => x.id !== id);
+      const obj = { ...previousValue, data: [...filtered] };
+      cache.setQueryData('tags', obj);
+      return previousValue;
+    },
+    onSuccess: () => {
+      toast.success('Tag deleted');
+    },
+    onError: (_, __, previousValue) => {
+      cache.setQueryData('tags', previousValue);
+      toast.error('Error deleting the tag');
+    },
+    onSettled: () => {
+      cache.invalidateQueries('tags');
+    },
+  });
 
   return (
     <Card {...rest} className={clsx(classes.root, className)}>
@@ -119,9 +139,9 @@ const TagsTable = props => {
               <TableRow>
                 <TableCell padding='checkbox'>
                   <Checkbox
-                    checked={selectedTags.length === tags.length}
+                    checked={selectedData?.length === tags?.data?.length}
                     color='primary'
-                    indeterminate={selectedTags.length > 0 && selectedTags.length < tags.length}
+                    indeterminate={selectedData?.length > 0 && selectedData?.length < tags?.data?.length}
                     onChange={handleSelectAll}
                   />
                 </TableCell>
@@ -133,18 +153,18 @@ const TagsTable = props => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {paginationMeta &&
-                tags.length > 0 &&
-                tags.slice(start, end).map(tag => (
+              {tags?.meta &&
+                tags.data.length > 0 &&
+                tags.data.slice(start, end).map(tag => (
                   <TableRow
                     className={classes.tableRow}
                     hover
                     key={nanoid()}
-                    selected={selectedTags.indexOf(tag.id) !== -1}
+                    selected={selectedData.indexOf(tag.id) !== -1}
                   >
                     <TableCell padding='checkbox'>
                       <Checkbox
-                        checked={selectedTags.indexOf(tag.id) !== -1}
+                        checked={selectedData.indexOf(tag.id) !== -1}
                         color='primary'
                         onChange={event => handleSelectOne(event, tag.id)}
                         value='true'
@@ -155,12 +175,22 @@ const TagsTable = props => {
                     <TableCell>{tag.slug}</TableCell>
                     <TableCell>{tag.description}</TableCell>
                     <TableCell>
+                      <Link to={`${tag.id}/${tag.slug}/preview`} style={{ textDecoration: 'none' }}>
+                        <Button
+                          color='secondary'
+                          startIcon={<VisibilityIcon />}
+                          // onClick={() => dispatch(productSlice.actions.setPreviewId(product.id))}
+                        >
+                          View
+                        </Button>
+                      </Link>
+                    </TableCell>
+                    <TableCell>
                       <Link to={`${tag.id}/${tag.slug}/edit`} style={{ textDecoration: 'none' }}>
                         <Button
-                          variant='outlined'
                           color='secondary'
                           startIcon={<EditIcon />}
-                          onClick={() => dispatch(tagSlice.actions.setEditId(tag.id))}
+                          // onClick={() => dispatch(tagSlice.actions.setEditId(tag.id))}
                         >
                           Edit
                         </Button>
@@ -168,9 +198,9 @@ const TagsTable = props => {
                     </TableCell>
                     <TableCell>
                       <Button
-                        variant='outlined'
                         color='secondary'
-                        startIcon={<DeleteIcon />}
+                        style={{ color: 'red' }}
+                        startIcon={<DeleteIcon style={{ fill: 'red' }} />}
                         onClick={() => handleDialogOpen()}
                       >
                         Delete
@@ -192,9 +222,9 @@ const TagsTable = props => {
                             Cancel
                           </Button>
                           <Button
-                            onClick={() => {
+                            onClick={async () => {
                               handleDialogClose();
-                              dispatch(tagDelete(tag.id));
+                              await deleteTag(tag.id);
                             }}
                             color='primary'
                             autoFocus
@@ -211,14 +241,14 @@ const TagsTable = props => {
         </div>
       </CardContent>
       <CardActions className={classes.actions}>
-        {paginationMeta && (
+        {tags?.meta && (
           <TablePagination
             component='div'
-            count={paginationMeta.totalCount || -1}
+            count={tags?.meta?.totalCount || -1}
             onChangePage={handlePageChange}
             onChangeRowsPerPage={handleRowsPerPageChange}
-            page={paginationMeta.page - 1 || 0}
-            rowsPerPage={paginationMeta.perPage || 50}
+            page={tags?.meta?.page - 1 || 0}
+            rowsPerPage={tags?.meta?.perPage || 50}
             rowsPerPageOptions={[10, 25, 50, 75, 120]}
           />
         )}

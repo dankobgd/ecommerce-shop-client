@@ -1,9 +1,9 @@
 import React from 'react';
 
 import { makeStyles } from '@material-ui/styles';
-import { useDispatch, useSelector } from 'react-redux';
+import { useQuery, useQueryCache } from 'react-query';
 
-import { tagGetAll, selectAllTags } from '../../store/tag/tagSlice';
+import api from '../../api';
 import TagsTable from './TagsTable/TagsTable';
 import TagsToolbar from './TagsToolbar/TagsToolbar';
 
@@ -18,18 +18,17 @@ const useStyles = makeStyles(theme => ({
 
 function Tags() {
   const classes = useStyles();
-  const dispatch = useDispatch();
-  const tags = useSelector(selectAllTags);
+  const cache = useQueryCache();
 
-  React.useEffect(() => {
-    dispatch(tagGetAll());
-  }, [dispatch]);
+  const info = useQuery('tags', () => api.tags.getAll(), {
+    initialData: () => cache.getQueryData(['tags']),
+  });
 
   return (
     <div className={classes.root}>
       <TagsToolbar />
       <div className={classes.content}>
-        <TagsTable tags={tags} />
+        <TagsTable info={info} />
       </div>
     </div>
   );

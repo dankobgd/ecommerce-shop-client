@@ -6,12 +6,15 @@ import { LocalizationProvider } from '@material-ui/pickers';
 import DateFnsUtils from '@material-ui/pickers/adapter/date-fns';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
+import { QueryCache, ReactQueryCacheProvider } from 'react-query';
+import { ReactQueryDevtools } from 'react-query-devtools';
 import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 
 import AppRoutes from './AppRoutes';
 import ToastList from './components/Toast/ToastList';
 import { store, persistor } from './store/store';
+import { ToastProvider } from './store/toast/toast';
 import { getCurrentUser } from './store/user/userSlice';
 import theme from './theme/theme';
 
@@ -23,20 +26,28 @@ function App() {
     store.dispatch(getCurrentUser());
   }, []);
 
+  const queryCache = new QueryCache();
+
   return (
-    <Provider store={store}>
-      <PersistGate persistor={persistor} loading={<div>Loading...</div>}>
-        <CssBaseline />
-        <ToastList />
-        <MuiThemeProvider theme={theme}>
-          <LocalizationProvider dateAdapter={DateFnsUtils}>
-            <DndProvider backend={HTML5Backend}>
-              <AppRoutes />
-            </DndProvider>
-          </LocalizationProvider>
-        </MuiThemeProvider>
-      </PersistGate>
-    </Provider>
+    <ReactQueryCacheProvider queryCache={queryCache}>
+      <ReactQueryDevtools initialIsOpen />
+
+      <ToastProvider>
+        <Provider store={store}>
+          <PersistGate persistor={persistor} loading={<div>Loading...</div>}>
+            <CssBaseline />
+            <ToastList />
+            <MuiThemeProvider theme={theme}>
+              <LocalizationProvider dateAdapter={DateFnsUtils}>
+                <DndProvider backend={HTML5Backend}>
+                  <AppRoutes />
+                </DndProvider>
+              </LocalizationProvider>
+            </MuiThemeProvider>
+          </PersistGate>
+        </Provider>
+      </ToastProvider>
+    </ReactQueryCacheProvider>
   );
 }
 

@@ -8,7 +8,7 @@ export const regexes = {
 };
 
 export const maxFileSize = 2000000;
-export const supportedFileFormats = ['image/jpg', 'image/jpeg', 'image/gif', 'image/png', 'image/bmp'];
+export const supportedFileFormats = ['image/jpg', 'image/jpeg', 'image/gif', 'image/png', 'image/bmp', 'image/webp'];
 
 export const rules = {
   username: Yup.string().required('Username is required'),
@@ -23,10 +23,16 @@ export const rules = {
     .matches(regexes.symbol, 'one symbol required')
     .required('Password is required'),
 
-  image: Yup.mixed()
+  requiredImage: Yup.mixed()
     .test('required', 'File is required', value => !!value)
     .test('fileSize', 'File size is too large', value => value.size <= maxFileSize)
     .test('fileType', 'Unsupported file format', value => supportedFileFormats.includes(value.type)),
+
+  optionalImage: Yup.mixed()
+    .test('fileSize', 'File size is too large', value => (!value.size ? true : value.size <= maxFileSize))
+    .test('fileType', 'Unsupported file format', value =>
+      !value.size ? true : supportedFileFormats.includes(value.type)
+    ),
 
   confirmPassword: pwdRef =>
     Yup.string()
@@ -51,6 +57,5 @@ export const rules = {
         filterable: Yup.bool().required(),
       })
     )
-    .required()
-    .min(1, 'Minimum 1 property required'),
+    .nullable(),
 };

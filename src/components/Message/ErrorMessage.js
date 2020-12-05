@@ -1,13 +1,23 @@
 import React from 'react';
 
-import { Paper, Typography } from '@material-ui/core';
+import { makeStyles } from '@material-ui/core/styles';
+import Alert from '@material-ui/lab/Alert';
 
-function ErrorMessage({ message }) {
+const useStyles = makeStyles(theme => ({
+  root: {
+    width: '100%',
+    '& > * + *': {
+      marginTop: theme.spacing(2),
+    },
+  },
+}));
+
+export default function ErrorMessage({ message }) {
+  const classes = useStyles();
+
   return (
-    <Paper bgcolor='error.main'>
-      <Typography variant='body1'>{message}</Typography>
-    </Paper>
+    <div className={classes.root}>
+      <Alert severity='error'>{message}</Alert>
+    </div>
   );
 }
-
-export default ErrorMessage;

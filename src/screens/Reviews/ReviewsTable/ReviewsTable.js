@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 
 import {
   Card,
@@ -20,13 +20,15 @@ import {
 } from '@material-ui/core';
 import DeleteIcon from '@material-ui/icons/Delete';
 import EditIcon from '@material-ui/icons/Edit';
+import VisibilityIcon from '@material-ui/icons/Visibility';
 import { makeStyles } from '@material-ui/styles';
 import { Link } from '@reach/router';
 import clsx from 'clsx';
 import { nanoid } from 'nanoid';
-import { useDispatch, useSelector } from 'react-redux';
+import { useMutation, useQueryCache } from 'react-query';
 
-import reviewSlice, { reviewDelete, reviewGetAll, selectPaginationMeta } from '../../../store/review/reviewSlice';
+import api from '../../../api';
+import { ToastContext } from '../../../store/toast/toast';
 import { calculatePaginationStartEndPosition } from '../../../utils/pagination';
 
 const useStyles = makeStyles(theme => ({
@@ -50,12 +52,14 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
-const ReviewsTable = props => {
-  const { className, reviews, ...rest } = props;
+const ReviewsTable = ({ className, info, ...rest }) => {
   const classes = useStyles();
-  const dispatch = useDispatch();
-  const paginationMeta = useSelector(selectPaginationMeta);
-  const [selectedReviews, setSelectedReviews] = useState([]);
+  const { data: reviews } = info;
+
+  const toast = useContext(ToastContext);
+  const cache = useQueryCache();
+
+  const [selectedData, setSelectedData] = useState([]);
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const handleDialogOpen = () => {
@@ -67,48 +71,63 @@ const ReviewsTable = props => {
   };
 
   const handleSelectAll = event => {
-    let selected;
-
-    if (event.target.checked) {
-      selected = reviews.map(rev => rev.id);
-    } else {
-      selected = [];
-    }
-
-    setSelectedReviews(selected);
+    const selected = event.target.checked ? reviews?.data?.map(x => x.id) : [];
+    setSelectedData(selected);
   };
-
   const handleSelectOne = (event, id) => {
-    const selectedIndex = selectedReviews.indexOf(id);
-    let newSelectedReviews = [];
+    const selectedIndex = selectedData.indexOf(id);
+    let newSelectedData = [];
 
     if (selectedIndex === -1) {
-      newSelectedReviews = newSelectedReviews.concat(selectedReviews, id);
+      newSelectedData = newSelectedData.concat(selectedData, id);
     } else if (selectedIndex === 0) {
-      newSelectedReviews = newSelectedReviews.concat(selectedReviews.slice(1));
-    } else if (selectedIndex === selectedReviews.length - 1) {
-      newSelectedReviews = newSelectedReviews.concat(selectedReviews.slice(0, -1));
+      newSelectedData = newSelectedData.concat(selectedData.slice(1));
+    } else if (selectedIndex === selectedData.length - 1) {
+      newSelectedData = newSelectedData.concat(selectedData.slice(0, -1));
     } else if (selectedIndex > 0) {
-      newSelectedReviews = newSelectedReviews.concat(
-        selectedReviews.slice(0, selectedIndex),
-        selectedReviews.slice(selectedIndex + 1)
+      newSelectedData = newSelectedData.concat(
+        selectedData.slice(0, selectedIndex),
+        selectedData.slice(selectedIndex + 1)
       );
     }
 
-    setSelectedReviews(newSelectedReviews);
+    setSelectedData(newSelectedData);
   };
 
   const handlePageChange = (e, page) => {
-    const params = new URLSearchParams({ per_page: paginationMeta.perPage, page: page + 1 });
-    dispatch(reviewGetAll(`${params}`));
+    const params = new URLSearchParams({ per_page: reviews?.meta?.perPage, page: page + 1 });
+    // @TOD: use paginated query...
+    // dispatch(reviewGetAll(`${params}`));
   };
 
   const handleRowsPerPageChange = e => {
     const params = new URLSearchParams({ per_page: e.target.value });
-    dispatch(reviewGetAll(`${params}`));
+    // @TOD: use paginated query...
+    // dispatch(reviewGetAll(`${params}`));
   };
 
-  const { start, end } = calculatePaginationStartEndPosition(paginationMeta?.page, paginationMeta?.perPage);
+  const { start, end } = calculatePaginationStartEndPosition(reviews?.meta?.page, reviews?.meta?.perPage);
+
+  const [deleteReview] = useMutation(id => api.reviews.delete(id), {
+    onMutate: id => {
+      cache.cancelQueries('reviews');
+      const previousValue = cache.getQueryData('reviews');
+      const filtered = previousValue?.data?.filter(x => x.id !== id);
+      const obj = { ...previousValue, data: [...filtered] };
+      cache.setQueryData('reviews', obj);
+      return previousValue;
+    },
+    onSuccess: () => {
+      toast.success('Review deleted');
+    },
+    onError: (_, __, previousValue) => {
+      cache.setQueryData('reviews', previousValue);
+      toast.error('Error deleting the review');
+    },
+    onSettled: () => {
+      cache.invalidateQueries('reviews');
+    },
+  });
 
   return (
     <Card {...rest} className={clsx(classes.root, className)}>
@@ -119,9 +138,9 @@ const ReviewsTable = props => {
               <TableRow>
                 <TableCell padding='checkbox'>
                   <Checkbox
-                    checked={selectedReviews.length === reviews.length}
+                    checked={selectedData?.length === reviews?.data?.length}
                     color='primary'
-                    indeterminate={selectedReviews.length > 0 && selectedReviews.length < reviews.length}
+                    indeterminate={selectedData?.length > 0 && selectedData?.length < reviews?.data?.length}
                     onChange={handleSelectAll}
                   />
                 </TableCell>
@@ -133,18 +152,18 @@ const ReviewsTable = props => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {paginationMeta &&
-                reviews.length > 0 &&
-                reviews.slice(start, end).map(review => (
+              {reviews?.meta &&
+                reviews.data.length > 0 &&
+                reviews.data.slice(start, end).map(review => (
                   <TableRow
                     className={classes.tableRow}
                     hover
                     key={nanoid()}
-                    selected={selectedReviews.indexOf(review.id) !== -1}
+                    selected={selectedData.indexOf(review.id) !== -1}
                   >
                     <TableCell padding='checkbox'>
                       <Checkbox
-                        checked={selectedReviews.indexOf(review.id) !== -1}
+                        checked={selectedData.indexOf(review.id) !== -1}
                         color='primary'
                         onChange={event => handleSelectOne(event, review.id)}
                         value='true'
@@ -155,12 +174,22 @@ const ReviewsTable = props => {
                     <TableCell>{review.rating}</TableCell>
                     <TableCell>{review.comment}</TableCell>
                     <TableCell>
+                      <Link to={`${review.id}/preview`} style={{ textDecoration: 'none' }}>
+                        <Button
+                          color='secondary'
+                          startIcon={<VisibilityIcon />}
+                          // onClick={() => dispatch(productSlice.actions.setPreviewId(product.id))}
+                        >
+                          View
+                        </Button>
+                      </Link>
+                    </TableCell>
+                    <TableCell>
                       <Link to={`${review.id}/edit`} style={{ textDecoration: 'none' }}>
                         <Button
-                          variant='outlined'
                           color='secondary'
                           startIcon={<EditIcon />}
-                          onClick={() => dispatch(reviewSlice.actions.setEditId(review.id))}
+                          // onClick={() => dispatch(reviewSlice.actions.setEditId(review.id))}
                         >
                           Edit
                         </Button>
@@ -168,9 +197,9 @@ const ReviewsTable = props => {
                     </TableCell>
                     <TableCell>
                       <Button
-                        variant='outlined'
                         color='secondary'
-                        startIcon={<DeleteIcon />}
+                        style={{ color: 'red' }}
+                        startIcon={<DeleteIcon style={{ fill: 'red' }} />}
                         onClick={() => handleDialogOpen()}
                       >
                         Delete
@@ -192,9 +221,9 @@ const ReviewsTable = props => {
                             Cancel
                           </Button>
                           <Button
-                            onClick={() => {
+                            onClick={async () => {
                               handleDialogClose();
-                              dispatch(reviewDelete(review.id));
+                              await deleteReview(review.id);
                             }}
                             color='primary'
                             autoFocus
@@ -211,14 +240,14 @@ const ReviewsTable = props => {
         </div>
       </CardContent>
       <CardActions className={classes.actions}>
-        {paginationMeta && (
+        {reviews?.meta && (
           <TablePagination
             component='div'
-            count={paginationMeta.totalCount || -1}
+            count={reviews?.meta?.totalCount || -1}
             onChangePage={handlePageChange}
             onChangeRowsPerPage={handleRowsPerPageChange}
-            page={paginationMeta.page - 1 || 0}
-            rowsPerPage={paginationMeta.perPage || 50}
+            page={reviews?.meta?.page - 1 || 0}
+            rowsPerPage={reviews?.meta?.perPage || 50}
             rowsPerPageOptions={[10, 25, 50, 75, 120]}
           />
         )}

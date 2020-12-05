@@ -76,15 +76,6 @@ export const productDelete = createAsyncThunk(`${sliceName}/delete`, async (id, 
   }
 });
 
-export const productGetProperties = createAsyncThunk(`${sliceName}/getProperties`, async (_, { rejectWithValue }) => {
-  try {
-    const props = await api.products.getProperties();
-    return props;
-  } catch (error) {
-    return rejectWithValue(error);
-  }
-});
-
 export const productGetFeatured = createAsyncThunk(`${sliceName}/getFeatured`, async (qs, { rejectWithValue }) => {
   try {
     const params = new URLSearchParams(qs);
@@ -115,6 +106,7 @@ export const productAdapter = createEntityAdapter();
 const initialState = productAdapter.getInitialState({
   editId: null,
   currentId: null,
+  previewId: null,
   pagination: null,
   properties: {},
   searchResults: [],
@@ -159,6 +151,9 @@ const productSlice = createSlice({
     clearSearchResults: state => {
       state.searchResults = [];
     },
+    setPreviewId: (state, { payload }) => {
+      state.previewId = payload;
+    },
   },
   extraReducers: {
     [productCreate.fulfilled]: productAdapter.addOne,
@@ -169,9 +164,6 @@ const productSlice = createSlice({
     },
     [productUpdate.fulfilled]: productAdapter.upsertOne,
     [productDelete.fulfilled]: productAdapter.removeOne,
-    [productGetProperties.fulfilled]: (state, { payload }) => {
-      state.properties = payload;
-    },
     [productGetFeatured.fulfilled]: (state, { payload }) => {
       productAdapter.upsertMany(state, payload.entities.products);
       state.pagination = payload.meta;
@@ -192,17 +184,18 @@ export const {
 
 export const selectEditId = state => state[sliceName].editId;
 export const selectCurrentId = state => state[sliceName].currentId;
+export const selectPreviewId = state => state[sliceName].previewId;
 export const selectPaginationMeta = state => state[sliceName].pagination;
 export const selectSearchResults = state => state[sliceName].searchResults;
-
-export const selectProductVariants = createSelector(
-  state => state[sliceName].properties,
-  variants => variants
-);
 
 export const selectCurrentProduct = createSelector(
   [selectProductEntities, selectCurrentId],
   (entities, currentId) => entities[currentId]
+);
+
+export const selectCurrentProductPreview = createSelector(
+  [selectProductEntities, selectPreviewId],
+  (entities, previewId) => entities[previewId]
 );
 
 export const selectCurrentEditProduct = createSelector(
@@ -222,13 +215,5 @@ export const selectCurrentUserWishlist = createSelector(
 export const selectTopFeaturedProducts = createSelector(selectFeaturedProducts, products => products.slice(0, 3));
 export const selectMostSoldProducts = createSelector(selectFeaturedProducts, products => products.slice(0, 3));
 export const selectBeastDealsProducts = createSelector(selectFeaturedProducts, products => products.slice(0, 3));
-
-// export const selectMostSoldProducts = createSelector(selectAllProducts, products =>
-//   products.filter(x => x.isFeatured === true)
-// );
-
-// export const selectBeastDealsProducts = createSelector(selectAllProducts, products =>
-//   products.filter(x => x.isFeatured === true)
-// );
 
 export default productSlice;

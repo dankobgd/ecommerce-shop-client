@@ -120,4 +120,33 @@ export const selectCurrentEditCategory = createSelector(
   (entities, editId) => entities[editId]
 );
 
+export const selectCategoryProperties = catId =>
+  createSelector(selectCategoryEntities, entities => entities[catId]?.properties ?? {});
+
+export const selectAllCategoriesProperties = createSelector(selectAllCategories, categories =>
+  categories.map(cat => ({
+    name: cat.name,
+    slug: cat.slug,
+    properties: [...cat.properties],
+  }))
+);
+
+export const selectChosenCategoriesProperties = createSelector(
+  [selectAllCategories, s => s?.search?.mainFilters?.categories],
+  (categories, chosenCats) =>
+    categories
+      .filter(cat => chosenCats.includes(cat.name))
+      .map(cat => ({
+        name: cat.name,
+        slug: cat.slug,
+        properties: [...cat.properties],
+      }))
+
+  // return categories.map(cat => ({
+  //   name: cat.name,
+  //   slug: cat.slug,
+  //   properties: [...cat.properties],
+  // }));
+);
+
 export default categorySlice;

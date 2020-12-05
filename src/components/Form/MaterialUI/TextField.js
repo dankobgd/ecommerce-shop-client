@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { TextField } from '@material-ui/core';
-import { useFormContext } from 'react-hook-form';
+import { Controller, useFormContext } from 'react-hook-form';
 
 import { defaultLabel } from '../helpers';
 
@@ -13,24 +13,31 @@ export default function FormTextField({
   variant = 'outlined',
   error,
   helperText,
+  defaultValue = '',
   ...rest
 }) {
-  const { register, errors } = useFormContext();
+  const { errors, control } = useFormContext();
 
-  const hasError = error || !!errors[name];
+  const hasError = error || !!errors?.[name];
   const errText = helperText || errors?.[name]?.message;
 
   return (
-    <TextField
+    <Controller
+      as={
+        <TextField
+          name={name}
+          label={label}
+          placeholder={placeholder}
+          margin={margin}
+          variant={variant}
+          error={hasError}
+          helperText={errText}
+          {...rest}
+        />
+      }
+      control={control}
       name={name}
-      label={label}
-      placeholder={placeholder}
-      margin={margin}
-      variant={variant}
-      error={hasError}
-      helperText={errText}
-      inputRef={register()}
-      {...rest}
+      defaultValue={defaultValue}
     />
   );
 }

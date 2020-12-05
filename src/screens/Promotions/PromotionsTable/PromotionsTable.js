@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 
 import {
   Card,
@@ -20,17 +20,15 @@ import {
 } from '@material-ui/core';
 import DeleteIcon from '@material-ui/icons/Delete';
 import EditIcon from '@material-ui/icons/Edit';
+import VisibilityIcon from '@material-ui/icons/Visibility';
 import { makeStyles } from '@material-ui/styles';
 import { Link } from '@reach/router';
 import clsx from 'clsx';
 import { nanoid } from 'nanoid';
-import { useDispatch, useSelector } from 'react-redux';
+import { useMutation, useQueryCache } from 'react-query';
 
-import promotionSlice, {
-  promotionDelete,
-  promotionGetAll,
-  selectPaginationMeta,
-} from '../../../store/promotion/promotionSlice';
+import api from '../../../api';
+import { ToastContext } from '../../../store/toast/toast';
 import { calculatePaginationStartEndPosition } from '../../../utils/pagination';
 
 const useStyles = makeStyles(theme => ({
@@ -54,12 +52,14 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
-const PromotionsTable = props => {
-  const { className, promotions, ...rest } = props;
+const PromotionsTable = ({ className, info, ...rest }) => {
   const classes = useStyles();
-  const dispatch = useDispatch();
-  const paginationMeta = useSelector(selectPaginationMeta);
-  const [selectedPromotions, setSelectedPromotions] = useState([]);
+  const { data: promotions } = info;
+
+  const toast = useContext(ToastContext);
+  const cache = useQueryCache();
+
+  const [selectedData, setSelectedData] = useState([]);
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const handleDialogOpen = () => {
@@ -71,48 +71,64 @@ const PromotionsTable = props => {
   };
 
   const handleSelectAll = event => {
-    let selected;
-
-    if (event.target.checked) {
-      selected = promotions.map(p => p.promoCode);
-    } else {
-      selected = [];
-    }
-
-    setSelectedPromotions(selected);
+    const selected = event.target.checked ? promotions?.data?.map(x => x.id) : [];
+    setSelectedData(selected);
   };
 
   const handleSelectOne = (event, code) => {
-    const selectedIndex = selectedPromotions.indexOf(code);
-    let newSelectedPromotions = [];
+    const selectedIndex = selectedData.indexOf(code);
+    let newSelectedData = [];
 
     if (selectedIndex === -1) {
-      newSelectedPromotions = newSelectedPromotions.concat(selectedPromotions, code);
+      newSelectedData = newSelectedData.concat(selectedData, code);
     } else if (selectedIndex === 0) {
-      newSelectedPromotions = newSelectedPromotions.concat(selectedPromotions.slice(1));
-    } else if (selectedIndex === selectedPromotions.length - 1) {
-      newSelectedPromotions = newSelectedPromotions.concat(selectedPromotions.slice(0, -1));
+      newSelectedData = newSelectedData.concat(selectedData.slice(1));
+    } else if (selectedIndex === selectedData.length - 1) {
+      newSelectedData = newSelectedData.concat(selectedData.slice(0, -1));
     } else if (selectedIndex > 0) {
-      newSelectedPromotions = newSelectedPromotions.concat(
-        selectedPromotions.slice(0, selectedIndex),
-        selectedPromotions.slice(selectedIndex + 1)
+      newSelectedData = newSelectedData.concat(
+        selectedData.slice(0, selectedIndex),
+        selectedData.slice(selectedIndex + 1)
       );
     }
 
-    setSelectedPromotions(newSelectedPromotions);
+    setSelectedData(newSelectedData);
   };
 
   const handlePageChange = (e, page) => {
-    const params = new URLSearchParams({ per_page: paginationMeta.perPage, page: page + 1 });
-    dispatch(promotionGetAll(`${params}`));
+    const params = new URLSearchParams({ per_page: promotions?.meta.perPage, page: page + 1 });
+    // @TODO: use paginated query...
+    // dispatch(promotionGetAll(`${params}`));
   };
 
   const handleRowsPerPageChange = e => {
     const params = new URLSearchParams({ per_page: e.target.value });
-    dispatch(promotionGetAll(`${params}`));
+    // @TODO: use paginated query...
+    /// dispatch(promotionGetAll(`${params}`));
   };
 
-  const { start, end } = calculatePaginationStartEndPosition(paginationMeta?.page, paginationMeta?.perPage);
+  const { start, end } = calculatePaginationStartEndPosition(promotions?.meta?.page, promotions?.meta?.perPage);
+
+  const [deletePromotion] = useMutation(code => api.promotions.delete(code), {
+    onMutate: code => {
+      cache.cancelQueries('promotions');
+      const previousValue = cache.getQueryData('promotions');
+      const filtered = previousValue?.data?.filter(x => x.promoCode !== code);
+      const obj = { ...previousValue, data: [...filtered] };
+      cache.setQueryData('promotions', obj);
+      return previousValue;
+    },
+    onSuccess: () => {
+      toast.success('Promotion deleted');
+    },
+    onError: (_, __, previousValue) => {
+      cache.setQueryData('promotions', previousValue);
+      toast.error('Error deleting the promotion');
+    },
+    onSettled: () => {
+      cache.invalidateQueries('promotions');
+    },
+  });
 
   return (
     <Card {...rest} className={clsx(classes.root, className)}>
@@ -123,9 +139,9 @@ const PromotionsTable = props => {
               <TableRow>
                 <TableCell padding='checkbox'>
                   <Checkbox
-                    checked={selectedPromotions.length === promotions.length}
+                    checked={selectedData?.length === promotions?.data?.length}
                     color='primary'
-                    indeterminate={selectedPromotions.length > 0 && selectedPromotions.length < promotions.length}
+                    indeterminate={selectedData?.length > 0 && selectedData?.length < promotions?.data?.length}
                     onChange={handleSelectAll}
                   />
                 </TableCell>
@@ -139,18 +155,18 @@ const PromotionsTable = props => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {paginationMeta &&
-                promotions.length > 0 &&
-                promotions.slice(start, end).map(promotion => (
+              {promotions?.meta &&
+                promotions.data.length > 0 &&
+                promotions.data.slice(start, end).map(promotion => (
                   <TableRow
                     className={classes.tableRow}
                     hover
                     key={nanoid()}
-                    selected={selectedPromotions.indexOf(promotion.promoCode) !== -1}
+                    selected={selectedData.indexOf(promotion.promoCode) !== -1}
                   >
                     <TableCell padding='checkbox'>
                       <Checkbox
-                        checked={selectedPromotions.indexOf(promotion.promoCode) !== -1}
+                        checked={selectedData.indexOf(promotion.promoCode) !== -1}
                         color='primary'
                         onChange={event => handleSelectOne(event, promotion.promoCode)}
                         value='true'
@@ -163,12 +179,22 @@ const PromotionsTable = props => {
                     <TableCell>{promotion.startsAt}</TableCell>
                     <TableCell>{promotion.endsAt}</TableCell>
                     <TableCell>
+                      <Link to={`${promotion.promoCode}/preview`} style={{ textDecoration: 'none' }}>
+                        <Button
+                          color='secondary'
+                          startIcon={<VisibilityIcon />}
+                          // onClick={() => dispatch(productSlice.actions.setPreviewId(product.id))}
+                        >
+                          View
+                        </Button>
+                      </Link>
+                    </TableCell>
+                    <TableCell>
                       <Link to={`${promotion.promoCode}/edit`} style={{ textDecoration: 'none' }}>
                         <Button
-                          variant='outlined'
                           color='secondary'
                           startIcon={<EditIcon />}
-                          onClick={() => dispatch(promotionSlice.actions.setEditId(promotion.promoCode))}
+                          // onClick={() => dispatch(promotionSlice.actions.setEditId(promotion.promoCode))}
                         >
                           Edit
                         </Button>
@@ -176,9 +202,9 @@ const PromotionsTable = props => {
                     </TableCell>
                     <TableCell>
                       <Button
-                        variant='outlined'
+                        style={{ color: 'red' }}
                         color='secondary'
-                        startIcon={<DeleteIcon />}
+                        startIcon={<DeleteIcon style={{ fill: 'red' }} />}
                         onClick={() => handleDialogOpen()}
                       >
                         Delete
@@ -200,9 +226,9 @@ const PromotionsTable = props => {
                             Cancel
                           </Button>
                           <Button
-                            onClick={() => {
+                            onClick={async () => {
                               handleDialogClose();
-                              dispatch(promotionDelete(promotion.promoCode));
+                              await deletePromotion(promotion.promoCode);
                             }}
                             color='primary'
                             autoFocus
@@ -219,14 +245,14 @@ const PromotionsTable = props => {
         </div>
       </CardContent>
       <CardActions className={classes.actions}>
-        {paginationMeta && (
+        {promotions?.meta && (
           <TablePagination
             component='div'
-            count={paginationMeta.totalCount || -1}
+            count={promotions?.meta?.totalCount || -1}
             onChangePage={handlePageChange}
             onChangeRowsPerPage={handleRowsPerPageChange}
-            page={paginationMeta.page - 1 || 0}
-            rowsPerPage={paginationMeta.perPage || 50}
+            page={promotions?.meta?.page - 1 || 0}
+            rowsPerPage={promotions?.meta?.perPage || 50}
             rowsPerPageOptions={[10, 25, 50, 75, 120]}
           />
         )}

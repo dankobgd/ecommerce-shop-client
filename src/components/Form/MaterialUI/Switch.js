@@ -8,7 +8,7 @@ import { defaultLabel } from '../helpers';
 export default function FormSwitch({ name, label = defaultLabel(name), error, helperText, defaultValue = false }) {
   const { control, errors } = useFormContext();
 
-  const hasError = error || !!errors[name];
+  const hasError = error || !!errors?.[name];
   const errText = helperText || errors?.[name]?.message;
 
   return (

@@ -211,9 +211,13 @@ export const selectChipFilters = createSelector(
 
     const nonEmptySpecific = _.pickBy(specific, v => v.length > 0);
     Object.entries(nonEmptySpecific).forEach(([key, val]) => {
-      val.forEach(v => {
-        chipData.push({ key: `${key}_${v}`, label: `${key}: ${v}`, name: key, values: val, value: v });
-      });
+      if (Array.isArray(val)) {
+        val.forEach(v => {
+          chipData.push({ key: `${key}_${v}`, label: `${key}: ${v}`, name: key, values: val, value: v });
+        });
+      } else {
+        chipData.push({ key: `${key}_${val}`, label: `${key}`, name: key, values: val });
+      }
     });
 
     return chipData;
