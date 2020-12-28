@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useContext } from 'react';
 
 import { yupResolver } from '@hookform/resolvers';
 import { Avatar, CircularProgress, Container, Grid, Typography } from '@material-ui/core';
@@ -6,14 +6,13 @@ import { LockOutlined } from '@material-ui/icons';
 import { makeStyles } from '@material-ui/styles';
 import { Link } from '@reach/router';
 import { FormProvider, useForm } from 'react-hook-form';
-import { useDispatch, useSelector } from 'react-redux';
 import * as Yup from 'yup';
 
 import { FormTextField, FormSubmitButton } from '../../components/Form';
 import ErrorMessage from '../../components/Message/ErrorMessage';
+import { ToastContext } from '../../components/Toast/ToastContext';
+import { useSignup } from '../../hooks/queries/userQueries';
 import { useFormServerErrors } from '../../hooks/useFormServerErrors';
-import { selectUIState } from '../../store/ui';
-import { userSignup } from '../../store/user/userSlice';
 import { rules } from '../../utils/validation';
 
 const useStyles = makeStyles(theme => ({
@@ -36,6 +35,7 @@ const useStyles = makeStyles(theme => ({
 }));
 
 const schema = Yup.object({
+  username: Yup.string().required(),
   firstName: Yup.string().required(),
   lastName: Yup.string().required(),
   email: rules.email,
@@ -47,6 +47,7 @@ const formOpts = {
   mode: 'onChange',
   reValidateMode: 'onChange',
   defaultValues: {
+    username: '',
     firstName: '',
     lastName: '',
     email: '',
@@ -58,16 +59,22 @@ const formOpts = {
 
 function SignupForm() {
   const classes = useStyles();
-  const dispatch = useDispatch();
+  const toast = useContext(ToastContext);
+
   const methods = useForm(formOpts);
   const { handleSubmit, setError } = methods;
-  const { loading, error } = useSelector(selectUIState(userSignup));
 
-  const onSubmit = async data => {
-    await dispatch(userSignup(data));
+  const signupMutation = useSignup();
+
+  const onSubmit = values => {
+    signupMutation.mutate(values);
   };
 
-  useFormServerErrors(error, setError);
+  const onError = () => {
+    toast.error('Form has errors, please check the details');
+  };
+
+  useFormServerErrors(signupMutation?.error, setError);
 
   return (
     <Container component='main' maxWidth='xs'>
@@ -79,17 +86,18 @@ function SignupForm() {
           Signup
         </Typography>
 
-        {loading && <CircularProgress />}
-        {error && <ErrorMessage message={error.message} />}
+        {signupMutation?.isLoading && <CircularProgress />}
+        {signupMutation?.isError && <ErrorMessage message={signupMutation?.error?.message} />}
 
         <FormProvider {...methods}>
-          <form onSubmit={handleSubmit(onSubmit)} noValidate>
+          <form onSubmit={handleSubmit(onSubmit, onError)} noValidate>
+            <FormTextField name='username' fullWidth />
             <FormTextField name='firstName' fullWidth />
             <FormTextField name='lastName' fullWidth />
             <FormTextField name='email' type='email' fullWidth />
             <FormTextField name='password' type='password' fullWidth />
             <FormTextField name='confirmPassword' type='password' fullWidth />
-            <FormSubmitButton className={classes.submit} fullWidth>
+            <FormSubmitButton className={classes.submit} fullWidth loading={signupMutation?.isLoading}>
               Signup
             </FormSubmitButton>
 

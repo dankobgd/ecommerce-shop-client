@@ -1,20 +1,20 @@
-import React from 'react';
+import { parse } from 'querystring';
+
+import React, { useContext } from 'react';
 
 import { yupResolver } from '@hookform/resolvers';
 import { Avatar, CircularProgress, Container, Grid, Typography } from '@material-ui/core';
 import { LockOutlined } from '@material-ui/icons';
 import { makeStyles } from '@material-ui/styles';
 import { Link, useLocation } from '@reach/router';
-import { parse } from 'query-string';
 import { FormProvider, useForm } from 'react-hook-form';
-import { useDispatch, useSelector } from 'react-redux';
 import * as Yup from 'yup';
 
 import { FormTextField, FormSubmitButton } from '../../components/Form';
 import ErrorMessage from '../../components/Message/ErrorMessage';
+import { ToastContext } from '../../components/Toast/ToastContext';
+import { useResetPassword } from '../../hooks/queries/userQueries';
 import { useFormServerErrors } from '../../hooks/useFormServerErrors';
-import { selectUIState } from '../../store/ui';
-import { userResetPassword } from '../../store/user/userSlice';
 import { rules } from '../../utils/validation';
 
 const useStyles = makeStyles(theme => ({
@@ -53,17 +53,22 @@ const formOpts = {
 
 function PasswordResetForm() {
   const classes = useStyles();
-  const dispatch = useDispatch();
+  const toast = useContext(ToastContext);
   const methods = useForm(formOpts);
   const { handleSubmit, setError } = methods;
-  const { loading, error } = useSelector(selectUIState(userResetPassword));
-  const { token } = parse(useLocation().search);
+  const { token } = parse(useLocation().search.slice(1));
 
-  const onSubmit = async data => {
-    await dispatch(userResetPassword({ ...data, token }));
+  const resetPasswordMutation = useResetPassword();
+
+  const onSubmit = data => {
+    resetPasswordMutation.mutate({ ...data, token });
   };
 
-  useFormServerErrors(error, setError);
+  const onError = () => {
+    toast.error('Form has errors, please check the details');
+  };
+
+  useFormServerErrors(resetPasswordMutation?.error, setError);
 
   return (
     <Container component='main' maxWidth='xs'>
@@ -75,14 +80,14 @@ function PasswordResetForm() {
           Reset Password
         </Typography>
 
-        {loading && <CircularProgress />}
-        {error && <ErrorMessage message={error.message} />}
+        {resetPasswordMutation?.isLoading && <CircularProgress />}
+        {resetPasswordMutation?.isError && <ErrorMessage message={resetPasswordMutation?.error?.message} />}
 
         <FormProvider {...methods}>
-          <form onSubmit={handleSubmit(onSubmit)} noValidate>
+          <form onSubmit={handleSubmit(onSubmit, onError)} noValidate>
             <FormTextField name='password' type='password' fullWidth />
             <FormTextField name='confirmPassword' type='password' fullWidth />
-            <FormSubmitButton className={classes.submit} fullWidth>
+            <FormSubmitButton className={classes.submit} fullWidth loading={resetPasswordMutation?.isLoading}>
               Update Password
             </FormSubmitButton>
 

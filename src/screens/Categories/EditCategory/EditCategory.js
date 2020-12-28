@@ -1,21 +1,21 @@
 import React, { useContext } from 'react';
 
 import { yupResolver } from '@hookform/resolvers';
-import { Avatar, Button, CircularProgress, Container, Tooltip, Typography } from '@material-ui/core';
+import { Avatar, Button, CircularProgress, Container, Typography } from '@material-ui/core';
 import AddIcon from '@material-ui/icons/Add';
 import CategoryIcon from '@material-ui/icons/Category';
 import ClearAllIcon from '@material-ui/icons/ClearAll';
 import HelpIcon from '@material-ui/icons/Help';
-import { makeStyles, withStyles } from '@material-ui/styles';
+import { makeStyles } from '@material-ui/styles';
 import { FormProvider, useFieldArray, useForm } from 'react-hook-form';
-import { useMutation, useQuery, useQueryCache } from 'react-query';
 import * as Yup from 'yup';
 
-import api from '../../../api';
+import CustomTooltip from '../../../components/CustomTooltip/CustomTooltip';
 import { FormTextField, FormSubmitButton, FormSwitch } from '../../../components/Form';
 import ErrorMessage from '../../../components/Message/ErrorMessage';
+import { ToastContext } from '../../../components/Toast/ToastContext';
+import { useCategory, useUpdateCategory } from '../../../hooks/queries/categoryQueries';
 import { useFormServerErrors } from '../../../hooks/useFormServerErrors';
-import { ToastContext } from '../../../store/toast/toast';
 import { diff } from '../../../utils/diff';
 import { transformKeysToSnakeCase } from '../../../utils/transformObjectKeys';
 import { rules } from '../../../utils/validation';
@@ -51,7 +51,7 @@ const schema = Yup.object({
   slug: Yup.string().required(),
   logo: rules.optionalImage,
   description: Yup.string(),
-  properties: rules.properties,
+  properties: rules.categoryProperties,
 });
 
 const formOpts = {
@@ -71,7 +71,6 @@ const formOpts = {
 
 function EditCategoryForm({ categoryId }) {
   const classes = useStyles();
-  const cache = useQueryCache();
   const toast = useContext(ToastContext);
   const [baseFormObj, setBaseFormObj] = React.useState({});
 
@@ -79,33 +78,11 @@ function EditCategoryForm({ categoryId }) {
   const { handleSubmit, control, setError, errors, getValues, setValue, reset } = methods;
   const { fields, append, remove, swap } = useFieldArray({ name: 'properties', control });
 
-  const { data: category } = useQuery(['categories', categoryId], () => api.categories.get(categoryId), {
-    initialData: () => cache.getQueryData('categories')?.data?.find(x => x.id === categoryId),
-  });
+  const { data: category } = useCategory(categoryId);
 
-  const [editCategory, { isLoading, isError, error }] = useMutation(
-    ({ id, formData }) => api.categories.update(id, formData),
-    {
-      onMutate: formData => {
-        cache.cancelQueries(['categories', categoryId]);
-        const previousValue = cache.getQueryData(['categories', categoryId]);
-        cache.setQueryData(['categories', categoryId], formData);
-        return previousValue;
-      },
-      onSuccess: () => {
-        toast.success('Category updated');
-      },
-      onError: (_, __, previousValue) => {
-        cache.setQueryData(['categories', categoryId], previousValue);
-        toast.error('Form has errors, please check the details');
-      },
-      onSettled: () => {
-        cache.invalidateQueries(['categories', categoryId]);
-      },
-    }
-  );
+  const editCategoryMutation = useUpdateCategory();
 
-  const onSubmit = async values => {
+  const onSubmit = values => {
     const changes = diff(baseFormObj, values);
     const { properties } = values;
     const { logo, ...rest } = changes;
@@ -139,7 +116,7 @@ function EditCategoryForm({ categoryId }) {
     }
 
     if (Object.keys(changes).length > 0) {
-      await editCategory({ id: category.id, formData });
+      editCategoryMutation.mutate({ id: category.id, formData });
     }
   };
 
@@ -158,7 +135,7 @@ function EditCategoryForm({ categoryId }) {
     }
   }, [category, reset]);
 
-  useFormServerErrors(error, setError);
+  useFormServerErrors(editCategoryMutation?.error, setError);
 
   const moveCard = React.useCallback(
     (dragIndex, hoverIndex) => {
@@ -177,8 +154,8 @@ function EditCategoryForm({ categoryId }) {
           Edit Category
         </Typography>
 
-        {isLoading && <CircularProgress />}
-        {isError && <ErrorMessage message={error.message} />}
+        {editCategoryMutation?.isLoading && <CircularProgress />}
+        {editCategoryMutation?.isError && <ErrorMessage message={editCategoryMutation?.error?.message} />}
 
         <FormProvider {...methods}>
           <form onSubmit={handleSubmit(onSubmit, onError)} noValidate>
@@ -235,7 +212,7 @@ function EditCategoryForm({ categoryId }) {
               )}
             </div>
 
-            <FormSubmitButton className={classes.submit} fullWidth loading={isLoading}>
+            <FormSubmitButton className={classes.submit} fullWidth loading={editCategoryMutation?.isLoading}>
               Save Changes
             </FormSubmitButton>
           </form>
@@ -244,15 +221,5 @@ function EditCategoryForm({ categoryId }) {
     </Container>
   );
 }
-
-const CustomTooltip = withStyles(theme => ({
-  tooltip: {
-    backgroundColor: '#f5f5f9',
-    color: 'rgba(0, 0, 0, 0.87)',
-    maxWidth: 350,
-    fontSize: theme.typography.pxToRem(16),
-    border: '1px solid #dadde9',
-  },
-}))(Tooltip);
 
 export default EditCategoryForm;

@@ -2,13 +2,8 @@ import React from 'react';
 
 import { Container, makeStyles } from '@material-ui/core';
 import { Link } from '@reach/router';
-import { useSelector, useDispatch } from 'react-redux';
 
 import ScrollTopButton from '../../components/ScrollTop/ScrollTopButton';
-import { selectAllBrands, brandGetAll } from '../../store/brand/brandSlice';
-import { selectFeaturedCategories, categoryGetAll } from '../../store/category/categorySlice';
-import { selectFeaturedProducts, productGetFeatured } from '../../store/product/productSlice';
-import { wishlistGetProducts } from '../../store/user/userSlice';
 import Header from './Header/Header';
 import PopularProductsSection from './PopularProductsSection/PopularProductsSection';
 import ShowcaseBrands from './ShowcaseBrands/ShowcaseBrands';
@@ -22,25 +17,7 @@ const useStyles = makeStyles(() => ({
 }));
 
 function Home() {
-  const dispatch = useDispatch();
   const classes = useStyles();
-  const brands = useSelector(selectAllBrands);
-  const featuredCategories = useSelector(selectFeaturedCategories);
-  const featuredProducts = useSelector(selectFeaturedProducts);
-
-  React.useEffect(() => {
-    dispatch(wishlistGetProducts());
-
-    if (featuredProducts.length === 0) {
-      dispatch(productGetFeatured());
-    }
-    if (featuredCategories.length === 0) {
-      dispatch(categoryGetAll());
-    }
-    if (brands.length === 0) {
-      dispatch(brandGetAll());
-    }
-  }, [dispatch, brands.length, featuredProducts.length, featuredCategories.length]);
 
   return (
     <Container>
@@ -54,14 +31,14 @@ function Home() {
       </Link>
 
       <div>
-        <ShowcaseCategories categories={featuredCategories} />
-        <ShowcaseProducts products={featuredProducts} />
+        <ShowcaseCategories />
+        <ShowcaseProducts />
 
         <div className={classes.popular}>
           <PopularProductsSection />
         </div>
 
-        <ShowcaseBrands brands={brands} />
+        <ShowcaseBrands />
       </div>
 
       <ScrollTopButton />

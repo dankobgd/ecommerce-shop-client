@@ -2,9 +2,8 @@ import React from 'react';
 
 import { Card, CardContent, Container, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/styles';
-import { useQuery, useQueryCache } from 'react-query';
 
-import api from '../../../api';
+import { usePromotion } from '../../../hooks/queries/promotionQueries';
 import PreviewToolbar from '../PromotionsToolbar/PreviewToolbar';
 
 const useStyles = makeStyles({
@@ -16,11 +15,8 @@ const useStyles = makeStyles({
 
 function PreviewPromotion({ promoCode }) {
   const classes = useStyles();
-  const cache = useQueryCache();
 
-  const { data: brand } = useQuery(['promotions', promoCode], () => api.promotions.get(promoCode), {
-    initialData: () => cache.getQueryData('promotions')?.data?.find(x => x.id === promoCode),
-  });
+  const { data: promotion } = usePromotion(promoCode);
 
   return (
     <>
@@ -28,8 +24,8 @@ function PreviewPromotion({ promoCode }) {
         <PreviewToolbar />
         <Card className={classes.root} variant='outlined'>
           <CardContent>
-            {brand &&
-              Object.entries(brand).map(([key, val], idx) => (
+            {promotion &&
+              Object.entries(promotion).map(([key, val], idx) => (
                 <div key={key} style={{ marginTop: idx !== 0 ? '1rem' : 0 }}>
                   <Typography variant='subtitle2' color='textSecondary' gutterBottom>
                     {key}

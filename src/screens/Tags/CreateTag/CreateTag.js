@@ -5,14 +5,13 @@ import { Avatar, CircularProgress, Container, Typography } from '@material-ui/co
 import LabelIcon from '@material-ui/icons/Label';
 import { makeStyles } from '@material-ui/styles';
 import { FormProvider, useForm } from 'react-hook-form';
-import { useMutation, useQueryCache } from 'react-query';
 import * as Yup from 'yup';
 
-import api from '../../../api';
 import { FormTextField, FormSubmitButton } from '../../../components/Form';
 import ErrorMessage from '../../../components/Message/ErrorMessage';
+import { ToastContext } from '../../../components/Toast/ToastContext';
+import { useCreateTag, useTags } from '../../../hooks/queries/tagQueries';
 import { useFormServerErrors } from '../../../hooks/useFormServerErrors';
-import { ToastContext } from '../../../store/toast/toast';
 
 const useStyles = makeStyles(theme => ({
   paper: {
@@ -53,42 +52,21 @@ const formOpts = {
 function CreateTagForm() {
   const classes = useStyles();
   const toast = useContext(ToastContext);
-  const cache = useQueryCache();
 
   const methods = useForm(formOpts);
   const { handleSubmit, setError } = methods;
 
-  const [createTag, { isLoading, isError, error }] = useMutation(values => api.tags.create(values), {
-    onMutate: values => {
-      cache.cancelQueries('tags');
-      const previousValue = cache.getQueryData('tags');
-      cache.setQueryData('tags', old => ({
-        ...old,
-        values,
-      }));
-      return previousValue;
-    },
-    onSuccess: () => {
-      toast.success('Tag created');
-    },
-    onError: (_, __, previousValue) => {
-      cache.setQueryData('tags', previousValue);
-      toast.error('Form has errors, please check the details');
-    },
-    onSettled: () => {
-      cache.invalidateQueries('tags');
-    },
-  });
+  const createTagMutation = useCreateTag();
 
-  const onSubmit = async values => {
-    await createTag(values);
+  const onSubmit = values => {
+    createTagMutation.mutate(values);
   };
 
   const onError = () => {
     toast.error('Form has errors, please check the details');
   };
 
-  useFormServerErrors(error, setError);
+  useFormServerErrors(createTagMutation?.error, setError);
 
   return (
     <Container component='main' maxWidth='xs'>
@@ -100,8 +78,8 @@ function CreateTagForm() {
           Create Tag
         </Typography>
 
-        {isLoading && <CircularProgress />}
-        {isError && <ErrorMessage message={error.message} />}
+        {createTagMutation?.isLoading && <CircularProgress />}
+        {createTagMutation?.isError && <ErrorMessage message={createTagMutation?.error?.message} />}
 
         <FormProvider {...methods}>
           <form onSubmit={handleSubmit(onSubmit, onError)} noValidate>
@@ -109,7 +87,7 @@ function CreateTagForm() {
             <FormTextField name='slug' fullWidth />
             <FormTextField name='description' fullWidth />
 
-            <FormSubmitButton className={classes.submit} fullWidth loading={isLoading}>
+            <FormSubmitButton className={classes.submit} fullWidth loading={createTagMutation?.isLoading}>
               Add Tag
             </FormSubmitButton>
           </form>

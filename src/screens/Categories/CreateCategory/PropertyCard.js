@@ -10,16 +10,15 @@ import {
   makeStyles,
   Slide,
   Toolbar,
-  Tooltip,
   Typography,
 } from '@material-ui/core';
 import CloseIcon from '@material-ui/icons/Close';
 import DeleteIcon from '@material-ui/icons/Delete';
 import EditIcon from '@material-ui/icons/Edit';
-import { withStyles } from '@material-ui/styles';
 import _ from 'lodash';
 import { useDrag, useDrop } from 'react-dnd';
 
+import CustomTooltip from '../../../components/CustomTooltip/CustomTooltip';
 import { FormSelect, FormSwitch, FormTextField } from '../../../components/Form';
 import FilterChoices from './FilterChoices';
 
@@ -232,15 +231,5 @@ function PropertyCard({ card, idx, control, remove, moveCard, errors, getValues 
     </>
   );
 }
-
-const CustomTooltip = withStyles(theme => ({
-  tooltip: {
-    backgroundColor: '#f5f5f9',
-    color: 'rgba(0, 0, 0, 0.87)',
-    maxWidth: 350,
-    fontSize: theme.typography.pxToRem(16),
-    border: '1px solid #dadde9',
-  },
-}))(Tooltip);
 
 export default PropertyCard;

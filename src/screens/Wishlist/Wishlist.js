@@ -11,11 +11,9 @@ import {
   Typography,
 } from '@material-ui/core';
 import DeleteIcon from '@material-ui/icons/Delete';
-import { useDispatch, useSelector } from 'react-redux';
 
 import ProductCard from '../../components/ProductCard/ProductCard';
-import { selectCurrentUserWishlist } from '../../store/product/productSlice';
-import { wishlistClear } from '../../store/user/userSlice';
+import { useClearWishlist, useWishlist } from '../../hooks/queries/userQueries';
 
 const useStyles = makeStyles(() => ({
   upDiv: {
@@ -41,14 +39,16 @@ const useStyles = makeStyles(() => ({
 }));
 
 function Wishlist() {
-  const dispatch = useDispatch();
   const classes = useStyles();
-  const products = useSelector(selectCurrentUserWishlist);
+
+  const { data: productWishlist } = useWishlist();
+
+  const clearWishlistMutation = useClearWishlist();
 
   const [open, setOpen] = React.useState(false);
   const handleClear = () => {
     setOpen(false);
-    dispatch(wishlistClear());
+    clearWishlistMutation.mutate();
   };
 
   return (
@@ -56,7 +56,7 @@ function Wishlist() {
       <div className={classes.outer}>
         <div className={classes.upDiv}>
           <Typography variant='h4'>Products Wishlist</Typography>
-          {products.length > 0 && (
+          {productWishlist?.length > 0 && (
             <Button
               size='small'
               variant='outlined'
@@ -72,10 +72,10 @@ function Wishlist() {
         </div>
 
         <div className={classes.productArea}>
-          {products.map(product => (
+          {productWishlist?.map(product => (
             <ProductCard key={product.sku} product={product} />
           ))}
-          {products.length === 0 && (
+          {productWishlist?.length === 0 && (
             <div style={{ padding: '2rem' }}>
               <Typography variant='h4'>No products in wishlist</Typography>
             </div>

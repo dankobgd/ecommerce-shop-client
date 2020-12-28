@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useState } from 'react';
 
 import { yupResolver } from '@hookform/resolvers';
 import {
@@ -14,20 +14,20 @@ import {
 } from '@material-ui/core';
 import { makeStyles } from '@material-ui/styles';
 import { FormProvider, useForm } from 'react-hook-form';
-import { useDispatch, useSelector } from 'react-redux';
 import * as Yup from 'yup';
 
 import { FormSubmitButton, FormTextField } from '../../../components/Form';
 import ErrorMessage from '../../../components/Message/ErrorMessage';
-import { useFormServerErrors } from '../../../hooks/useFormServerErrors';
-import { selectUIState } from '../../../store/ui';
+import { ToastContext } from '../../../components/Toast/ToastContext';
 import {
-  createAddress,
-  getAddresses,
-  selectCurrentEditAddress,
-  selectUserAddresses,
-  updateAddress,
-} from '../../../store/user/userSlice';
+  useUserAddresses,
+  useUserAddress,
+  useCreateAddress,
+  useUserFromCache,
+  useUpdateAddress,
+} from '../../../hooks/queries/userQueries';
+import { useFormServerErrors } from '../../../hooks/useFormServerErrors';
+import { diff } from '../../../utils/diff';
 import AddressTable from './AddressTable/AddressTable';
 import AddressToolbar from './AddressToolbar/AddressToolbar';
 
@@ -52,7 +52,6 @@ const schema = Yup.object({
 const formOpts1 = {
   mode: 'onChange',
   reValidateMode: 'onChange',
-  resolver: yupResolver(schema),
   defaultValues: {
     line1: '',
     line2: '',
@@ -61,27 +60,33 @@ const formOpts1 = {
     state: '',
     phone: '',
   },
+  resolver: yupResolver(schema),
 };
-
-const formOpts2 = addr => ({
+const formOpts2 = {
   mode: 'onChange',
   reValidateMode: 'onChange',
-  resolver: yupResolver(schema),
   defaultValues: {
-    line1: addr?.line1 || '',
-    line2: addr?.line2 || '',
-    city: addr?.city || '',
-    country: addr?.country || '',
-    state: addr?.state || '',
-    phone: addr?.phone || '',
+    line1: '',
+    line2: '',
+    city: '',
+    country: '',
+    state: '',
+    phone: '',
   },
-});
+  resolver: yupResolver(schema),
+};
 
 function AccountAddress() {
   const classes = useStyles();
-  const dispatch = useDispatch();
-  const addresses = useSelector(selectUserAddresses);
-  const editAddress = useSelector(selectCurrentEditAddress);
+  const toast = useContext(ToastContext);
+  const [baseFormObj, setBaseFormObj] = React.useState({});
+  const user = useUserFromCache();
+
+  const methods1 = useForm(formOpts1);
+  const methods2 = useForm(formOpts2);
+
+  const { handleSubmit: handleSubmitCreateAddress, setError: setErrorCreateAddress } = methods1;
+  const { handleSubmit: handleSubmitEditAddress, setError: setErrorEditAddress, reset } = methods2;
 
   const [modalOpen, setModalOpen] = useState(false);
   const handleModalOpen = () => {
@@ -91,38 +96,41 @@ function AccountAddress() {
     setModalOpen(false);
   };
 
-  const methods1 = useForm(formOpts1);
-  const { handleSubmit: handleSubmitCreateAddress, setError: setErrorCreateAddress } = methods1;
-  const { loading: loadingCreateAddress, error: errorCreateAddress } = useSelector(selectUIState(createAddress));
-  const onSubmitCreateAddress = async data => {
-    await dispatch(createAddress(data));
+  const { data: userAddresses } = useUserAddresses();
+  const { data: address } = useUserAddress(1);
+
+  const createAddressMutation = useCreateAddress();
+  const editAddressMutation = useUpdateAddress();
+
+  const onSubmitCreateAddress = values => {
+    createAddressMutation.mutate(values);
   };
 
-  const methods2 = useForm(formOpts2(editAddress));
-  const { handleSubmit: handleSubmitEditAddress, setError: setErrorEditAddress, reset } = methods2;
-  const { loading: loadingEditAddress, error: errorEditAddress } = useSelector(selectUIState(updateAddress));
-  const onSubmitEditAddress = async data => {
-    const payload = { id: editAddress.id, details: data };
-    await dispatch(updateAddress(payload));
+  const onSubmitEditAddress = values => {
+    const changes = diff(baseFormObj, values);
+    const payload = { id: address?.id, details: values };
+
+    if (Object.keys(changes).length === 0) {
+      toast.info('No changes applied');
+    }
+    if (Object.keys(changes).length > 0) {
+      editAddressMutation.mutate(payload);
+    }
   };
 
-  useEffect(() => {
-    dispatch(getAddresses());
-  }, [dispatch]);
+  const onError = () => {
+    toast.error('Form has errors, please check the details');
+  };
 
-  useEffect(() => {
-    reset({
-      line1: editAddress?.line1 || '',
-      line2: editAddress?.line2 || '',
-      city: editAddress?.city || '',
-      country: editAddress?.country || '',
-      state: editAddress?.state || '',
-      phone: editAddress?.phone || '',
-    });
-  }, [reset, editAddress]);
+  React.useEffect(() => {
+    if (address) {
+      setBaseFormObj(address);
+      reset(address);
+    }
+  }, [address, reset]);
 
-  useFormServerErrors(errorCreateAddress, setErrorCreateAddress);
-  useFormServerErrors(errorEditAddress, setErrorEditAddress);
+  useFormServerErrors(createAddressMutation?.error, setErrorCreateAddress);
+  useFormServerErrors(editAddressMutation?.error, setErrorEditAddress);
 
   return (
     <>
@@ -134,7 +142,7 @@ function AccountAddress() {
           <div className={classes.root}>
             <AddressToolbar handleModalOpen={handleModalOpen} />
             <div className={classes.content}>
-              <AddressTable addresses={addresses} handleModalOpen={handleModalOpen} />
+              <AddressTable addresses={userAddresses} handleModalOpen={handleModalOpen} />
             </div>
           </div>
         </CardContent>
@@ -143,15 +151,15 @@ function AccountAddress() {
       <Dialog
         open={modalOpen}
         onClose={handleModalClose}
-        aria-labelledby={`${editAddress ? 'edit' : 'create'}-address-dialog`}
+        aria-labelledby={`${address ? 'edit' : 'create'}-address-dialog`}
       >
-        <DialogTitle>{editAddress ? 'Edit' : 'Create'} User Address</DialogTitle>
+        <DialogTitle>{address ? 'Edit' : 'Create'} User Address</DialogTitle>
         <DialogContent>
-          {editAddress ? (
+          {address ? (
             <FormProvider {...methods2}>
-              <form onSubmit={handleSubmitEditAddress(onSubmitEditAddress)} noValidate>
-                {loadingEditAddress && <CircularProgress />}
-                {errorEditAddress && <ErrorMessage message={errorEditAddress.message} />}
+              <form onSubmit={handleSubmitEditAddress(onSubmitEditAddress, onError)} noValidate>
+                {editAddressMutation?.isLoading && <CircularProgress />}
+                {editAddressMutation?.isError && <ErrorMessage message={editAddressMutation?.error?.message} />}
 
                 <FormTextField name='line1' fullWidth />
                 <FormTextField name='line2' fullWidth />
@@ -163,14 +171,14 @@ function AccountAddress() {
                 <Button onClick={handleModalClose} color='primary'>
                   Cancel
                 </Button>
-                <FormSubmitButton>Update Address</FormSubmitButton>
+                <FormSubmitButton loading={editAddressMutation?.isLoading}>Update Address</FormSubmitButton>
               </form>
             </FormProvider>
           ) : (
             <FormProvider {...methods1}>
-              <form onSubmit={handleSubmitCreateAddress(onSubmitCreateAddress)} noValidate>
-                {loadingCreateAddress && <CircularProgress />}
-                {errorCreateAddress && <ErrorMessage message={errorCreateAddress.message} />}
+              <form onSubmit={handleSubmitCreateAddress(onSubmitCreateAddress, onError)} noValidate>
+                {createAddressMutation?.isLoading && <CircularProgress />}
+                {createAddressMutation?.isError && <ErrorMessage message={createAddressMutation?.error?.message} />}
 
                 <FormTextField name='line1' fullWidth />
                 <FormTextField name='line2' fullWidth />
@@ -182,7 +190,7 @@ function AccountAddress() {
                 <Button onClick={handleModalClose} color='primary'>
                   Cancel
                 </Button>
-                <FormSubmitButton>Add Address</FormSubmitButton>
+                <FormSubmitButton loading={createAddressMutation?.isLoading}>Add Address</FormSubmitButton>
               </form>
             </FormProvider>
           )}

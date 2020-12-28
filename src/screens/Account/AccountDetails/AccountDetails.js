@@ -1,18 +1,18 @@
-import React from 'react';
+import React, { useContext } from 'react';
 
 import { yupResolver } from '@hookform/resolvers';
 import { Card, CardActions, CardContent, CardHeader, CircularProgress, Divider, Grid } from '@material-ui/core';
 import { makeStyles } from '@material-ui/styles';
 import clsx from 'clsx';
 import { FormProvider, useForm } from 'react-hook-form';
-import { useDispatch, useSelector } from 'react-redux';
 import * as Yup from 'yup';
 
 import { FormSelect, FormTextField, FormSubmitButton } from '../../../components/Form';
 import ErrorMessage from '../../../components/Message/ErrorMessage';
+import { ToastContext } from '../../../components/Toast/ToastContext';
+import { useEditProfile, useUserFromCache } from '../../../hooks/queries/userQueries';
 import { useFormServerErrors } from '../../../hooks/useFormServerErrors';
-import { selectUIState } from '../../../store/ui';
-import { selectUserProfile, userUpdateProfileDetails } from '../../../store/user/userSlice';
+import { diff } from '../../../utils/diff';
 import { rules } from '../../../utils/validation';
 
 const useStyles = makeStyles(() => ({
@@ -27,43 +27,63 @@ const schema = Yup.object({
   locale: Yup.string().required(),
 });
 
-const formOpts = user => ({
+const formOpts = {
   mode: 'onChange',
   reValidateMode: 'onChange',
   defaultValues: {
-    firstName: user?.firstName || '',
-    lastName: user?.lastName || '',
-    username: user?.username || '',
-    email: user?.email || '',
-    gender: user?.gender || '',
-    locale: user?.locale || '',
+    firstName: '',
+    lastName: '',
+    username: '',
+    email: '',
+    gender: '',
+    locale: '',
   },
   resolver: yupResolver(schema),
-});
+};
 
-function AccountDetails(props) {
-  const { className, ...rest } = props;
+function AccountDetails({ className, ...rest }) {
   const classes = useStyles();
-  const dispatch = useDispatch();
-  const user = useSelector(selectUserProfile);
-  const { loading, error } = useSelector(selectUIState(userUpdateProfileDetails));
-  const methods = useForm(formOpts(user));
-  const { handleSubmit, setError } = methods;
+  const toast = useContext(ToastContext);
+  const [baseFormObj, setBaseFormObj] = React.useState({});
 
-  const onSubmit = async data => {
-    await dispatch(userUpdateProfileDetails(data));
+  const user = useUserFromCache();
+  const methods = useForm(formOpts);
+  const { handleSubmit, setError, reset } = methods;
+
+  const editProfileMutation = useEditProfile();
+
+  const onSubmit = values => {
+    const changes = diff(baseFormObj, values);
+
+    if (Object.keys(changes).length === 0) {
+      toast.info('No changes applied');
+    }
+    if (Object.keys(changes).length > 0) {
+      editProfileMutation.mutate(values);
+    }
   };
 
-  useFormServerErrors(error, setError);
+  const onError = () => {
+    toast.error('Form has errors, please check the details');
+  };
+
+  React.useEffect(() => {
+    if (user) {
+      setBaseFormObj(user);
+      reset(user);
+    }
+  }, [user, reset]);
+
+  useFormServerErrors(editProfileMutation?.error, setError);
 
   return (
     <Card {...rest} className={clsx(classes.root, className)}>
       <FormProvider {...methods}>
-        <form onSubmit={handleSubmit(onSubmit)} noValidate>
+        <form onSubmit={handleSubmit(onSubmit, onError)} noValidate>
           <CardHeader title='Details' />
 
-          {loading && <CircularProgress />}
-          {error && <ErrorMessage message={error.message} />}
+          {editProfileMutation?.isLoading && <CircularProgress />}
+          {editProfileMutation?.isError && <ErrorMessage message={editProfileMutation?.error?.message} />}
 
           <Divider />
           <CardContent>
@@ -102,7 +122,9 @@ function AccountDetails(props) {
           </CardContent>
           <Divider />
           <CardActions>
-            <FormSubmitButton fullWidth>Save Details</FormSubmitButton>
+            <FormSubmitButton fullWidth loading={editProfileMutation?.isLoading}>
+              Save Details
+            </FormSubmitButton>
           </CardActions>
         </form>
       </FormProvider>

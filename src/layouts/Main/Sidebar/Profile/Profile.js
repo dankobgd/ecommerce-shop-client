@@ -4,10 +4,9 @@ import { Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/styles';
 import { Link } from '@reach/router';
 import clsx from 'clsx';
-import { useSelector } from 'react-redux';
 
 import AvatarFallback from '../../../../components/AvatarFallback/AvatarFallback';
-import { selectUserProfile } from '../../../../store/user/userSlice';
+import { useUserFromCache } from '../../../../hooks/queries/userQueries';
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -28,7 +27,7 @@ const useStyles = makeStyles(theme => ({
 function Profile(props) {
   const { className, ...rest } = props;
   const classes = useStyles();
-  const user = useSelector(selectUserProfile);
+  const user = useUserFromCache();
 
   const avatarName = user ? `${user.firstName} ${user.lastName}` : '';
 

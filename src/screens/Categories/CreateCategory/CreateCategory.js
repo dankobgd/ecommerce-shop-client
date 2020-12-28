@@ -1,21 +1,21 @@
 import React, { useContext } from 'react';
 
 import { yupResolver } from '@hookform/resolvers';
-import { Avatar, Button, CircularProgress, Container, Tooltip, Typography } from '@material-ui/core';
+import { Avatar, Button, CircularProgress, Container, Typography } from '@material-ui/core';
 import AddIcon from '@material-ui/icons/Add';
 import CategoryIcon from '@material-ui/icons/Category';
 import ClearAllIcon from '@material-ui/icons/ClearAll';
 import HelpIcon from '@material-ui/icons/Help';
-import { makeStyles, withStyles } from '@material-ui/styles';
+import { makeStyles } from '@material-ui/styles';
 import { FormProvider, useFieldArray, useForm } from 'react-hook-form';
-import { useMutation, useQueryCache } from 'react-query';
 import * as Yup from 'yup';
 
-import api from '../../../api';
+import CustomTooltip from '../../../components/CustomTooltip/CustomTooltip';
 import { FormTextField, FormSubmitButton, FormSwitch } from '../../../components/Form';
 import ErrorMessage from '../../../components/Message/ErrorMessage';
+import { ToastContext } from '../../../components/Toast/ToastContext';
+import { useCreateCategory } from '../../../hooks/queries/categoryQueries';
 import { useFormServerErrors } from '../../../hooks/useFormServerErrors';
-import { ToastContext } from '../../../store/toast/toast';
 import { transformKeysToSnakeCase } from '../../../utils/transformObjectKeys';
 import { rules } from '../../../utils/validation';
 import { CategoryLogoUploadField } from './FileUploadInputs';
@@ -50,7 +50,7 @@ const schema = Yup.object({
   slug: Yup.string().required(),
   description: Yup.string(),
   logo: rules.requiredImage,
-  properties: rules.properties,
+  properties: rules.categoryProperties,
 });
 
 const formOpts = {
@@ -71,35 +71,14 @@ const formOpts = {
 function CreateCategoryForm() {
   const classes = useStyles();
   const toast = useContext(ToastContext);
-  const cache = useQueryCache();
 
   const methods = useForm(formOpts);
   const { handleSubmit, setError, control, errors, getValues, setValue } = methods;
   const { fields, append, remove, swap } = useFieldArray({ name: 'properties', control });
 
-  const [createCategory, { isLoading, isError, error }] = useMutation(formData => api.categories.create(formData), {
-    onMutate: formData => {
-      cache.cancelQueries('categories');
-      const previousValue = cache.getQueryData('categories');
-      cache.setQueryData('categories', old => ({
-        ...old,
-        formData,
-      }));
-      return previousValue;
-    },
-    onSuccess: () => {
-      toast.success('Category created');
-    },
-    onError: (_, __, previousValue) => {
-      cache.setQueryData('categories', previousValue);
-      toast.error('Form has errors, please check the details');
-    },
-    onSettled: () => {
-      cache.invalidateQueries('categories');
-    },
-  });
+  const createCategoryMutation = useCreateCategory();
 
-  const onSubmit = async values => {
+  const onSubmit = values => {
     const { logo, properties, ...rest } = values;
     const formData = new FormData();
 
@@ -123,14 +102,14 @@ function CreateCategoryForm() {
       formData.append('properties', JSON.stringify(transformKeysToSnakeCase(propertiesList)));
     }
 
-    await createCategory(formData);
+    createCategoryMutation.mutate(formData);
   };
 
   const onError = () => {
     toast.error('Form has errors, please check the details');
   };
 
-  useFormServerErrors(error, setError);
+  useFormServerErrors(createCategoryMutation?.error, setError);
 
   const moveCard = React.useCallback(
     (dragIndex, hoverIndex) => {
@@ -149,8 +128,8 @@ function CreateCategoryForm() {
           Create Category
         </Typography>
 
-        {isLoading && <CircularProgress />}
-        {isError && <ErrorMessage message={error.message} />}
+        {createCategoryMutation?.isLoading && <CircularProgress />}
+        {createCategoryMutation?.isError && <ErrorMessage message={createCategoryMutation?.error?.message} />}
 
         <FormProvider {...methods}>
           <form onSubmit={handleSubmit(onSubmit, onError)} noValidate>
@@ -207,7 +186,7 @@ function CreateCategoryForm() {
               )}
             </div>
 
-            <FormSubmitButton className={classes.submit} fullWidth loading={isLoading}>
+            <FormSubmitButton className={classes.submit} fullWidth loading={createCategoryMutation?.isLoading}>
               Add category
             </FormSubmitButton>
           </form>
@@ -216,15 +195,5 @@ function CreateCategoryForm() {
     </Container>
   );
 }
-
-const CustomTooltip = withStyles(theme => ({
-  tooltip: {
-    backgroundColor: '#f5f5f9',
-    color: 'rgba(0, 0, 0, 0.87)',
-    maxWidth: 350,
-    fontSize: theme.typography.pxToRem(16),
-    border: '1px solid #dadde9',
-  },
-}))(Tooltip);
 
 export default CreateCategoryForm;

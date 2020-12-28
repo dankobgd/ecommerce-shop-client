@@ -40,11 +40,11 @@ export default {
   async wishlistGet(params) {
     return apiClient.get(`v1/users/wishlist`, { params });
   },
-  async wishlistDelete(details) {
-    return apiClient.delete(`v1/users/wishlist`, { data: details });
+  async wishlistDelete(productId) {
+    return apiClient.delete(`v1/users/wishlist/${productId}`);
   },
-  async wishlistClear(details) {
-    return apiClient.delete(`v1/users/wishlist/clear`, { data: details });
+  async wishlistClear() {
+    return apiClient.delete(`v1/users/wishlist/clear`);
   },
   async createAddress(details) {
     return apiClient.post(`v1/users/addresses`, { data: details });

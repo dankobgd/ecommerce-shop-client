@@ -1,18 +1,15 @@
-import React from 'react';
+import React, { useContext } from 'react';
 
-import { Tooltip, Fab } from '@material-ui/core';
+import { Fab } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
 import AddShoppingCartIcon from '@material-ui/icons/AddShoppingCart';
-import { withStyles } from '@material-ui/styles';
 import { Link } from '@reach/router';
-import { useDispatch, useSelector } from 'react-redux';
 
-import { selectBrandById } from '../../store/brand/brandSlice';
-import cartSlice from '../../store/cart/cartSlice';
-import productSlice from '../../store/product/productSlice';
-import toastSlice, { successToast } from '../../store/toast/toastSlice';
 import { formatPriceForDisplay } from '../../utils/priceFormat';
+import CustomTooltip from '../CustomTooltip/CustomTooltip';
+import { CartContext } from '../ShoppingCart/CartContext';
+import { ToastContext } from '../Toast/ToastContext';
 
 const useStyles = makeStyles(theme => ({
   cardOuter: {
@@ -67,50 +64,32 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
-const CustomTooltip = withStyles(theme => ({
-  tooltip: {
-    backgroundColor: '#f5f5f9',
-    color: 'rgba(0, 0, 0, 0.87)',
-    maxWidth: 220,
-    fontSize: theme.typography.pxToRem(16),
-    border: '1px solid #dadde9',
-  },
-}))(Tooltip);
-
 function ProductCard({ product }) {
   const classes = useStyles();
-  const dispatch = useDispatch();
-  const brand = useSelector(s => selectBrandById(s, product.brand));
-
-  const handleCardClick = () => {
-    dispatch(productSlice.actions.setCurrentId(product.id));
-  };
+  const toast = useContext(ToastContext);
+  const cart = useContext(CartContext);
 
   const handleAddToCart = () => {
-    dispatch(cartSlice.actions.addProductToCart(product));
-    dispatch(toastSlice.actions.addToast(successToast('Product added to cart')));
+    cart.addProduct(product);
+    toast.success('Product added to cart');
   };
 
   return (
     <div className={classes.cardOuter}>
       <div className={classes.brandWrapper}>
-        <CustomTooltip title={<Typography color='inherit'>{brand?.name}</Typography>}>
+        <CustomTooltip title={<Typography color='inherit'>{product?.brand?.name}</Typography>}>
           <div className={classes.brandLogo}>
-            <img src={brand?.logo} alt={brand?.name || 'brand logo'} />
+            <img src={product?.brand?.logo} alt={product?.brand?.name || 'brand logo'} />
           </div>
         </CustomTooltip>
       </div>
-      <Link to={`/product/${product.id}/${product.slug}`} onClick={handleCardClick}>
+      <Link to={`/product/${product.id}/${product.slug}`}>
         <div className={classes.cardMedia}>
           <img src={product.imageUrl} alt={product.name} />
         </div>
       </Link>
       <div className={classes.cardContent}>
-        <Link
-          to={`/product/${product.id}/${product.slug}`}
-          onClick={handleCardClick}
-          style={{ textDecoration: 'none' }}
-        >
+        <Link to={`/product/${product.id}/${product.slug}`} style={{ textDecoration: 'none' }}>
           <Typography variant='subtitle1' className={classes.productName}>
             {product.name}
           </Typography>

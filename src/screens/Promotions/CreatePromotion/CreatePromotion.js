@@ -5,10 +5,8 @@ import { Avatar, CircularProgress, Container, Typography } from '@material-ui/co
 import LoyaltyIcon from '@material-ui/icons/Loyalty';
 import { makeStyles } from '@material-ui/styles';
 import { FormProvider, useForm } from 'react-hook-form';
-import { useMutation, useQueryCache } from 'react-query';
 import * as Yup from 'yup';
 
-import api from '../../../api';
 import {
   FormTextField,
   FormSubmitButton,
@@ -17,8 +15,9 @@ import {
   FormNumberField,
 } from '../../../components/Form';
 import ErrorMessage from '../../../components/Message/ErrorMessage';
+import { ToastContext } from '../../../components/Toast/ToastContext';
+import { useCreatePromotion } from '../../../hooks/queries/promotionQueries';
 import { useFormServerErrors } from '../../../hooks/useFormServerErrors';
-import { ToastContext } from '../../../store/toast/toast';
 import { transformValuesToNumbers } from '../../../utils/transformObjectKeys';
 import { rules } from '../../../utils/validation';
 
@@ -67,43 +66,22 @@ const formOpts = {
 function CreatePromotionForm() {
   const classes = useStyles();
   const toast = useContext(ToastContext);
-  const cache = useQueryCache();
 
   const methods = useForm(formOpts);
   const { handleSubmit, setError, watch } = methods;
 
-  const [createPromotion, { isLoading, isError, error }] = useMutation(values => api.promotions.create(values), {
-    onMutate: values => {
-      cache.cancelQueries('promotions');
-      const previousValue = cache.getQueryData('promotions');
-      cache.setQueryData('promotions', old => ({
-        ...old,
-        values,
-      }));
-      return previousValue;
-    },
-    onSuccess: () => {
-      toast.success('Promo Code created');
-    },
-    onError: (_, __, previousValue) => {
-      cache.setQueryData('promotions', previousValue);
-      toast.error('Form has errors, please check the details');
-    },
-    onSettled: () => {
-      cache.invalidateQueries('promotions');
-    },
-  });
+  const createPromotionMutation = useCreatePromotion();
 
   const onSubmit = async data => {
     const transformed = transformValuesToNumbers(data, ['amount']);
-    await createPromotion(transformed);
+    createPromotionMutation.mutate(transformed);
   };
 
   const onError = () => {
     toast.error('Form has errors, please check the details');
   };
 
-  useFormServerErrors(error, setError);
+  useFormServerErrors(createPromotionMutation?.error, setError);
 
   const isAllowedAmountValue = (values, type) => {
     const val = !type || type === 'fixed' ? 9999 : 100;
@@ -120,8 +98,8 @@ function CreatePromotionForm() {
           Create Promotion
         </Typography>
 
-        {isLoading && <CircularProgress />}
-        {isError && <ErrorMessage message={error.message} />}
+        {createPromotionMutation?.isLoading && <CircularProgress />}
+        {createPromotionMutation?.isError && <ErrorMessage message={createPromotionMutation?.error?.message} />}
 
         <FormProvider {...methods}>
           <form onSubmit={handleSubmit(onSubmit, onError)} noValidate>
@@ -144,7 +122,7 @@ function CreatePromotionForm() {
             <FormDateTimePicker name='startsAt' fullWidth minutesStep={1} disablePast />
             <FormDateTimePicker name='endsAt' fullWidth minutesStep={1} disablePast />
 
-            <FormSubmitButton className={classes.submit} fullWidth loading={isLoading}>
+            <FormSubmitButton className={classes.submit} fullWidth loading={createPromotionMutation?.isLoading}>
               Create Promotion
             </FormSubmitButton>
           </form>

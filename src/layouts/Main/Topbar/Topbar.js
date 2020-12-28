@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 
 import { AppBar, Toolbar, Badge, Hidden, IconButton } from '@material-ui/core';
 import InputIcon from '@material-ui/icons/Input';
@@ -7,9 +7,8 @@ import NotificationsIcon from '@material-ui/icons/NotificationsOutlined';
 import { makeStyles } from '@material-ui/styles';
 import { Link } from '@reach/router';
 import clsx from 'clsx';
-import { useDispatch } from 'react-redux';
 
-import { userLogout } from '../../../store/user/userSlice';
+import { useLogout } from '../../../hooks/queries/userQueries';
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -23,11 +22,10 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
-function Topbar(props) {
-  const { className, onSidebarOpen, ...rest } = props;
+function Topbar({ className, onSidebarOpen, ...rest }) {
   const classes = useStyles();
-  const dispatch = useDispatch();
-  const [notifications] = useState([]);
+  const [notifications] = React.useState([]);
+  const logoutMutation = useLogout();
 
   return (
     <AppBar {...rest} className={clsx(classes.root, className)}>
@@ -42,7 +40,13 @@ function Topbar(props) {
               <NotificationsIcon />
             </Badge>
           </IconButton>
-          <IconButton className={classes.signOutButton} color='inherit' onClick={() => dispatch(userLogout())}>
+          <IconButton
+            className={classes.signOutButton}
+            color='inherit'
+            onClick={() => {
+              logoutMutation.mutate();
+            }}
+          >
             <InputIcon />
           </IconButton>
         </Hidden>

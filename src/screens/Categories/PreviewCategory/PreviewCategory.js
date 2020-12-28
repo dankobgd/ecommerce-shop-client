@@ -2,9 +2,8 @@ import React from 'react';
 
 import { Card, CardContent, Container, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/styles';
-import { useQuery, useQueryCache } from 'react-query';
 
-import api from '../../../api';
+import { useCategory } from '../../../hooks/queries/categoryQueries';
 import PreviewToolbar from '../CategoriesToolbar/PreviewToolbar';
 
 const useStyles = makeStyles({
@@ -16,11 +15,8 @@ const useStyles = makeStyles({
 
 function PreviewCategory({ categoryId }) {
   const classes = useStyles();
-  const cache = useQueryCache();
 
-  const { data: category } = useQuery(['categories', categoryId], () => api.categories.get(categoryId), {
-    initialData: () => cache.getQueryData('categories')?.data?.find(x => x.id === categoryId),
-  });
+  const { data: category } = useCategory(categoryId);
 
   const { properties = [], ...rest } = category || {};
 

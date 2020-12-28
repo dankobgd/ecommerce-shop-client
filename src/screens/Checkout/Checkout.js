@@ -1,34 +1,22 @@
-import React from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 
 import { yupResolver } from '@hookform/resolvers';
-import { Button, Chip, Container, Divider, IconButton, Tooltip, Typography } from '@material-ui/core';
+import { Button, Chip, Container, Divider, IconButton, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import AddIcon from '@material-ui/icons/Add';
 import ClearAllIcon from '@material-ui/icons/ClearAll';
 import DeleteIcon from '@material-ui/icons/Delete';
 import RemoveIcon from '@material-ui/icons/Remove';
-import { withStyles } from '@material-ui/styles';
 import { Link, navigate } from '@reach/router';
-import { unwrapResult } from '@reduxjs/toolkit';
 import { FormProvider, useForm } from 'react-hook-form';
-import { useDispatch, useSelector } from 'react-redux';
 import * as Yup from 'yup';
 
+import CustomTooltip from '../../components/CustomTooltip/CustomTooltip';
 import { FormSubmitButton, FormTextField } from '../../components/Form';
 import ErrorMessage from '../../components/Message/ErrorMessage';
+import { CartContext } from '../../components/ShoppingCart/CartContext';
+import { usePromotion, usePromotionStatus } from '../../hooks/queries/promotionQueries';
 import { useFormServerErrors } from '../../hooks/useFormServerErrors';
-import cartSlice, {
-  selectCartItems,
-  selectCartLength,
-  selectCartSubtotalPrice,
-  selectCartTotalPrice,
-  selectCartTotalQuantity,
-  selectCartPromoCode,
-  selectCartPromoCodeError,
-} from '../../store/cart/cartSlice';
-import productSlice from '../../store/product/productSlice';
-import { promotionGet, promotionGetStatus, selectPromotionForCart } from '../../store/promotion/promotionSlice';
-import { selectUIState } from '../../store/ui';
 import { formatPriceForDisplay, formatPriceUnitSum } from '../../utils/priceFormat';
 
 const useStyles = makeStyles({
@@ -138,7 +126,7 @@ const useStyles = makeStyles({
 });
 
 const schema = Yup.object({
-  promoCode: Yup.string(),
+  promoCode: Yup.string().required(),
 });
 
 const formOpts = {
@@ -152,49 +140,73 @@ const formOpts = {
 
 function Checkout() {
   const classes = useStyles();
-  const dispatch = useDispatch();
-  const cartSubtotalPrice = useSelector(selectCartSubtotalPrice);
-  const cartTotalPrice = useSelector(selectCartTotalPrice);
-  const cartTotalQuantity = useSelector(selectCartTotalQuantity);
-  const cartLength = useSelector(selectCartLength);
-  const cartItems = useSelector(selectCartItems);
-  const cartPromoCode = useSelector(selectCartPromoCode);
-  const cartPromotion = useSelector(selectPromotionForCart);
-  const cartPromoCodeError = useSelector(selectCartPromoCodeError);
+  const {
+    subtotalPrice,
+    totalPrice,
+    totalQuantity,
+    items,
+    clearItems,
+    cartPromoCode,
+    setCartPromoCode,
+    cartPromotion,
+    setCartPromotion,
+  } = useContext(CartContext);
+  const [enteredPromoCode, setEnteredPromoCode] = useState('');
+
+  const { isError, error, refetch: fetchStatus } = usePromotionStatus(enteredPromoCode, {
+    enabled: false,
+    retry: false,
+    onSuccess: () => setCartPromoCode(enteredPromoCode),
+    onError: () => {
+      setCartPromoCode('');
+      setCartPromotion(null);
+    },
+  });
+
+  const { refetch: fetchPromotion } = usePromotion(cartPromoCode, {
+    enabled: false,
+    retry: false,
+    onSuccess: result => setCartPromotion(result),
+    onError: () => setCartPromotion(null),
+  });
+
   const methods = useForm(formOpts);
   const { handleSubmit, setError, reset } = methods;
-  const { error } = useSelector(selectUIState(promotionGetStatus));
 
-  React.useEffect(() => {
-    if (cartLength === 0) {
+  const onSubmit = values => {
+    setEnteredPromoCode(values.promoCode);
+  };
+
+  useEffect(() => {
+    if (items?.length === 0) {
       navigate('/');
     }
-  }, [cartLength]);
+  }, [items.length]);
 
-  React.useEffect(() => {
-    if (!cartPromoCodeError && cartPromoCode) {
+  useEffect(() => {
+    if (cartPromoCode) {
       reset({ promoCode: cartPromoCode });
-      dispatch(promotionGet(cartPromoCode));
     }
-  }, [cartPromoCode, dispatch, reset, cartPromoCodeError]);
+  }, [cartPromoCode, reset]);
 
-  const onSubmit = async data => {
-    try {
-      const result = await dispatch(promotionGetStatus(data.promoCode));
-      unwrapResult(result);
-      dispatch(cartSlice.actions.setCartPromoCode(data.promoCode));
-      dispatch(cartSlice.actions.setCartPromoCodeError(false));
-    } catch (error) {
-      dispatch(cartSlice.actions.setCartPromoCodeError(true));
+  useEffect(() => {
+    if (enteredPromoCode) {
+      fetchStatus();
     }
-  };
+  }, [enteredPromoCode, fetchStatus]);
+
+  useEffect(() => {
+    if (cartPromoCode) {
+      fetchPromotion();
+    }
+  }, [cartPromoCode, fetchPromotion]);
 
   useFormServerErrors(error, setError);
 
   return (
     <Container>
       <div className={classes.summaryContent}>
-        {cartLength > 0 && (
+        {items?.length > 0 && (
           <>
             <Typography variant='h2' component='h2' className={classes.summaryTitle}>
               Order Summary
@@ -203,7 +215,7 @@ function Checkout() {
             <Divider variant='middle' orientation='horizontal' className={classes.divider} />
 
             <div className={classes.list}>
-              {cartItems.map(({ product, quantity }) => (
+              {items.map(({ product, quantity }) => (
                 <CartListItem key={product.id} product={product} quantity={quantity} />
               ))}
             </div>
@@ -214,7 +226,11 @@ function Checkout() {
               variant='outlined'
               className={classes.clearCartBtn}
               endIcon={<ClearAllIcon />}
-              onClick={() => dispatch(cartSlice.actions.clearCartItems())}
+              onClick={() => {
+                clearItems();
+                setCartPromoCode('');
+                setCartPromotion(null);
+              }}
             >
               Clear Cart
             </Button>
@@ -246,13 +262,13 @@ function Checkout() {
 
             <div className={classes.summary}>
               <Typography component='span' variant='subtitle2' color='textPrimary' className={classes.totalQty}>
-                Total Quantity: {cartTotalQuantity}
+                Total Quantity: {totalQuantity}
               </Typography>
               <Typography component='span' variant='subtitle2' color='textPrimary' className={classes.subtotalPrice}>
-                Subtotal: <strong>${formatPriceForDisplay(cartSubtotalPrice)}</strong>
+                Subtotal: <strong>${formatPriceForDisplay(subtotalPrice)}</strong>
               </Typography>
               <Typography component='span' variant='subtitle2' color='textPrimary' className={classes.totalPrice}>
-                Total Price: <strong>${formatPriceForDisplay(cartTotalPrice)}</strong>
+                Total Price: <strong>${formatPriceForDisplay(totalPrice)}</strong>
               </Typography>
             </div>
           </>
@@ -266,7 +282,7 @@ function Checkout() {
             onSubmit={handleSubmit(onSubmit)}
             noValidate
           >
-            {error && <ErrorMessage message={error.message} />}
+            {isError && <ErrorMessage message={error.message} />}
             <FormTextField name='promoCode' />
             <FormSubmitButton style={{ marginLeft: '4px' }}>Redeem</FormSubmitButton>
           </form>
@@ -282,32 +298,18 @@ function Checkout() {
   );
 }
 
-const CustomTooltip = withStyles(theme => ({
-  tooltip: {
-    backgroundColor: '#f5f5f9',
-    color: 'rgba(0, 0, 0, 0.87)',
-    maxWidth: 220,
-    fontSize: theme.typography.pxToRem(16),
-    border: '1px solid #dadde9',
-  },
-}))(Tooltip);
-
 function CartListItem({ product, quantity }) {
-  const dispatch = useDispatch();
   const classes = useStyles();
-
-  const handleCardClick = () => {
-    dispatch(productSlice.actions.setCurrentId(product.id));
-  };
+  const { addProduct, removeProduct, clearProduct } = useContext(CartContext);
 
   return (
     <div className={classes.listItem}>
       <div className={classes.listItemContent}>
         <div className={classes.imgNameSection}>
-          <Link to={`/${product.id}/${product.slug}`} onClick={handleCardClick} className={classes.link}>
+          <Link to={`/${product.id}/${product.slug}`} className={classes.link}>
             <img className={classes.listItemImage} src={product.imageUrl} alt={product.name} />
           </Link>
-          <Link to={`/${product.id}/${product.slug}`} onClick={handleCardClick} className={classes.link}>
+          <Link to={`/${product.id}/${product.slug}`} className={classes.link}>
             <Typography className={classes.listItemName} component='h3' variant='subtitle1'>
               {product.name}
             </Typography>
@@ -328,17 +330,17 @@ function CartListItem({ product, quantity }) {
           </div>
           <div className={classes.controls}>
             <CustomTooltip title={<Typography color='inherit'>Increase Quantity</Typography>}>
-              <IconButton onClick={() => dispatch(cartSlice.actions.addProductToCart(product))}>
+              <IconButton onClick={() => addProduct(product)}>
                 <AddIcon />
               </IconButton>
             </CustomTooltip>
             <CustomTooltip title={<Typography color='inherit'>Decrease Quantity</Typography>}>
-              <IconButton onClick={() => dispatch(cartSlice.actions.removeProductFromCart(product.id))}>
+              <IconButton onClick={() => removeProduct(product.id)}>
                 <RemoveIcon />
               </IconButton>
             </CustomTooltip>
             <CustomTooltip title={<Typography color='inherit'>Remove Item</Typography>}>
-              <IconButton onClick={() => dispatch(cartSlice.actions.clearProductFromCart(product.id))}>
+              <IconButton onClick={() => clearProduct(product.id)}>
                 <DeleteIcon />
               </IconButton>
             </CustomTooltip>

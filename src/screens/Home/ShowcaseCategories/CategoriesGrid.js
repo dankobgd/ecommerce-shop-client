@@ -18,7 +18,7 @@ function CategoriesGrid({ categories }) {
 
   return (
     <div className={classes.grid}>
-      {categories.map(category => (
+      {categories?.map(category => (
         <CategoryCard key={category.id} category={category} />
       ))}
     </div>

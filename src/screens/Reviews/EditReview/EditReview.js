@@ -5,14 +5,13 @@ import { Avatar, CircularProgress, Container, Typography } from '@material-ui/co
 import RateReviewIcon from '@material-ui/icons/RateReview';
 import { makeStyles } from '@material-ui/styles';
 import { FormProvider, useForm } from 'react-hook-form';
-import { useMutation, useQuery, useQueryCache } from 'react-query';
 import * as Yup from 'yup';
 
-import api from '../../../api';
 import { FormTextField, FormSubmitButton, FormRadioGroup } from '../../../components/Form';
 import ErrorMessage from '../../../components/Message/ErrorMessage';
+import { ToastContext } from '../../../components/Toast/ToastContext';
+import { useReview, useUpdateReview } from '../../../hooks/queries/reviewQueries';
 import { useFormServerErrors } from '../../../hooks/useFormServerErrors';
-import { ToastContext } from '../../../store/toast/toast';
 import { diff } from '../../../utils/diff';
 
 const useStyles = makeStyles(theme => ({
@@ -52,50 +51,29 @@ const formOpts = {
 
 function EditReviewForm({ reviewId }) {
   const classes = useStyles();
-  const cache = useQueryCache();
   const toast = useContext(ToastContext);
   const [baseFormObj, setBaseFormObj] = React.useState({});
 
   const methods = useForm(formOpts);
   const { handleSubmit, setError, reset } = methods;
 
-  const { data: review } = useQuery(['reviews', reviewId], () => api.reviews.get(reviewId), {
-    initialData: () => cache.getQueryData('reviews')?.data?.find(x => x.id === reviewId),
-  });
+  const { data: review } = useReview(reviewId);
 
-  const [editReview, { isLoading, isError, error }] = useMutation(({ id, values }) => api.reviews.update(id, values), {
-    onMutate: values => {
-      cache.cancelQueries(['reviews', reviewId]);
-      const previousValue = cache.getQueryData(['reviews', reviewId]);
-      cache.setQueryData(['reviews', reviewId], values);
-      return previousValue;
-    },
-    onSuccess: () => {
-      toast.success('Review updated');
-    },
-    onError: (_, __, previousValue) => {
-      cache.setQueryData(['reviews', reviewId], previousValue);
-      toast.error('Form has errors, please check the details');
-    },
-    onSettled: () => {
-      cache.invalidateQueries(['reviews', reviewId]);
-    },
-  });
+  const editReviewMutation = useUpdateReview(reviewId);
 
-  const onSubmit = async values => {
+  const onSubmit = values => {
     const changes = diff(baseFormObj, values);
 
     if (Object.keys(changes).length === 0) {
       toast.info('No changes applied');
     }
-
     if (Object.keys(changes).length > 0) {
       const obj = {
         ...values,
         rating: Number.parseInt(values.rating, 10),
       };
 
-      await editReview({ id: review.id, values: obj });
+      editReviewMutation.mutate({ id: review.id, values: obj });
     }
   };
 
@@ -115,7 +93,7 @@ function EditReviewForm({ reviewId }) {
     }
   }, [review, reset]);
 
-  useFormServerErrors(error, setError);
+  useFormServerErrors(editReviewMutation?.error, setError);
 
   return (
     <Container component='main' maxWidth='xs'>
@@ -127,8 +105,8 @@ function EditReviewForm({ reviewId }) {
           Edit Review
         </Typography>
 
-        {isLoading && <CircularProgress />}
-        {isError && <ErrorMessage message={error.message} />}
+        {editReviewMutation?.isLoading && <CircularProgress />}
+        {editReviewMutation?.isError && <ErrorMessage message={editReviewMutation?.error?.message} />}
 
         <FormProvider {...methods}>
           <form onSubmit={handleSubmit(onSubmit, onError)} noValidate>
@@ -150,7 +128,7 @@ function EditReviewForm({ reviewId }) {
             <FormTextField name='title' fullWidth />
             <FormTextField name='comment' multiline rowsMax={6} fullWidth />
 
-            <FormSubmitButton className={classes.submit} fullWidth loading={isLoading}>
+            <FormSubmitButton className={classes.submit} fullWidth loading={editReviewMutation?.isLoading}>
               Save Changes
             </FormSubmitButton>
           </form>

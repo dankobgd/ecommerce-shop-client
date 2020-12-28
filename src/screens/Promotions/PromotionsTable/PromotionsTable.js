@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useState } from 'react';
 
 import {
   Card,
@@ -11,25 +11,15 @@ import {
   TableHead,
   TableRow,
   TablePagination,
-  Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogContentText,
-  DialogActions,
 } from '@material-ui/core';
-import DeleteIcon from '@material-ui/icons/Delete';
-import EditIcon from '@material-ui/icons/Edit';
-import VisibilityIcon from '@material-ui/icons/Visibility';
 import { makeStyles } from '@material-ui/styles';
-import { Link } from '@reach/router';
 import clsx from 'clsx';
-import { nanoid } from 'nanoid';
-import { useMutation, useQueryCache } from 'react-query';
 
-import api from '../../../api';
-import { ToastContext } from '../../../store/toast/toast';
-import { calculatePaginationStartEndPosition } from '../../../utils/pagination';
+import DeleteDialog from '../../../components/TableComponents/DeleteDialog';
+import { DeleteButton, EditButton, PreviewButton } from '../../../components/TableComponents/TableButtons';
+import { useDeletePromotion, usePromotions } from '../../../hooks/queries/promotionQueries';
+import { diff } from '../../../utils/diff';
+import { getPersistedPagination, paginationRanges, persistPagination } from '../../../utils/pagination';
 
 const useStyles = makeStyles(theme => ({
   root: {},
@@ -52,13 +42,13 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
-const PromotionsTable = ({ className, info, ...rest }) => {
+const PromotionsTable = ({ className, ...rest }) => {
   const classes = useStyles();
-  const { data: promotions } = info;
+  const [pageMeta, setPageMeta] = useState(getPersistedPagination('promotions'));
+  const { data: promotions } = usePromotions(pageMeta, { keepPreviousData: true });
+  const deletePromotionMutation = useDeletePromotion();
 
-  const toast = useContext(ToastContext);
-  const cache = useQueryCache();
-
+  const [deleteItem, setDeleteItem] = useState();
   const [selectedData, setSelectedData] = useState([]);
   const [dialogOpen, setDialogOpen] = useState(false);
 
@@ -71,7 +61,7 @@ const PromotionsTable = ({ className, info, ...rest }) => {
   };
 
   const handleSelectAll = event => {
-    const selected = event.target.checked ? promotions?.data?.map(x => x.id) : [];
+    const selected = event.target.checked ? promotions?.data?.map(x => x.promoCode) : [];
     setSelectedData(selected);
   };
 
@@ -96,72 +86,54 @@ const PromotionsTable = ({ className, info, ...rest }) => {
   };
 
   const handlePageChange = (e, page) => {
-    const params = new URLSearchParams({ per_page: promotions?.meta.perPage, page: page + 1 });
-    // @TODO: use paginated query...
-    // dispatch(promotionGetAll(`${params}`));
+    const params = { page: page + 1, per_page: promotions?.meta?.perPage };
+    if (Object.keys(diff(pageMeta, params).length > 0)) {
+      setPageMeta(meta => ({ ...meta, ...params }));
+    }
   };
 
   const handleRowsPerPageChange = e => {
-    const params = new URLSearchParams({ per_page: e.target.value });
-    // @TODO: use paginated query...
-    /// dispatch(promotionGetAll(`${params}`));
+    const params = { page: 1, per_page: e.target.value };
+    if (Object.keys(diff(pageMeta, params).length > 0)) {
+      setPageMeta(meta => ({ ...meta, ...params }));
+    }
   };
 
-  const { start, end } = calculatePaginationStartEndPosition(promotions?.meta?.page, promotions?.meta?.perPage);
-
-  const [deletePromotion] = useMutation(code => api.promotions.delete(code), {
-    onMutate: code => {
-      cache.cancelQueries('promotions');
-      const previousValue = cache.getQueryData('promotions');
-      const filtered = previousValue?.data?.filter(x => x.promoCode !== code);
-      const obj = { ...previousValue, data: [...filtered] };
-      cache.setQueryData('promotions', obj);
-      return previousValue;
-    },
-    onSuccess: () => {
-      toast.success('Promotion deleted');
-    },
-    onError: (_, __, previousValue) => {
-      cache.setQueryData('promotions', previousValue);
-      toast.error('Error deleting the promotion');
-    },
-    onSettled: () => {
-      cache.invalidateQueries('promotions');
-    },
-  });
+  React.useEffect(() => {
+    persistPagination('promotions', pageMeta);
+  }, [pageMeta]);
 
   return (
-    <Card {...rest} className={clsx(classes.root, className)}>
-      <CardContent className={classes.content}>
-        <div className={classes.inner}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell padding='checkbox'>
-                  <Checkbox
-                    checked={selectedData?.length === promotions?.data?.length}
-                    color='primary'
-                    indeterminate={selectedData?.length > 0 && selectedData?.length < promotions?.data?.length}
-                    onChange={handleSelectAll}
-                  />
-                </TableCell>
-                <TableCell>PromoCode</TableCell>
-                <TableCell>Type</TableCell>
-                <TableCell>Amount</TableCell>
-                <TableCell>Description</TableCell>
-                <TableCell>Starts at</TableCell>
-                <TableCell>Ends at</TableCell>
-                <TableCell />
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {promotions?.meta &&
-                promotions.data.length > 0 &&
-                promotions.data.slice(start, end).map(promotion => (
+    <>
+      <Card {...rest} className={clsx(classes.root, className)}>
+        <CardContent className={classes.content}>
+          <div className={classes.inner}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell padding='checkbox'>
+                    <Checkbox
+                      checked={selectedData?.length === promotions?.data?.length}
+                      color='primary'
+                      indeterminate={selectedData?.length > 0 && selectedData?.length < promotions?.data?.length}
+                      onChange={handleSelectAll}
+                    />
+                  </TableCell>
+                  <TableCell>PromoCode</TableCell>
+                  <TableCell>Type</TableCell>
+                  <TableCell>Amount</TableCell>
+                  <TableCell>Description</TableCell>
+                  <TableCell>Starts at</TableCell>
+                  <TableCell>Ends at</TableCell>
+                  <TableCell />
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {promotions?.data?.map(promotion => (
                   <TableRow
                     className={classes.tableRow}
                     hover
-                    key={nanoid()}
+                    key={promotion.promoCode}
                     selected={selectedData.indexOf(promotion.promoCode) !== -1}
                   >
                     <TableCell padding='checkbox'>
@@ -179,85 +151,51 @@ const PromotionsTable = ({ className, info, ...rest }) => {
                     <TableCell>{promotion.startsAt}</TableCell>
                     <TableCell>{promotion.endsAt}</TableCell>
                     <TableCell>
-                      <Link to={`${promotion.promoCode}/preview`} style={{ textDecoration: 'none' }}>
-                        <Button
-                          color='secondary'
-                          startIcon={<VisibilityIcon />}
-                          // onClick={() => dispatch(productSlice.actions.setPreviewId(product.id))}
-                        >
-                          View
-                        </Button>
-                      </Link>
+                      <PreviewButton to={`${promotion.promoCode}/preview`} />
                     </TableCell>
                     <TableCell>
-                      <Link to={`${promotion.promoCode}/edit`} style={{ textDecoration: 'none' }}>
-                        <Button
-                          color='secondary'
-                          startIcon={<EditIcon />}
-                          // onClick={() => dispatch(promotionSlice.actions.setEditId(promotion.promoCode))}
-                        >
-                          Edit
-                        </Button>
-                      </Link>
+                      <EditButton to={`${promotion.promoCode}/edit`} />
                     </TableCell>
                     <TableCell>
-                      <Button
-                        style={{ color: 'red' }}
-                        color='secondary'
-                        startIcon={<DeleteIcon style={{ fill: 'red' }} />}
-                        onClick={() => handleDialogOpen()}
-                      >
-                        Delete
-                      </Button>
-                      <Dialog
-                        open={dialogOpen}
-                        onClose={handleDialogClose}
-                        aria-labelledby='delete promotion dialog'
-                        aria-describedby='deletes the promotion'
-                      >
-                        <DialogTitle id='delete promotion dialog'>Delete Promotion?</DialogTitle>
-                        <DialogContent>
-                          <DialogContentText>
-                            Are you sure you want to delete the promotion <strong>{promotion.name}</strong> ?
-                          </DialogContentText>
-                        </DialogContent>
-                        <DialogActions>
-                          <Button onClick={handleDialogClose} color='primary'>
-                            Cancel
-                          </Button>
-                          <Button
-                            onClick={async () => {
-                              handleDialogClose();
-                              await deletePromotion(promotion.promoCode);
-                            }}
-                            color='primary'
-                            autoFocus
-                          >
-                            Delete
-                          </Button>
-                        </DialogActions>
-                      </Dialog>
+                      <DeleteButton
+                        onClick={() => {
+                          setDeleteItem(promotion);
+                          handleDialogOpen();
+                        }}
+                      />
                     </TableCell>
                   </TableRow>
                 ))}
-            </TableBody>
-          </Table>
-        </div>
-      </CardContent>
-      <CardActions className={classes.actions}>
-        {promotions?.meta && (
-          <TablePagination
-            component='div'
-            count={promotions?.meta?.totalCount || -1}
-            onChangePage={handlePageChange}
-            onChangeRowsPerPage={handleRowsPerPageChange}
-            page={promotions?.meta?.page - 1 || 0}
-            rowsPerPage={promotions?.meta?.perPage || 50}
-            rowsPerPageOptions={[10, 25, 50, 75, 120]}
-          />
-        )}
-      </CardActions>
-    </Card>
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+        <CardActions className={classes.actions}>
+          {promotions?.meta && (
+            <TablePagination
+              component='div'
+              count={promotions?.meta?.totalCount || -1}
+              onChangePage={handlePageChange}
+              onChangeRowsPerPage={handleRowsPerPageChange}
+              page={pageMeta.page - 1}
+              rowsPerPage={pageMeta?.per_page}
+              rowsPerPageOptions={paginationRanges}
+            />
+          )}
+        </CardActions>
+      </Card>
+
+      <DeleteDialog
+        title='promotion'
+        item={deleteItem?.promoCode}
+        handleDialogClose={handleDialogClose}
+        dialogOpen={dialogOpen}
+        onClick={() => {
+          handleDialogClose();
+          deletePromotionMutation.mutate(deleteItem.promoCode);
+        }}
+      />
+    </>
   );
 };
 

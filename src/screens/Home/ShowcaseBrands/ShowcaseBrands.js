@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { useContext } from 'react';
 
 import { makeStyles } from '@material-ui/core';
 import { Link } from '@reach/router';
-import { useDispatch } from 'react-redux';
 import Slider from 'react-slick';
 
-import searchSlice from '../../../store/search/searchSlice';
+import { useBrands } from '../../../hooks/queries/brandQueries';
+import { ShopContext } from '../../Shop/ShopContext';
 
 const useStyles = makeStyles(() => ({
   gallery: {
@@ -40,8 +40,10 @@ const responsiveSettings = numToShow => ({
   centerPadding: '50px',
 });
 
-function BrandsGrid({ brands }) {
+function BrandsGrid() {
   const classes = useStyles();
+
+  const { data: brands } = useBrands();
 
   const settings = {
     dots: false,
@@ -76,7 +78,7 @@ function BrandsGrid({ brands }) {
   return (
     <div className={classes.gallery}>
       <Slider {...settings}>
-        {brands.map(brand => (
+        {brands?.data?.map(brand => (
           <BrandSlide key={brand.name} brand={brand} />
         ))}
       </Slider>
@@ -86,10 +88,10 @@ function BrandsGrid({ brands }) {
 
 function BrandSlide({ brand }) {
   const classes = useStyles();
-  const dispatch = useDispatch();
+  const { clickMainFilterChoice } = useContext(ShopContext);
 
   const handleBrandChoice = () => {
-    dispatch(searchSlice.actions.filterChoiceClicked({ name: 'brands', value: brand.name }));
+    clickMainFilterChoice({ name: 'brands', value: brand.name });
   };
 
   return (

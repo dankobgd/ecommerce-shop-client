@@ -2,9 +2,8 @@ import React from 'react';
 
 import { Card, CardContent, Container, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/styles';
-import { useQuery, useQueryCache } from 'react-query';
 
-import api from '../../../api';
+import { useBrand } from '../../../hooks/queries/brandQueries';
 import PreviewToolbar from '../BrandsToolbar/PreviewToolbar';
 
 const useStyles = makeStyles({
@@ -16,11 +15,8 @@ const useStyles = makeStyles({
 
 function PreviewBrand({ brandId }) {
   const classes = useStyles();
-  const cache = useQueryCache();
 
-  const { data: brand } = useQuery(['brands', brandId], () => api.brands.get(brandId), {
-    initialData: () => cache.getQueryData('brands')?.data?.find(x => x.id === brandId),
-  });
+  const { data: brand } = useBrand(brandId);
 
   return (
     <>

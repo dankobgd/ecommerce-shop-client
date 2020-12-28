@@ -7,10 +7,6 @@ export const ToastContext = createContext();
 export function ToastProvider({ children }) {
   const [toasts, setToasts] = useState([]);
 
-  const addToast = ({ type, message }) => {
-    setToasts([...toasts, { id: nanoid(), type, message }]);
-  };
-
   const success = message => {
     setToasts([...toasts, { id: nanoid(), type: 'success', message }]);
   };
@@ -29,13 +25,8 @@ export function ToastProvider({ children }) {
   };
 
   return (
-    <ToastContext.Provider value={{ toasts, addToast, removeToast, success, info, warn, error }}>
+    <ToastContext.Provider value={{ toasts, removeToast, success, info, warn, error }}>
       {children}
     </ToastContext.Provider>
   );
 }
-
-export const successToast = message => ({ type: 'success', message });
-export const infoToast = message => ({ type: 'info', message });
-export const warnToast = message => ({ type: 'warn', message });
-export const errorToast = message => ({ type: 'error', message });

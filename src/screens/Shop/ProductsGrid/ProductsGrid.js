@@ -1,12 +1,8 @@
 import React from 'react';
 
 import { makeStyles, Typography } from '@material-ui/core';
-import { useSelector } from 'react-redux';
 
 import ProductCard from '../../../components/ProductCard/ProductCard';
-import { selectPaginationMeta } from '../../../store/search/searchSlice';
-import { calculatePaginationStartEndPosition } from '../../../utils/pagination';
-import PaginationRanges from '../Pagination/Pagination';
 import ChipsSection from './ChipsSection';
 
 const useStyles = makeStyles(() => ({
@@ -40,26 +36,36 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
-function ProductsGrid({ products, hasSearched }) {
+function ProductsGrid({
+  products,
+  hasSearched,
+  setHasSearched,
+  setFilterQueryString,
+  setShouldFetchAllByFilter,
+  shouldShowDefaultProducts,
+  setShouldShowDefaultProducts,
+}) {
   const classes = useStyles();
-  const paginationMeta = useSelector(selectPaginationMeta);
-
-  const { start, end } = calculatePaginationStartEndPosition(paginationMeta?.page, paginationMeta?.perPage);
 
   return (
     <div className={classes.outer}>
       <div className={classes.mainArea}>
         <div className={classes.chipsArea}>
-          <ChipsSection />
+          <ChipsSection
+            setHasSearched={setHasSearched}
+            setFilterQueryString={setFilterQueryString}
+            setShouldFetchAllByFilter={setShouldFetchAllByFilter}
+            setShouldShowDefaultProducts={setShouldShowDefaultProducts}
+          />
         </div>
 
         <div className={classes.productAre}>
-          {paginationMeta &&
-            products.length > 0 &&
-            products.slice(start, end).map(product => <ProductCard key={product.sku} product={product} />)}
+          {products?.map(product => (
+            <ProductCard key={product.sku} product={product} />
+          ))}
         </div>
 
-        {products.length === 0 && !hasSearched && (
+        {products?.length === 0 && !hasSearched && !shouldShowDefaultProducts && (
           <div style={{ padding: '2rem' }}>
             <Typography variant='h4'>Choose filters from the sidebar to search products</Typography>
             <Typography variant='subtitle2' style={{ marginTop: '10px' }}>
@@ -67,7 +73,7 @@ function ProductsGrid({ products, hasSearched }) {
             </Typography>
           </div>
         )}
-        {products.length === 0 && hasSearched && (
+        {products?.length === 0 && hasSearched && (
           <div style={{ padding: '2rem' }}>
             <Typography variant='h4'>No products found matching the search criteria</Typography>
             <Typography variant='subtitle2' style={{ marginTop: '10px' }}>
@@ -76,15 +82,6 @@ function ProductsGrid({ products, hasSearched }) {
           </div>
         )}
       </div>
-      {paginationMeta && paginationMeta.totalCount !== -1 && paginationMeta.pageCount !== 1 && (
-        <div className={classes.paginationArea}>
-          <PaginationRanges
-            page={paginationMeta.page}
-            perPage={paginationMeta.perPage}
-            pageCount={paginationMeta.pageCount}
-          />
-        </div>
-      )}
     </div>
   );
 }

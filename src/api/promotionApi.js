@@ -5,23 +5,23 @@ export default {
     return apiClient.post(`v1/promotions`, { data: details });
   },
 
-  async get(code) {
-    return apiClient.get(`v1/promotions/${code}`);
+  async get(promoCode) {
+    return apiClient.get(`v1/promotions/${promoCode}`);
   },
 
   async getAll(params) {
     return apiClient.get(`v1/promotions`, { params });
   },
 
-  async update(code, details) {
-    return apiClient.patch(`v1/promotions/${code}`, { data: details });
+  async update(promoCode, details) {
+    return apiClient.patch(`v1/promotions/${promoCode}`, { data: details });
   },
 
-  async delete(code) {
-    return apiClient.delete(`v1/promotions/${code}`);
+  async delete(promoCode) {
+    return apiClient.delete(`v1/promotions/${promoCode}`);
   },
 
-  async getStatus(code) {
-    return apiClient.get(`v1/promotions/${code}/status`);
+  async getStatus(promoCode) {
+    return apiClient.get(`v1/promotions/${promoCode}/status`);
   },
 };

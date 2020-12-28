@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useContext } from 'react';
 
 import {
   Accordion,
@@ -13,10 +13,9 @@ import {
 import CheckBoxIcon from '@material-ui/icons/CheckBox';
 import CheckBoxOutlineBlankIcon from '@material-ui/icons/CheckBoxOutlineBlank';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
-import { useDispatch, useSelector } from 'react-redux';
 
-import { selectChosenCategoriesProperties } from '../../../store/category/categorySlice';
-import searchSlice, { selectSpecificFilters, selectHasSpecificFilters } from '../../../store/search/searchSlice';
+import { useCategoriesFromCache } from '../../../hooks/queries/categoryQueries';
+import { ShopContext } from '../ShopContext';
 
 const useStyles = makeStyles(() => ({
   expanded: {
@@ -36,33 +35,27 @@ const useStyles = makeStyles(() => ({
 
 function PropFilters() {
   const classes = useStyles();
-  const dispatch = useDispatch();
-  const specificFilters = useSelector(selectSpecificFilters);
-  const hasSpecificFilters = useSelector(selectHasSpecificFilters);
-  const chosenCategoriesProperties = useSelector(selectChosenCategoriesProperties);
+  const { mainFilters, specificFilters, setSpecificTextFilters, setSpecificBoolFilter } = useContext(ShopContext);
 
-  // useEffect(() => {
-  //   const obj = Object.keys(variants).reduce((acc, key) => {
-  //     acc[key] = [];
-  //     return acc;
-  //   }, {});
+  const allCachedCategories = useCategoriesFromCache();
 
-  //   if (!hasSpecificFilters) {
-  //     dispatch(searchSlice.actions.initSpecificFilters(obj));
-  //   }
-  // }, [dispatch, hasSpecificFilters, variants]);
+  const chosenCategoriesProperties = allCachedCategories?.data
+    ?.filter(x => mainFilters?.categories?.includes(x.slug))
+    ?.map(x => ({
+      name: x.name,
+      slug: x.slug,
+      properties: x.properties,
+    }));
 
   const handleChangeBoolCheckbox = event => {
-    const { name, value } = event.target;
-    const items = specificFilters[name];
-    dispatch(searchSlice.actions.setSpecificFilters({ name, items }));
+    setSpecificBoolFilter(event.target.name);
   };
 
   const handleChangeArrayCheckbox = event => {
     const { name, value } = event.target;
     const arr = specificFilters[name];
     const items = arr?.includes(value) ? arr.filter(x => x !== value) : [...(arr ?? []), value];
-    dispatch(searchSlice.actions.setSpecificFilters({ name, items }));
+    setSpecificTextFilters({ name, items });
   };
 
   const renderChoiceInputField = (category, property) => {
@@ -77,8 +70,7 @@ function PropFilters() {
                   checkedIcon={<CheckBoxIcon fontSize='small' />}
                   name={`${category.slug}_${property.name}`}
                   value={property.name}
-                  // checked={false}
-                  checked={specificFilters && specificFilters[`${category.slug}_${property.name}`].length > 0}
+                  checked={(specificFilters && specificFilters[`${category.slug}_${property.name}`]) || false}
                   onChange={handleChangeBoolCheckbox}
                 />
               }
@@ -87,7 +79,6 @@ function PropFilters() {
           </div>
         );
       }
-
       if (property.type === 'text') {
         if (property.choices) {
           return property.choices.map(choice => (
@@ -99,7 +90,6 @@ function PropFilters() {
                     checkedIcon={<CheckBoxIcon fontSize='small' />}
                     name={`${category.slug}_${property.name}`}
                     value={choice.name}
-                    // checked={false}
                     checked={
                       specificFilters && specificFilters[`${category.slug}_${property.slug}`]?.includes(choice.name)
                     }
@@ -113,13 +103,11 @@ function PropFilters() {
         }
       }
     }
-
     return null;
   };
-
   return (
     <div>
-      {chosenCategoriesProperties.map(category => (
+      {chosenCategoriesProperties?.map(category => (
         <div key={category.slug} style={{ border: '1px solid lightblue', marginTop: '1rem' }}>
           {category.properties.map(property => (
             <Accordion key={`${category.slug}_${property.label}`} classes={{ expanded: classes.expanded }}>
@@ -132,7 +120,6 @@ function PropFilters() {
                   {category.name} {property.label}
                 </Typography>
               </AccordionSummary>
-
               <AccordionDetails className={classes.accordionDetails}>
                 <FormGroup>{renderChoiceInputField(category, property)}</FormGroup>
               </AccordionDetails>

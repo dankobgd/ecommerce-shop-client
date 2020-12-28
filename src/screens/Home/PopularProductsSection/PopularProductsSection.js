@@ -5,13 +5,8 @@ import Grid from '@material-ui/core/Grid';
 import Paper from '@material-ui/core/Paper';
 import { makeStyles } from '@material-ui/core/styles';
 import { Link } from '@reach/router';
-import { useDispatch, useSelector } from 'react-redux';
 
-import productSlice, {
-  selectBeastDealsProducts,
-  selectMostSoldProducts,
-  selectTopFeaturedProducts,
-} from '../../../store/product/productSlice';
+import { useFeaturedProducts } from '../../../hooks/queries/productQueries';
 import { formatPriceForDisplay } from '../../../utils/priceFormat';
 
 const useStyles = makeStyles(theme => ({
@@ -81,9 +76,24 @@ const useCardStyles = makeStyles(() => ({
 
 function PopularProductsSection() {
   const classes = useStyles();
-  const topFeatured = useSelector(selectTopFeaturedProducts);
-  const mostSold = useSelector(selectMostSoldProducts);
-  const bestDeals = useSelector(selectBeastDealsProducts);
+
+  // const { data: topFeatured } = useQuery('products', () => api.products.getFeatured(), {
+  //   initialData: () => queryClient.getQueryData('products'),
+  // });
+
+  // const { data: bestDeals } = useQuery('products', () => api.products.getFeatured(), {
+  //   initialData: () => queryClient.getQueryData('products'),
+  // });
+
+  // const { data: mostSold } = useQuery('products', () => api.products.getFeatured(), {
+  //   initialData: () => queryClient.getQueryData('products'),
+  // });
+
+  const { data: top } = useFeaturedProducts();
+
+  const topFeatured = top?.data?.slice(0, 3) ?? [];
+  const mostSold = topFeatured;
+  const bestDeals = topFeatured;
 
   return (
     <div className={classes.root}>
@@ -94,7 +104,7 @@ function PopularProductsSection() {
               <Typography variant='subtitle1' className={classes.title}>
                 Top Featured
               </Typography>
-              {topFeatured.map(product => (
+              {topFeatured?.map(product => (
                 <ProductListCard key={product.sku} product={product} />
               ))}
             </div>
@@ -106,7 +116,7 @@ function PopularProductsSection() {
               <Typography variant='subtitle1' className={classes.title}>
                 Most Sold
               </Typography>
-              {mostSold.map(product => (
+              {mostSold?.map(product => (
                 <ProductListCard key={product.sku} product={product} />
               ))}
             </div>
@@ -118,7 +128,7 @@ function PopularProductsSection() {
               <Typography variant='subtitle1' className={classes.title}>
                 Best Deals
               </Typography>
-              {bestDeals.map(product => (
+              {bestDeals?.map(product => (
                 <ProductListCard key={product.sku} product={product} />
               ))}
             </div>
@@ -131,15 +141,10 @@ function PopularProductsSection() {
 
 function ProductListCard({ product }) {
   const classes = useCardStyles();
-  const dispatch = useDispatch();
-
-  const handleCardClick = () => {
-    dispatch(productSlice.actions.setCurrentId(product.id));
-  };
 
   return (
     <Paper className={classes.card}>
-      <Link to={`/product/${product.id}/${product.slug}`} onClick={handleCardClick} className={classes.link}>
+      <Link to={`/product/${product.id}/${product.slug}`} className={classes.link}>
         <div className={classes.cardInner}>
           <img className={classes.cover} src={product.imageUrl} alt={product.name} />
           <div className={classes.content}>

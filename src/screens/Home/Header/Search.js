@@ -3,22 +3,21 @@ import React, { useState, useCallback } from 'react';
 import { CircularProgress, TextField } from '@material-ui/core';
 import { Autocomplete } from '@material-ui/lab';
 import { debounce } from 'lodash';
-import { useDispatch, useSelector } from 'react-redux';
 
-import productSlice, { productSearch, selectSearchResults } from '../../../store/product/productSlice';
-import { selectUIState } from '../../../store/ui';
+import { useSearchProducts } from '../../../hooks/queries/productQueries';
+import { formatPriceForDisplay } from '../../../utils/priceFormat';
 
 function Search() {
-  const dispatch = useDispatch();
-  const results = useSelector(selectSearchResults);
-  const [search, setSearch] = useState(null);
-  const { loading } = useSelector(selectUIState(productSearch));
+  const [searchTerm, setSearchTerm] = useState(null);
+  const [actualDebouncedSearchValue, setActualDebouncedSearchValue] = useState(null);
+  const { data: searchResults, isLoading, refetch, remove } = useSearchProducts(
+    { q: actualDebouncedSearchValue },
+    { enabled: false, retry: false }
+  );
 
-  const searchProducts = async searchValue => {
-    const params = new URLSearchParams({ q: searchValue });
-
+  const searchProducts = searchValue => {
     if (searchValue) {
-      await dispatch(productSearch(`${params}`));
+      setActualDebouncedSearchValue(searchValue);
     }
   };
 
@@ -26,15 +25,21 @@ function Search() {
   const debounceSearch = useCallback(debounce(searchProducts, 1000), []);
 
   const onChange = (e, value, reason) => {
-    setSearch(value);
+    setSearchTerm(value);
 
     if (reason === 'clear') {
-      dispatch(productSlice.actions.clearSearchResults());
+      remove();
     }
   };
 
+  React.useEffect(() => {
+    if (actualDebouncedSearchValue) {
+      refetch();
+    }
+  }, [actualDebouncedSearchValue, refetch]);
+
   const onInputChange = (e, value) => {
-    setSearch(value);
+    setSearchTerm(value);
     debounceSearch(value);
   };
 
@@ -44,20 +49,23 @@ function Search() {
   return (
     <Autocomplete
       freeSolo
-      value={search}
-      options={results}
-      loading={loading}
+      value={searchTerm}
+      options={searchResults ?? []}
+      loading={isLoading}
       onChange={onChange}
       getOptionLabel={getOptionLabel}
       getOptionSelected={getOptionSelected}
       renderOption={option => (
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%' }}>
           <img
             src={option?.imageUrl || ''}
             alt={option?.name || ''}
             style={{ width: 60, height: 60, objectFit: 'cover', marginRight: '1rem' }}
           />
           <span>{option?.name || ''}</span>
+          <span style={{ marginLeft: 'auto' }}>
+            {(option?.price && `$${formatPriceForDisplay(option.price)}`) || ''}
+          </span>
         </div>
       )}
       renderInput={params => (
@@ -75,7 +83,7 @@ function Search() {
             },
             endAdornment: (
               <>
-                {loading ? <CircularProgress color='inherit' size={20} /> : null}
+                {isLoading ? <CircularProgress color='inherit' size={20} /> : null}
                 {params.InputProps.endAdornment}
               </>
             ),

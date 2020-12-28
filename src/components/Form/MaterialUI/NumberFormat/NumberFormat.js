@@ -17,6 +17,7 @@ export default function FormNumberField({
   inputProps,
   isAllowed,
   defaultValue = '',
+  allowLeadingZeros,
   ...rest
 }) {
   const { control, errors, setValue, trigger } = useFormContext();
@@ -40,6 +41,7 @@ export default function FormNumberField({
             customInput={TextField}
             value={props.value}
             inputProps={inputProps}
+            allowLeadingZeros={allowLeadingZeros}
             onValueChange={target => {
               props.onChange();
               setValue(name, target.value);

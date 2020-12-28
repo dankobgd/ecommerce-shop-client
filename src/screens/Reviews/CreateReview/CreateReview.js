@@ -5,16 +5,14 @@ import { Avatar, CircularProgress, Container, Typography } from '@material-ui/co
 import RateReviewIcon from '@material-ui/icons/RateReview';
 import { makeStyles } from '@material-ui/styles';
 import { FormProvider, useForm } from 'react-hook-form';
-import { useMutation, useQueryCache } from 'react-query';
-import { useSelector } from 'react-redux';
 import * as Yup from 'yup';
 
-import api from '../../../api';
 import { FormTextField, FormSubmitButton, FormRadioGroup } from '../../../components/Form';
 import ErrorMessage from '../../../components/Message/ErrorMessage';
+import { ToastContext } from '../../../components/Toast/ToastContext';
+import { useCreateReview } from '../../../hooks/queries/reviewQueries';
+import { useUserFromCache } from '../../../hooks/queries/userQueries';
 import { useFormServerErrors } from '../../../hooks/useFormServerErrors';
-import { ToastContext } from '../../../store/toast/toast';
-import { selectUserProfile } from '../../../store/user/userSlice';
 
 const useStyles = makeStyles(theme => ({
   paper: {
@@ -57,37 +55,15 @@ const formOpts = {
 function CreateReviewForm() {
   const classes = useStyles();
   const toast = useContext(ToastContext);
-  const cache = useQueryCache();
 
   const methods = useForm(formOpts);
   const { handleSubmit, setError } = methods;
 
-  // @TODO remove this
-  const user = useSelector(selectUserProfile);
+  const user = useUserFromCache();
 
-  const [createReview, { isLoading, isError, error }] = useMutation(values => api.reviews.create(values), {
-    onMutate: formData => {
-      cache.cancelQueries('reviews');
-      const previousValue = cache.getQueryData('reviews');
-      cache.setQueryData('reviews', old => ({
-        ...old,
-        formData,
-      }));
-      return previousValue;
-    },
-    onSuccess: () => {
-      toast.success('Review created');
-    },
-    onError: (_, __, previousValue) => {
-      cache.setQueryData('reviews', previousValue);
-      toast.error('Form has errors, please check the details');
-    },
-    onSettled: () => {
-      cache.invalidateQueries('reviews');
-    },
-  });
+  const createReviewMutation = useCreateReview();
 
-  const onSubmit = async values => {
+  const onSubmit = values => {
     const obj = {
       ...values,
       rating: Number.parseInt(values.rating, 10),
@@ -95,14 +71,14 @@ function CreateReviewForm() {
       user_id: user.id,
     };
 
-    await createReview(obj);
+    createReviewMutation.mutate(obj);
   };
 
   const onError = () => {
     toast.error('Form has errors, please check the details');
   };
 
-  useFormServerErrors(error, setError);
+  useFormServerErrors(createReviewMutation?.error, setError);
 
   return (
     <Container component='main' maxWidth='xs'>
@@ -114,8 +90,8 @@ function CreateReviewForm() {
           Create Review
         </Typography>
 
-        {isLoading && <CircularProgress />}
-        {isError && <ErrorMessage message={error.message} />}
+        {createReviewMutation?.isLoading && <CircularProgress />}
+        {createReviewMutation?.isError && <ErrorMessage message={createReviewMutation?.error?.message} />}
 
         <FormProvider {...methods}>
           <form onSubmit={handleSubmit(onSubmit, onError)} noValidate>
@@ -135,7 +111,7 @@ function CreateReviewForm() {
             <FormTextField name='title' fullWidth />
             <FormTextField name='comment' multiline rowsMax={6} fullWidth />
 
-            <FormSubmitButton className={classes.submit} fullWidth loading={isLoading}>
+            <FormSubmitButton className={classes.submit} fullWidth loading={createReviewMutation?.isLoading}>
               Add Review
             </FormSubmitButton>
           </form>

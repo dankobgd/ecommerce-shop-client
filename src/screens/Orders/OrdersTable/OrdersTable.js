@@ -24,11 +24,17 @@ import { makeStyles } from '@material-ui/styles';
 import { Link } from '@reach/router';
 import clsx from 'clsx';
 import { nanoid } from 'nanoid';
-import { useDispatch, useSelector } from 'react-redux';
 
-import orderSlice, { orderGetAll, orderGetAllForUser, selectPaginationMeta } from '../../../store/order/orderSlice';
-import { selectUserProfile } from '../../../store/user/userSlice';
-import { calculatePaginationStartEndPosition } from '../../../utils/pagination';
+import { EditButton, PreviewButton } from '../../../components/TableComponents/TableButtons';
+import { useOrders } from '../../../hooks/queries/orderQueries';
+import { useUserFromCache } from '../../../hooks/queries/userQueries';
+import { diff } from '../../../utils/diff';
+import {
+  calculatePaginationStartEndPosition,
+  getPersistedPagination,
+  paginationRanges,
+  persistPagination,
+} from '../../../utils/pagination';
 import { formatPriceForDisplay } from '../../../utils/priceFormat';
 
 const useStyles = makeStyles(theme => ({
@@ -52,13 +58,13 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
-const OrdersTable = props => {
-  const { className, orders, ...rest } = props;
+const OrdersTable = ({ className, ...rest }) => {
   const classes = useStyles();
-  const dispatch = useDispatch();
-  const user = useSelector(selectUserProfile);
-  const paginationMeta = useSelector(selectPaginationMeta);
-  const [selectedOrders, setSelectedOrders] = useState([]);
+  const [pageMeta, setPageMeta] = useState(getPersistedPagination('orders'));
+  const { data: orders } = useOrders(pageMeta, { keepPreviousData: true });
+  const user = useUserFromCache();
+
+  const [selectedData, setSelectedData] = useState([]);
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const handleDialogOpen = () => {
@@ -70,56 +76,47 @@ const OrdersTable = props => {
   };
 
   const handleSelectAll = event => {
-    let selected;
-
-    if (event.target.checked) {
-      selected = orders.map(order => order.id);
-    } else {
-      selected = [];
-    }
-
-    setSelectedOrders(selected);
+    const selected = event.target.checked ? orders?.data?.map(x => x.id) : [];
+    setSelectedData(selected);
   };
 
   const handleSelectOne = (event, id) => {
-    const selectedIndex = selectedOrders.indexOf(id);
-    let newSelectedOrders = [];
+    const selectedIndex = selectedData.indexOf(id);
+    let newSelectedData = [];
 
     if (selectedIndex === -1) {
-      newSelectedOrders = newSelectedOrders.concat(selectedOrders, id);
+      newSelectedData = newSelectedData.concat(selectedData, id);
     } else if (selectedIndex === 0) {
-      newSelectedOrders = newSelectedOrders.concat(selectedOrders.slice(1));
-    } else if (selectedIndex === selectedOrders.length - 1) {
-      newSelectedOrders = newSelectedOrders.concat(selectedOrders.slice(0, -1));
+      newSelectedData = newSelectedData.concat(selectedData.slice(1));
+    } else if (selectedIndex === selectedData.length - 1) {
+      newSelectedData = newSelectedData.concat(selectedData.slice(0, -1));
     } else if (selectedIndex > 0) {
-      newSelectedOrders = newSelectedOrders.concat(
-        selectedOrders.slice(0, selectedIndex),
-        selectedOrders.slice(selectedIndex + 1)
+      newSelectedData = newSelectedData.concat(
+        selectedData.slice(0, selectedIndex),
+        selectedData.slice(selectedIndex + 1)
       );
     }
 
-    setSelectedOrders(newSelectedOrders);
+    setSelectedData(newSelectedData);
   };
 
   const handlePageChange = (e, page) => {
-    const params = new URLSearchParams({ per_page: paginationMeta.perPage, page: page + 1 });
-    if (user.role === 'admin') {
-      dispatch(orderGetAll(params));
-    } else {
-      dispatch(orderGetAllForUser({ id: user.id, params }));
+    const params = { page: page + 1, per_page: orders?.meta?.perPage };
+    if (Object.keys(diff(pageMeta, params).length > 0)) {
+      setPageMeta(meta => ({ ...meta, ...params }));
     }
   };
 
   const handleRowsPerPageChange = e => {
-    const params = new URLSearchParams({ per_page: e.target.value });
-    if (user.role === 'admin') {
-      dispatch(orderGetAll(params));
-    } else {
-      dispatch(orderGetAllForUser({ id: user.id, params }));
+    const params = { page: 1, per_page: e.target.value };
+    if (Object.keys(diff(pageMeta, params).length > 0)) {
+      setPageMeta(meta => ({ ...meta, ...params }));
     }
   };
 
-  const { start, end } = calculatePaginationStartEndPosition(paginationMeta?.page, paginationMeta?.perPage);
+  React.useEffect(() => {
+    persistPagination('orders', pageMeta);
+  }, [pageMeta]);
 
   return (
     <Card {...rest} className={clsx(classes.root, className)}>
@@ -130,9 +127,9 @@ const OrdersTable = props => {
               <TableRow>
                 <TableCell padding='checkbox'>
                   <Checkbox
-                    checked={selectedOrders.length === orders.length}
+                    checked={selectedData?.length === orders?.data?.length}
                     color='primary'
-                    indeterminate={selectedOrders.length > 0 && selectedOrders.length < orders.length}
+                    indeterminate={selectedData?.length > 0 && selectedData?.length < orders?.data?.length}
                     onChange={handleSelectAll}
                   />
                 </TableCell>
@@ -161,110 +158,64 @@ const OrdersTable = props => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {paginationMeta &&
-                orders.length > 0 &&
-                orders.slice(start, end).map(order => (
-                  <TableRow
-                    className={classes.tableRow}
-                    hover
-                    key={nanoid()}
-                    selected={selectedOrders.indexOf(order.id) !== -1}
-                  >
-                    <TableCell padding='checkbox'>
-                      <Checkbox
-                        checked={selectedOrders.indexOf(order.id) !== -1}
-                        color='primary'
-                        onChange={event => handleSelectOne(event, order.id)}
-                        value='true'
-                      />
-                    </TableCell>
-                    <TableCell>{order.id}</TableCell>
-                    <TableCell>{order.status}</TableCell>
-                    <TableCell>${formatPriceForDisplay(order.subtotal)}</TableCell>
-                    <TableCell>${formatPriceForDisplay(order.total)}</TableCell>
-                    <TableCell>{order.shippedAt}</TableCell>
-                    <TableCell>{order.billingAddressLine1}</TableCell>
-                    <TableCell>{order.billingAddressLine2}</TableCell>
-                    <TableCell>{order.billingAddressCity}</TableCell>
-                    <TableCell>{order.billingAddressCountry}</TableCell>
-                    <TableCell>{order.billingAddressState}</TableCell>
-                    <TableCell>{order.billingAddressZip}</TableCell>
-                    <TableCell>{order.billingAddressLatitude}</TableCell>
-                    <TableCell>{order.billingAddressLongitude}</TableCell>
-                    <TableCell>{order.shippingAddressLine1}</TableCell>
-                    <TableCell>{order.shippingAddressLine2}</TableCell>
-                    <TableCell>{order.shippingAddressCity}</TableCell>
-                    <TableCell>{order.shippingAddressCountry}</TableCell>
-                    <TableCell>{order.shippingAddressState}</TableCell>
-                    <TableCell>{order.shippingAddressZip}</TableCell>
-                    <TableCell>{order.shippingAddressLatitude}</TableCell>
-                    <TableCell>{order.shippingAddressLongitude}</TableCell>
-                    <TableCell>
-                      <Link to={`${order.id}/${order.slug}/edit`} style={{ textDecoration: 'none' }}>
-                        <Button
-                          variant='outlined'
-                          color='secondary'
-                          startIcon={<EditIcon />}
-                          onClick={() => dispatch(orderSlice.actions.setEditId(order.id))}
-                        >
-                          Edit
-                        </Button>
-                      </Link>
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        variant='outlined'
-                        color='secondary'
-                        startIcon={<DeleteIcon />}
-                        onClick={() => handleDialogOpen()}
-                      >
-                        Delete
-                      </Button>
-                      <Dialog
-                        open={dialogOpen}
-                        onClose={handleDialogClose}
-                        aria-labelledby='delete order dialog'
-                        aria-describedby='deletes the order'
-                      >
-                        <DialogTitle id='delete order dialog'>Delete Order?</DialogTitle>
-                        <DialogContent>
-                          <DialogContentText>
-                            Are you sure you want to delete the order <strong>{order.name}</strong> ?
-                          </DialogContentText>
-                        </DialogContent>
-                        <DialogActions>
-                          <Button onClick={handleDialogClose} color='primary'>
-                            Cancel
-                          </Button>
-                          <Button
-                            onClick={() => {
-                              handleDialogClose();
-                              dispatch(order(order.id));
-                            }}
-                            color='primary'
-                            autoFocus
-                          >
-                            Delete
-                          </Button>
-                        </DialogActions>
-                      </Dialog>
-                    </TableCell>
-                  </TableRow>
-                ))}
+              {orders?.data?.map(order => (
+                <TableRow
+                  className={classes.tableRow}
+                  hover
+                  key={nanoid()}
+                  selected={selectedData.indexOf(order.id) !== -1}
+                >
+                  <TableCell padding='checkbox'>
+                    <Checkbox
+                      checked={selectedData.indexOf(order.id) !== -1}
+                      color='primary'
+                      onChange={event => handleSelectOne(event, order.id)}
+                      value='true'
+                    />
+                  </TableCell>
+                  <TableCell>{order.id}</TableCell>
+                  <TableCell>{order.status}</TableCell>
+                  <TableCell>${formatPriceForDisplay(order.subtotal)}</TableCell>
+                  <TableCell>${formatPriceForDisplay(order.total)}</TableCell>
+                  <TableCell>{order.shippedAt}</TableCell>
+                  <TableCell>{order.billingAddressLine1}</TableCell>
+                  <TableCell>{order.billingAddressLine2}</TableCell>
+                  <TableCell>{order.billingAddressCity}</TableCell>
+                  <TableCell>{order.billingAddressCountry}</TableCell>
+                  <TableCell>{order.billingAddressState}</TableCell>
+                  <TableCell>{order.billingAddressZip}</TableCell>
+                  <TableCell>{order.billingAddressLatitude}</TableCell>
+                  <TableCell>{order.billingAddressLongitude}</TableCell>
+                  <TableCell>{order.shippingAddressLine1}</TableCell>
+                  <TableCell>{order.shippingAddressLine2}</TableCell>
+                  <TableCell>{order.shippingAddressCity}</TableCell>
+                  <TableCell>{order.shippingAddressCountry}</TableCell>
+                  <TableCell>{order.shippingAddressState}</TableCell>
+                  <TableCell>{order.shippingAddressZip}</TableCell>
+                  <TableCell>{order.shippingAddressLatitude}</TableCell>
+                  <TableCell>{order.shippingAddressLongitude}</TableCell>
+                  <TableCell>
+                    <PreviewButton to={`${order.id}/${order.slug}/preview`} />
+                  </TableCell>
+                  <TableCell>
+                    <EditButton to={`${order.id}/${order.slug}/edit`} />
+                  </TableCell>
+                </TableRow>
+              ))}
             </TableBody>
           </Table>
         </div>
       </CardContent>
       <CardActions className={classes.actions}>
-        {paginationMeta && (
+        {orders?.meta && (
           <TablePagination
             component='div'
-            count={paginationMeta.totalCount || -1}
+            count={orders?.meta?.totalCount || -1}
             onChangePage={handlePageChange}
             onChangeRowsPerPage={handleRowsPerPageChange}
-            page={paginationMeta.page - 1 || 0}
-            rowsPerPage={paginationMeta.perPage || 50}
-            rowsPerPageOptions={[10, 25, 50, 75, 120]}
+            page={pageMeta.page - 1}
+            rowsPerPage={pageMeta?.per_page}
+            rowsPerPageOptions={paginationRanges}
           />
         )}
       </CardActions>

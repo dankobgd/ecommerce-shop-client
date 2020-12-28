@@ -3,10 +3,10 @@ import React from 'react';
 import { AppBar, Toolbar, IconButton, MenuItem, Menu, Button } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { Link } from '@reach/router';
-import { useSelector, useDispatch } from 'react-redux';
 
 import AvatarFallback from '../../../components/AvatarFallback/AvatarFallback';
-import { selectIsUserAuthenticated, userLogout, selectUserProfile } from '../../../store/user/userSlice';
+import { useLogout, useUserFromCache } from '../../../hooks/queries/userQueries';
+import { useIsAuthenticated } from '../../../hooks/useIsAuthenticated';
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -35,12 +35,12 @@ const useStyles = makeStyles(theme => ({
 
 export default function MenuAppBar() {
   const classes = useStyles();
-  const dispatch = useDispatch();
   const [anchorEl, setAnchorEl] = React.useState(null);
   const open = Boolean(anchorEl);
 
-  const user = useSelector(selectUserProfile);
-  const isAuthenticated = useSelector(selectIsUserAuthenticated);
+  const user = useUserFromCache();
+  const isAuthenticated = useIsAuthenticated();
+  const logoutMutation = useLogout();
 
   const handleMenu = event => {
     setAnchorEl(event.currentTarget);
@@ -52,7 +52,7 @@ export default function MenuAppBar() {
 
   const handleLogout = () => {
     setAnchorEl(null);
-    dispatch(userLogout());
+    logoutMutation.mutate();
   };
 
   const avatarName = user ? `${user.firstName} ${user.lastName}` : '';

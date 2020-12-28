@@ -5,14 +5,13 @@ import { Avatar, CircularProgress, Container, Typography } from '@material-ui/co
 import ClassIcon from '@material-ui/icons/Class';
 import { makeStyles } from '@material-ui/styles';
 import { FormProvider, useForm } from 'react-hook-form';
-import { useMutation, useQuery, useQueryCache } from 'react-query';
 import * as Yup from 'yup';
 
-import api from '../../../api';
 import { FormTextField, FormSubmitButton } from '../../../components/Form';
 import ErrorMessage from '../../../components/Message/ErrorMessage';
+import { ToastContext } from '../../../components/Toast/ToastContext';
+import { useBrand, useUpdateBrand } from '../../../hooks/queries/brandQueries';
 import { useFormServerErrors } from '../../../hooks/useFormServerErrors';
-import { ToastContext } from '../../../store/toast/toast';
 import { diff } from '../../../utils/diff';
 import { rules } from '../../../utils/validation';
 import { BrandLogoUploadField } from './FileUploadInputs';
@@ -63,40 +62,17 @@ const formOpts = {
 
 function EditBrandForm({ brandId }) {
   const classes = useStyles();
-  const cache = useQueryCache();
   const toast = useContext(ToastContext);
   const [baseFormObj, setBaseFormObj] = React.useState({});
 
   const methods = useForm(formOpts);
   const { handleSubmit, setError, reset } = methods;
 
-  const { data: brand } = useQuery(['brands', brandId], () => api.brands.get(brandId), {
-    initialData: () => cache.getQueryData('brands')?.data?.find(x => x.id === brandId),
-  });
+  const { data: brand } = useBrand(brandId);
 
-  const [editBrand, { isLoading, isError, error }] = useMutation(
-    ({ id, formData }) => api.brands.update(id, formData),
-    {
-      onMutate: formData => {
-        cache.cancelQueries(['brands', brandId]);
-        const previousValue = cache.getQueryData(['brands', brandId]);
-        cache.setQueryData(['brands', brandId], formData);
-        return previousValue;
-      },
-      onSuccess: () => {
-        toast.success('Brand updated');
-      },
-      onError: (_, __, previousValue) => {
-        cache.setQueryData(['brands', brandId], previousValue);
-        toast.error('Form has errors, please check the details');
-      },
-      onSettled: () => {
-        cache.invalidateQueries(['brands', brandId]);
-      },
-    }
-  );
+  const editBrandMutation = useUpdateBrand(brandId);
 
-  const onSubmit = async values => {
+  const onSubmit = values => {
     const changes = diff(baseFormObj, values);
     const { logo, ...rest } = changes;
     const formData = new FormData();
@@ -111,9 +87,8 @@ function EditBrandForm({ brandId }) {
     if (Object.keys(changes).length === 0) {
       toast.info('No changes applied');
     }
-
     if (Object.keys(changes).length > 0) {
-      await editBrand({ id: brand.id, formData });
+      editBrandMutation.mutate({ id: brand.id, formData });
     }
   };
 
@@ -132,7 +107,7 @@ function EditBrandForm({ brandId }) {
     }
   }, [brand, reset]);
 
-  useFormServerErrors(error, setError);
+  useFormServerErrors(editBrandMutation?.error, setError);
 
   return (
     <Container component='main' maxWidth='xs'>
@@ -144,8 +119,8 @@ function EditBrandForm({ brandId }) {
           Edit Brand
         </Typography>
 
-        {isLoading && <CircularProgress />}
-        {isError && <ErrorMessage message={error.message} />}
+        {editBrandMutation?.isLoading && <CircularProgress />}
+        {editBrandMutation?.isError && <ErrorMessage message={editBrandMutation?.error?.message} />}
 
         <FormProvider {...methods}>
           <form onSubmit={handleSubmit(onSubmit, onError)} noValidate>
@@ -158,7 +133,7 @@ function EditBrandForm({ brandId }) {
             <FormTextField name='websiteUrl' fullWidth />
             <BrandLogoUploadField name='logo' />
 
-            <FormSubmitButton className={classes.submit} fullWidth loading={isLoading}>
+            <FormSubmitButton className={classes.submit} fullWidth loading={editBrandMutation?.isLoading}>
               Save Changes
             </FormSubmitButton>
           </form>

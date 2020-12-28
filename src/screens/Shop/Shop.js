@@ -1,16 +1,16 @@
-import React from 'react';
+import React, { useContext, useState } from 'react';
 
 import { Container, makeStyles } from '@material-ui/core';
-import { useDispatch, useSelector } from 'react-redux';
 
 import ScrollTopButton from '../../components/ScrollTop/ScrollTopButton';
-import { brandGetAll, selectAllBrands } from '../../store/brand/brandSlice';
-import { categoryGetAll, selectAllCategories } from '../../store/category/categorySlice';
-import { selectAllSearchProducts, selectHasSearched } from '../../store/search/searchSlice';
-import { tagGetAll, selectAllTags } from '../../store/tag/tagSlice';
+import { useBrands } from '../../hooks/queries/brandQueries';
+import { useCategories } from '../../hooks/queries/categoryQueries';
+import { useProducts } from '../../hooks/queries/productQueries';
+import { useTags } from '../../hooks/queries/tagQueries';
 import Header from '../Home/Header/Header';
 import Filter from './Filter/Filter';
 import ProductsGrid from './ProductsGrid/ProductsGrid';
+import { ShopContext } from './ShopContext';
 
 const useStyles = makeStyles(() => ({
   shop: {
@@ -24,34 +24,48 @@ const useStyles = makeStyles(() => ({
 
 function Shop() {
   const classes = useStyles();
-  const dispatch = useDispatch();
-  const brands = useSelector(selectAllBrands);
-  const tags = useSelector(selectAllTags);
-  const categories = useSelector(selectAllCategories);
-  const searchProducts = useSelector(selectAllSearchProducts);
-  const hasSearched = useSelector(selectHasSearched);
+  const { hasSearched, setHasSearched } = useContext(ShopContext);
+  const [filterQueryString, setFilterQueryString] = useState('');
+  const [shouldFetchAllByFilter, setShouldFetchAllByFilter] = useState(false);
+  const [shouldShowDefaultProducts, setShouldShowDefaultProducts] = useState(false);
+
+  const { data: brands } = useBrands();
+  const { data: tags } = useTags();
+  const { data: categories } = useCategories();
+  const { data: products, refetch } = useProducts(filterQueryString, { enabled: false });
 
   React.useEffect(() => {
-    if (categories.length === 0) {
-      dispatch(categoryGetAll());
+    if (
+      (shouldFetchAllByFilter && hasSearched && !!filterQueryString) ||
+      (shouldFetchAllByFilter && hasSearched && filterQueryString === '' && shouldShowDefaultProducts)
+    ) {
+      refetch();
     }
-    if (brands.length === 0) {
-      dispatch(brandGetAll());
-    }
-    if (tags.length === 0) {
-      dispatch(tagGetAll());
-    }
-  }, [brands.length, categories.length, dispatch, tags.length]);
+  }, [filterQueryString, hasSearched, refetch, shouldFetchAllByFilter, shouldShowDefaultProducts]);
 
   return (
     <div>
       <Header />
       <Container className={classes.shop}>
         <section className={classes.filter}>
-          <Filter tagsList={tags} brandsList={brands} categoriesList={categories} />
+          <Filter
+            tagsList={tags?.data ?? []}
+            brandsList={brands?.data ?? []}
+            categoriesList={categories?.data ?? []}
+            setFilterQueryString={setFilterQueryString}
+            setShouldFetchAllByFilter={setShouldFetchAllByFilter}
+          />
         </section>
         <section className={classes.main}>
-          <ProductsGrid products={searchProducts} hasSearched={hasSearched} />
+          <ProductsGrid
+            products={products?.data ?? []}
+            hasSearched={hasSearched}
+            setFilterQueryString={setFilterQueryString}
+            setShouldFetchAllByFilter={setShouldFetchAllByFilter}
+            setHasSearched={setHasSearched}
+            shouldShowDefaultProducts={shouldShowDefaultProducts}
+            setShouldShowDefaultProducts={setShouldShowDefaultProducts}
+          />
         </section>
       </Container>
 

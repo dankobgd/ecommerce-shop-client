@@ -1,11 +1,10 @@
-import React from 'react';
+import React, { useContext } from 'react';
 
 import { yupResolver } from '@hookform/resolvers';
 import { Avatar, CircularProgress, Container, Typography } from '@material-ui/core';
 import ShoppingBasketIcon from '@material-ui/icons/ShoppingBasket';
 import { makeStyles } from '@material-ui/styles';
 import { FormProvider, useForm } from 'react-hook-form';
-import { useDispatch, useSelector } from 'react-redux';
 import * as Yup from 'yup';
 
 import {
@@ -14,14 +13,15 @@ import {
   FormNumberField,
   FormSwitch,
   FormAutoComplete,
+  FormCheckbox,
 } from '../../../components/Form';
 import ErrorMessage from '../../../components/Message/ErrorMessage';
+import { ToastContext } from '../../../components/Toast/ToastContext';
+import { useBrands } from '../../../hooks/queries/brandQueries';
+import { useCategories } from '../../../hooks/queries/categoryQueries';
+import { useProduct, useUpdateProduct } from '../../../hooks/queries/productQueries';
 import { useFormServerErrors } from '../../../hooks/useFormServerErrors';
-import { selectAllBrands, brandGetAll } from '../../../store/brand/brandSlice';
-import { selectAllCategories, categoryGetAll } from '../../../store/category/categorySlice';
-import { productCreate, productUpdate, selectCurrentEditProduct } from '../../../store/product/productSlice';
-import { selectAllTags, tagGetAll, selectCurrentProductTags, tagGetAllForProduct } from '../../../store/tag/tagSlice';
-import { selectUIState } from '../../../store/ui';
+import { diff } from '../../../utils/diff';
 import { formatPriceForDisplay, priceToLowestCurrencyDenomination } from '../../../utils/priceFormat';
 import { rules } from '../../../utils/validation';
 
@@ -45,61 +45,135 @@ const useStyles = makeStyles(theme => ({
 }));
 
 const schema = Yup.object({
-  email: rules.email,
-  password: rules.password,
+  brandId: Yup.object()
+    .test('required', 'brand is a required field', value => !!value)
+    .nullable(),
+  categoryId: Yup.object()
+    .test('required', 'category is a required field', value => !!value)
+    .nullable(),
+  name: Yup.string().required(),
+  slug: Yup.string().required(),
+  description: Yup.string(),
+  price: Yup.string().required(),
+  inStock: Yup.boolean().required(),
+  isFeatured: Yup.boolean().required(),
+  image: rules.optionalImage,
+  // properties: rules.productProperties,
 });
 
-const formOpts = product => ({
+const formOpts = {
   mode: 'onChange',
   reValidateMode: 'onChange',
   defaultValues: {
-    // discountId: product?.discountId || null,
-    brandId: product?.brand || null,
-    categoryId: product?.category || null,
-    name: product?.name || '',
-    slug: product?.slug || '',
-    description: product?.description || '',
-    price: (product && formatPriceForDisplay(product.price)) || '',
-    inStock: product?.inStock || false,
-    isFeatured: product?.isFeatured || false,
-    tags: [],
+    brandId: null,
+    categoryId: null,
+    name: '',
+    slug: '',
+    description: '',
+    price: 50,
+    image: '',
+    inStock: false,
+    isFeatured: false,
   },
   resolver: yupResolver(schema),
-});
+};
 
-function EditProductForm() {
+const renderPropertyInputType = property => {
+  if (property.type === 'text') {
+    return (
+      <FormAutoComplete
+        key={property.name}
+        name={`properties.${property.name}`}
+        label={property.label}
+        options={property.choices}
+        getOptionLabel={option => (option.name ? option.name : option) || ''}
+        getOptionSelected={(option, value) => (option ? option.name === value.name : option === value || '')}
+        fullWidth
+      />
+    );
+  }
+  // @TODO: init default form property vals to fix uncontroll field err
+  if (property.type === 'bool') {
+    return <FormCheckbox key={property.name} name={`properties.${property.name}`} label={property.label} fullWidth />;
+  }
+  return null;
+};
+
+const ProductProperties = ({ chosenCategory, product }) => {
+  const cat = chosenCategory || product?.category;
+
+  const properties = cat?.properties
+    ? cat?.properties.filter(x => Boolean(x.filterable)).sort((a, b) => a.importance - b.importance)
+    : [];
+
+  return (
+    properties.length > 0 && (
+      <div style={{ marginTop: '1rem' }}>
+        <Typography variant='subtitle1'>Properties</Typography>
+        {properties.map(prop => renderPropertyInputType(prop))}
+      </div>
+    )
+  );
+};
+
+function EditProductForm({ productId }) {
   const classes = useStyles();
-  const dispatch = useDispatch();
-  const tagList = useSelector(selectAllTags);
-  const brandList = useSelector(selectAllBrands);
-  const categoryList = useSelector(selectAllCategories);
-  const product = useSelector(selectCurrentEditProduct);
-  const { loading, error } = useSelector(selectUIState(productCreate));
-  const tags = useSelector(selectCurrentProductTags);
+  const toast = useContext(ToastContext);
+  const [baseFormObj, setBaseFormObj] = React.useState({});
 
-  const methods = useForm(formOpts(product));
-  const { handleSubmit, setError } = methods;
+  const methods = useForm(formOpts);
+  const { handleSubmit, setError, reset, watch } = methods;
 
-  React.useEffect(() => {
-    dispatch(tagGetAllForProduct(product.id));
-    dispatch(brandGetAll());
-    dispatch(categoryGetAll());
-    dispatch(tagGetAll());
-  }, [dispatch, product.id]);
+  const { data: product } = useProduct(productId);
+  const { data: brandsList } = useBrands();
+  const { data: categoriesList } = useCategories();
 
-  React.useEffect(() => {
-    methods.setValue('tags', tags);
-  }, [methods, tags]);
+  const editProductMutation = useUpdateProduct();
 
-  const onSubmit = async data => {
-    data.price = priceToLowestCurrencyDenomination(data.price);
-    dispatch(productUpdate({ id: product.id, details: data }));
+  const onSubmit = values => {
+    const changes = diff(baseFormObj, values);
+    const { image, ...rest } = changes;
+    const formData = new FormData();
+
+    rest.price = priceToLowestCurrencyDenomination(rest.price);
+
+    if (image) {
+      formData.append('image', image);
+    }
+    Object.keys(rest).forEach(name => {
+      formData.append(name, rest[name]);
+    });
+
+    if (Object.keys(changes).length === 0) {
+      toast.info('No changes applied');
+    }
+    if (Object.keys(changes).length > 0) {
+      editProductMutation.mutate(product.id, formData);
+    }
   };
 
-  useFormServerErrors(error, setError);
+  const onError = () => {
+    toast.error('Form has errors, please check the details');
+  };
+
+  React.useEffect(() => {
+    if (product) {
+      // eslint-disable-next-line no-unused-vars
+      const { image, ...rest } = product;
+      const obj = { ...rest, image: '', price: 50 };
+
+      setBaseFormObj(obj);
+      reset(obj);
+    }
+  }, [product, reset]);
+
+  useFormServerErrors(editProductMutation?.error, setError);
+
+  const chosenCategory = watch('categoryId');
 
   return (
     <Container component='main' maxWidth='xs'>
+      <pre>watch: {JSON.stringify(methods.watch(), null, 2)}</pre>
       <div className={classes.paper}>
         <Avatar className={classes.avatar}>
           <ShoppingBasketIcon />
@@ -108,22 +182,22 @@ function EditProductForm() {
           Edit Product
         </Typography>
 
-        {loading && <CircularProgress />}
-        {error && <ErrorMessage message={error.message} />}
+        {editProductMutation?.isLoading && <CircularProgress />}
+        {editProductMutation?.isError && <ErrorMessage message={editProductMutation?.error?.message} />}
 
         <FormProvider {...methods}>
-          <form onSubmit={handleSubmit(onSubmit)} noValidate>
-            <BrandDropdown fullWidth options={brandList} />
-            <CategoryDropdown fullWidth options={categoryList} />
+          <form onSubmit={handleSubmit(onSubmit, onError)} noValidate>
+            <BrandDropdown fullWidth options={brandsList?.data ?? []} defaultValue={product?.brand || ''} />
+            <CategoryDropdown fullWidth options={categoriesList?.data ?? []} defaultValue={product?.category || ''} />
             <FormTextField name='name' fullWidth />
             <FormTextField name='slug' fullWidth />
             <FormTextField name='description' fullWidth />
             <FormNumberField name='price' fullWidth prefix='$' />
             <FormSwitch name='inStock' />
             <FormSwitch name='isFeatured' />
-            <TagsDropdown fullWidth options={tagList} />
+            <ProductProperties chosenCategory={chosenCategory} product={product} />
 
-            <FormSubmitButton className={classes.submit} fullWidth>
+            <FormSubmitButton className={classes.submit} fullWidth loading={editProductMutation?.isLoading}>
               Save Changes
             </FormSubmitButton>
           </form>
@@ -133,51 +207,40 @@ function EditProductForm() {
   );
 }
 
-const BrandDropdown = ({ options, ...rest }) => {
-  const getOptionLabel = option => option.name || '';
-  const getOptionSelected = (option, value) => option.id === value.id;
+const getOptionLabel = option => option.name || '';
+const getOptionSelected = (option, value) => option.id === value.id;
 
-  return (
-    <FormAutoComplete
-      {...rest}
-      name='brandId'
-      label='Brand'
-      options={options}
-      getOptionLabel={getOptionLabel}
-      getOptionSelected={getOptionSelected}
-    />
-  );
-};
+const BrandDropdown = ({ options, ...rest }) => (
+  <FormAutoComplete
+    {...rest}
+    name='brandId'
+    label='Brand'
+    options={options}
+    getOptionLabel={getOptionLabel}
+    getOptionSelected={getOptionSelected}
+  />
+);
 
-const CategoryDropdown = ({ options, ...rest }) => {
-  const getOptionLabel = option => option.name || '';
-  const getOptionSelected = (option, value) => option.id === value.id;
+const CategoryDropdown = ({ options, ...rest }) => (
+  <FormAutoComplete
+    {...rest}
+    name='categoryId'
+    label='Category'
+    options={options}
+    getOptionLabel={getOptionLabel}
+    getOptionSelected={getOptionSelected}
+  />
+);
 
-  return (
-    <FormAutoComplete
-      {...rest}
-      name='categoryId'
-      label='Category'
-      options={options}
-      getOptionLabel={getOptionLabel}
-      getOptionSelected={getOptionSelected}
-    />
-  );
-};
-const TagsDropdown = ({ options, ...rest }) => {
-  const getOptionLabel = option => option.name || '';
-  const getOptionSelected = (option, value) => option.id === value.id;
-
-  return (
-    <FormAutoComplete
-      {...rest}
-      multiple
-      name='tags'
-      options={options}
-      getOptionLabel={getOptionLabel}
-      getOptionSelected={getOptionSelected}
-    />
-  );
-};
+const TagsDropdown = ({ options, ...rest }) => (
+  <FormAutoComplete
+    {...rest}
+    multiple
+    name='tags'
+    options={options}
+    getOptionLabel={getOptionLabel}
+    getOptionSelected={getOptionSelected}
+  />
+);
 
 export default EditProductForm;

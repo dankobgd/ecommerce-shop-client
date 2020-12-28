@@ -2,9 +2,8 @@ import React from 'react';
 
 import { Card, CardContent, Container, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/styles';
-import { useQuery, useQueryCache } from 'react-query';
 
-import api from '../../../api';
+import { useTag } from '../../../hooks/queries/tagQueries';
 import PreviewToolbar from '../TagsToolbar/PreviewToolbar';
 
 const useStyles = makeStyles({
@@ -16,11 +15,8 @@ const useStyles = makeStyles({
 
 function PreviewTag({ tagId }) {
   const classes = useStyles();
-  const cache = useQueryCache();
 
-  const { data: tag } = useQuery(['tags', tagId], () => api.tags.get(tagId), {
-    initialData: () => cache.getQueryData('tags')?.data?.find(x => x.id === tagId),
-  });
+  const { data: tag } = useTag(tagId);
 
   return (
     <>

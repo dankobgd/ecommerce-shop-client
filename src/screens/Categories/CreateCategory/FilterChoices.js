@@ -1,13 +1,13 @@
 import React from 'react';
 
-import { Button, IconButton, makeStyles, Tooltip, Typography } from '@material-ui/core';
+import { Button, IconButton, makeStyles, Typography } from '@material-ui/core';
 import AddIcon from '@material-ui/icons/Add';
 import DeleteIcon from '@material-ui/icons/Delete';
-import { withStyles } from '@material-ui/styles';
 import _ from 'lodash';
 import { nanoid } from 'nanoid';
 import { useFieldArray, useWatch } from 'react-hook-form';
 
+import CustomTooltip from '../../../components/CustomTooltip/CustomTooltip';
 import { FormTextField } from '../../../components/Form';
 
 const useStyles = makeStyles(() => ({
@@ -89,15 +89,5 @@ function FilterChoices({ control, nestedIndex, errors, getValues }) {
     </>
   );
 }
-
-const CustomTooltip = withStyles(theme => ({
-  tooltip: {
-    backgroundColor: '#f5f5f9',
-    color: 'rgba(0, 0, 0, 0.87)',
-    maxWidth: 350,
-    fontSize: theme.typography.pxToRem(16),
-    border: '1px solid #dadde9',
-  },
-}))(Tooltip);
 
 export default FilterChoices;

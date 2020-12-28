@@ -1,10 +1,9 @@
 import React from 'react';
 
 import { Redirect } from '@reach/router';
-import { useSelector } from 'react-redux';
 
-import { selectUIState } from '../../store/ui';
-import { selectUserProfile, getCurrentUser, selectIsUserAuthenticated } from '../../store/user/userSlice';
+import { useMe } from '../../hooks/queries/userQueries';
+import { useIsAuthenticated } from '../../hooks/useIsAuthenticated';
 
 const Loading = () => <div>Loading...</div>;
 
@@ -19,13 +18,12 @@ function AuthRoute(props) {
     ...rest
   } = props;
 
-  const user = useSelector(selectUserProfile);
-  const isAuthenticated = useSelector(selectIsUserAuthenticated);
-  const { loading } = useSelector(selectUIState(getCurrentUser));
+  const { data: user, isLoading } = useMe();
+  const isAuthenticated = useIsAuthenticated();
 
   const renderPrivateRoute = () => {
     if (access === 'private') {
-      if (loading) return <Loading />;
+      if (isLoading) return <Loading />;
 
       if (isAuthenticated) {
         if (user && !allowed.includes(user.role)) {
@@ -46,7 +44,7 @@ function AuthRoute(props) {
 
   const renderGuestRoute = () => {
     if (access === 'guest') {
-      if (loading) return <Loading />;
+      if (isLoading) return <Loading />;
 
       if (isAuthenticated) {
         return <Redirect to={redirectUrl} noThrow />;
@@ -65,7 +63,7 @@ function AuthRoute(props) {
 
   const renderPublicRoute = () => {
     if (access === 'public') {
-      if (loading) return <Loading />;
+      if (isLoading) return <Loading />;
 
       if (Layout) {
         return (

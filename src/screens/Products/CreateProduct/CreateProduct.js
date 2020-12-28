@@ -5,10 +5,8 @@ import { Avatar, CircularProgress, Container, Typography } from '@material-ui/co
 import ShoppingBasketIcon from '@material-ui/icons/ShoppingBasket';
 import { makeStyles } from '@material-ui/styles';
 import { FormProvider, useForm } from 'react-hook-form';
-import { useMutation, useQuery, useQueryCache } from 'react-query';
 import * as Yup from 'yup';
 
-import api from '../../../api';
 import {
   FormTextField,
   FormSwitch,
@@ -18,8 +16,12 @@ import {
   FormCheckbox,
 } from '../../../components/Form';
 import ErrorMessage from '../../../components/Message/ErrorMessage';
+import { ToastContext } from '../../../components/Toast/ToastContext';
+import { useBrands } from '../../../hooks/queries/brandQueries';
+import { useCategories } from '../../../hooks/queries/categoryQueries';
+import { useCreateProduct } from '../../../hooks/queries/productQueries';
+import { useTags } from '../../../hooks/queries/tagQueries';
 import { useFormServerErrors } from '../../../hooks/useFormServerErrors';
-import { ToastContext } from '../../../store/toast/toast';
 import { priceToLowestCurrencyDenomination } from '../../../utils/priceFormat';
 import { transformKeysToSnakeCase } from '../../../utils/transformObjectKeys';
 import { rules } from '../../../utils/validation';
@@ -58,6 +60,7 @@ const schema = Yup.object({
   inStock: Yup.boolean().required(),
   isFeatured: Yup.boolean().required(),
   image: rules.requiredImage,
+  // properties: rules.productProperties,
 });
 
 const formOpts = {
@@ -69,13 +72,16 @@ const formOpts = {
     name: '',
     slug: '',
     description: '',
-    price: '',
+    // price: '',
     inStock: true,
     isFeatured: false,
     image: '',
     properties: null,
     tags: [],
     images: [],
+    Pricing: {
+      price: '',
+    },
   },
   resolver: yupResolver(schema),
 };
@@ -119,46 +125,19 @@ const CategoryProperties = ({ chosenCategory }) => {
 function CreateProductForm() {
   const classes = useStyles();
   const toast = useContext(ToastContext);
-  const cache = useQueryCache();
 
   const methods = useForm(formOpts);
   const { handleSubmit, setError, watch } = methods;
 
-  const { data: brandsList } = useQuery('brands', () => api.brands.getAll(), {
-    initialData: () => cache.getQueryData(['brands']),
-  });
-  const { data: tagsList } = useQuery('tags', () => api.tags.getAll(), {
-    initialData: () => cache.getQueryData(['tags']),
-  });
-  const { data: categoriesList } = useQuery('categories', () => api.categories.getAll(), {
-    initialData: () => cache.getQueryData(['categories']),
-  });
+  const { data: brandsList } = useBrands();
+  const { data: tagsList } = useTags();
+  const { data: categoriesList } = useCategories();
 
-  const [createProduct, { isLoading, isError, error }] = useMutation(formData => api.products.create(formData), {
-    onMutate: formData => {
-      cache.cancelQueries('products');
-      const previousValue = cache.getQueryData('products');
-      cache.setQueryData('products', old => ({
-        ...old,
-        formData,
-      }));
-      return previousValue;
-    },
-    onSuccess: () => {
-      toast.success('Product created');
-    },
-    onError: (_, __, previousValue) => {
-      cache.setQueryData('products', previousValue);
-      toast.error('Form has errors, please check the details');
-    },
-    onSettled: () => {
-      cache.invalidateQueries('products');
-    },
-  });
+  const createProductMutation = useCreateProduct();
 
   const chosenCategory = watch('categoryId');
 
-  const onSubmit = async values => {
+  const onSubmit = values => {
     const { brandId, categoryId, tags, image, images, properties, price, ...rest } = values;
     const formData = new FormData();
 
@@ -181,14 +160,14 @@ function CreateProductForm() {
       formData.append('properties', JSON.stringify(transformKeysToSnakeCase(properties)));
     }
 
-    await createProduct(formData);
+    createProductMutation.mutate(formData);
   };
 
   const onError = () => {
     toast.error('Form has errors, please check the details');
   };
 
-  useFormServerErrors(error, setError);
+  useFormServerErrors(createProductMutation?.error, setError);
 
   return (
     <Container component='main' maxWidth='xs'>
@@ -200,8 +179,8 @@ function CreateProductForm() {
           Create Product
         </Typography>
 
-        {isLoading && <CircularProgress />}
-        {isError && <ErrorMessage message={error.message} />}
+        {createProductMutation?.isLoading && <CircularProgress />}
+        {createProductMutation?.isError && <ErrorMessage message={createProductMutation?.error?.message} />}
 
         <FormProvider {...methods}>
           <form onSubmit={handleSubmit(onSubmit, onError)} noValidate>
@@ -216,10 +195,9 @@ function CreateProductForm() {
             <ProductThumbnailUploadField name='image' />
             <TagsDropdown fullWidth options={tagsList?.data || []} />
             <ProductImagesDropzoneField name='images' />
-
             <CategoryProperties chosenCategory={chosenCategory} />
 
-            <FormSubmitButton className={classes.submit} fullWidth loading={isLoading}>
+            <FormSubmitButton className={classes.submit} fullWidth loading={createProductMutation?.isLoading}>
               Add product
             </FormSubmitButton>
           </form>

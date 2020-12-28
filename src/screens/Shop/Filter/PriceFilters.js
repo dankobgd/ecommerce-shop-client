@@ -1,11 +1,10 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useContext } from 'react';
 
 import { makeStyles, Paper, Typography, TextField } from '@material-ui/core';
 import _ from 'lodash';
 import NumberFormat from 'react-number-format';
-import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 
-import searchSlice, { selectPriceValues } from '../../../store/search/searchSlice';
+import { ShopContext } from '../ShopContext';
 
 const CustomInput = props => <TextField {...props} size='small' variant='outlined' />;
 
@@ -53,14 +52,14 @@ const useStyles = makeStyles(() => ({
 
 function PriceFilters() {
   const classes = useStyles();
-  const dispatch = useDispatch();
-  const priceValues = useSelector(selectPriceValues, shallowEqual);
+  const { priceValues, setPriceMinFilter, setPriceMaxFilter, setPriceValues } = useContext(ShopContext);
 
   const updatePriceMinFilter = value => {
-    dispatch(searchSlice.actions.setPriceMinFilter(value));
+    setPriceMinFilter(value);
   };
+
   const updatePriceMaxFilter = value => {
-    dispatch(searchSlice.actions.setPriceMaxFilter(value));
+    setPriceMaxFilter(value);
   };
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -71,13 +70,14 @@ function PriceFilters() {
   const onPriceMinValueChange = values => {
     debouncePriceMinFilter(values.value);
   };
+
   const onPriceMaxValueChange = values => {
     debouncePriceMaxFilter(values.value);
   };
 
   const onPriceChange = event => {
     const { name, value } = event.target;
-    dispatch(searchSlice.actions.setPriceValues({ name, value }));
+    setPriceValues({ name, value });
   };
 
   return (

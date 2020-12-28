@@ -2,9 +2,8 @@ import React from 'react';
 
 import { Box, Card, CardContent, Container, Tab, Tabs, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/styles';
-import { useQuery, useQueryCache } from 'react-query';
 
-import api from '../../../api';
+import { useProduct, useProductImages, useProductReviews, useProductTags } from '../../../hooks/queries/productQueries';
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -25,25 +24,16 @@ const a11yProps = index => ({
 
 function PreviewProduct({ productId }) {
   const classes = useStyles();
-  const cache = useQueryCache();
 
   const [value, setValue] = React.useState(0);
   const handleChange = (event, newValue) => {
     setValue(newValue);
   };
 
-  const { data: product } = useQuery(['products', productId], () => api.products.get(productId), {
-    initialData: () => cache.getQueryData('products')?.data?.find(x => x.id === productId),
-  });
-  const { data: tags } = useQuery(['products', productId, 'tags'], () => api.products.getTags(productId), {
-    initialData: () => cache.getQueryData(['products', productId, 'tags']),
-  });
-  const { data: images } = useQuery(['products', productId, 'images'], () => api.products.getImages(productId), {
-    initialData: () => cache.getQueryData(['products', productId, 'images']),
-  });
-  const { data: reviews } = useQuery(['products', productId, 'reviews'], () => api.products.getReviews(productId), {
-    initialData: () => cache.getQueryData(['products', productId, 'reviews']),
-  });
+  const { data: product } = useProduct(productId);
+  const { data: productTags } = useProductTags(productId);
+  const { data: productImages } = useProductImages(productId);
+  const { data: productReviews } = useProductReviews(productId);
 
   const { category, brand, ...productData } = product ?? {};
 
@@ -77,13 +67,13 @@ function PreviewProduct({ productId }) {
               <pre>{JSON.stringify(brand, null, 2)}</pre>
             </TabPanel>
             <TabPanel value={value} index={3}>
-              <pre>{JSON.stringify(tags, null, 2)}</pre>
+              <pre>{JSON.stringify(productTags, null, 2)}</pre>
             </TabPanel>
             <TabPanel value={value} index={4}>
-              <pre>{JSON.stringify(images, null, 2)}</pre>
+              <pre>{JSON.stringify(productImages, null, 2)}</pre>
             </TabPanel>
             <TabPanel value={value} index={5}>
-              <pre>{JSON.stringify(reviews, null, 2)}</pre>
+              <pre>{JSON.stringify(productReviews, null, 2)}</pre>
             </TabPanel>
           </CardContent>
         </div>

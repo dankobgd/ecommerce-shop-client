@@ -5,10 +5,8 @@ import { Avatar, CircularProgress, Container, Typography } from '@material-ui/co
 import LoyaltyIcon from '@material-ui/icons/Loyalty';
 import { makeStyles } from '@material-ui/styles';
 import { FormProvider, useForm } from 'react-hook-form';
-import { useMutation, useQuery, useQueryCache } from 'react-query';
 import * as Yup from 'yup';
 
-import api from '../../../api';
 import {
   FormTextField,
   FormSubmitButton,
@@ -17,8 +15,9 @@ import {
   FormNumberField,
 } from '../../../components/Form';
 import ErrorMessage from '../../../components/Message/ErrorMessage';
+import { ToastContext } from '../../../components/Toast/ToastContext';
+import { usePromotion, useUpdatePromotion } from '../../../hooks/queries/promotionQueries';
 import { useFormServerErrors } from '../../../hooks/useFormServerErrors';
-import { ToastContext } from '../../../store/toast/toast';
 import { diff } from '../../../utils/diff';
 import { transformValuesToNumbers } from '../../../utils/transformObjectKeys';
 import { rules } from '../../../utils/validation';
@@ -67,40 +66,17 @@ const formOpts = {
 
 function EditPromotionForm({ promoCode }) {
   const classes = useStyles();
-  const cache = useQueryCache();
   const toast = useContext(ToastContext);
   const [baseFormObj, setBaseFormObj] = React.useState({});
 
   const methods = useForm(formOpts);
   const { handleSubmit, setError, reset, watch } = methods;
 
-  const { data: promotion } = useQuery(['promotions', promoCode], () => api.promotions.get(promoCode), {
-    initialData: () => cache.getQueryData('promotions')?.data?.find(x => x.promoCode === promoCode),
-  });
+  const { data: promotion } = usePromotion(promoCode);
 
-  const [editPromotion, { isLoading, isError, error }] = useMutation(
-    ({ values }) => api.promotions.update(promoCode, values),
-    {
-      onMutate: values => {
-        cache.cancelQueries(['promotions', promoCode]);
-        const previousValue = cache.getQueryData(['promotions', promoCode]);
-        cache.setQueryData(['promotions', promoCode], values);
-        return previousValue;
-      },
-      onSuccess: () => {
-        toast.success('Promo Code updated');
-      },
-      onError: (_, __, previousValue) => {
-        cache.setQueryData(['promotions', promoCode], previousValue);
-        toast.error('Form has errors, please check the details');
-      },
-      onSettled: () => {
-        cache.invalidateQueries(['promotions', promoCode]);
-      },
-    }
-  );
+  const editPromotionMutation = useUpdatePromotion(promoCode);
 
-  const onSubmit = async values => {
+  const onSubmit = values => {
     // because date is in different format so it looks like form has changed fields
     // so i convert all to iso string see if it has changed...
     const base = {
@@ -120,9 +96,8 @@ function EditPromotionForm({ promoCode }) {
     if (Object.keys(changes).length === 0) {
       toast.info('No changes applied');
     }
-
     if (Object.keys(changes).length > 0) {
-      await editPromotion({ code: promotion.promoCode, values: transformed });
+      editPromotionMutation.mutate({ code: promotion.promoCode, values: transformed });
     }
   };
 
@@ -141,7 +116,7 @@ function EditPromotionForm({ promoCode }) {
     }
   }, [promotion, reset]);
 
-  useFormServerErrors(error, setError);
+  useFormServerErrors(editPromotionMutation?.error, setError);
 
   const isAllowedAmountValue = (values, type) => {
     const val = !type || type === 'fixed' ? 9999 : 100;
@@ -158,8 +133,8 @@ function EditPromotionForm({ promoCode }) {
           Edit Promotion
         </Typography>
 
-        {isLoading && <CircularProgress />}
-        {isError && <ErrorMessage message={error.message} />}
+        {editPromotionMutation?.isLoading && <CircularProgress />}
+        {editPromotionMutation?.isError && <ErrorMessage message={editPromotionMutation?.error?.message} />}
 
         <FormProvider {...methods}>
           <form onSubmit={handleSubmit(onSubmit, onError)} noValidate>
@@ -181,7 +156,7 @@ function EditPromotionForm({ promoCode }) {
             <FormDateTimePicker name='startsAt' fullWidth minutesStep={1} disablePast />
             <FormDateTimePicker name='endsAt' fullWidth minutesStep={1} disablePast />
 
-            <FormSubmitButton className={classes.submit} fullWidth loading={isLoading}>
+            <FormSubmitButton className={classes.submit} fullWidth loading={editPromotionMutation?.isLoading}>
               Save Changes
             </FormSubmitButton>
           </form>

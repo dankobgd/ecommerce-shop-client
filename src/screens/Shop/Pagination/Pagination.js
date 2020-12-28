@@ -2,9 +2,6 @@ import React from 'react';
 
 import { makeStyles } from '@material-ui/core';
 import { Pagination } from '@material-ui/lab';
-import { useDispatch } from 'react-redux';
-
-import { productGetFeatured } from '../../../store/product/productSlice';
 
 const useStyles = makeStyles(() => ({
   paginationOuter: {
@@ -23,8 +20,7 @@ const useStyles = makeStyles(() => ({
 
 function PaginationRanges({ page = 1, perPage = 50, pageCount = 1 }) {
   const classes = useStyles();
-  const dispatch = useDispatch();
-  const perPageSizes = [10, 25, 50, 75, 120];
+  const perPageSizes = [10, 25, 50, 100];
 
   const [pageData, setPageData] = React.useState({
     numPage: page,
@@ -43,13 +39,13 @@ function PaginationRanges({ page = 1, perPage = 50, pageCount = 1 }) {
   const handlePageChange = (e, value) => {
     setPageData(s => ({ ...s, numPerPage: perPage, numPage: value }));
     const params = new URLSearchParams({ per_page: perPage, page: value });
-    dispatch(productGetFeatured(`${params}`));
+    // dispatch(productGetFeatured(`${params}`));
   };
 
   const handleRowsPerPageChange = e => {
     setPageData(s => ({ ...s, numPerPage: e.target.value, numPage: 1 }));
     const params = new URLSearchParams({ per_page: e.target.value });
-    dispatch(productGetFeatured(`${params}`));
+    // dispatch(productGetFeatured(`${params}`));
   };
 
   return (

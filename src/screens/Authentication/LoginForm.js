@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useContext } from 'react';
 
 import { yupResolver } from '@hookform/resolvers';
 import { Avatar, CircularProgress, Container, Grid, Typography } from '@material-ui/core';
@@ -6,14 +6,13 @@ import { LockOutlined } from '@material-ui/icons';
 import { makeStyles } from '@material-ui/styles';
 import { Link } from '@reach/router';
 import { FormProvider, useForm } from 'react-hook-form';
-import { useDispatch, useSelector } from 'react-redux';
 import * as Yup from 'yup';
 
 import { FormTextField, FormSubmitButton } from '../../components/Form';
 import ErrorMessage from '../../components/Message/ErrorMessage';
+import { ToastContext } from '../../components/Toast/ToastContext';
+import { useLogin } from '../../hooks/queries/userQueries';
 import { useFormServerErrors } from '../../hooks/useFormServerErrors';
-import { selectUIState } from '../../store/ui';
-import { userLogin } from '../../store/user/userSlice';
 import { rules } from '../../utils/validation';
 
 const useStyles = makeStyles(theme => ({
@@ -52,16 +51,22 @@ const formOpts = {
 
 function LoginForm() {
   const classes = useStyles();
-  const dispatch = useDispatch();
+  const toast = useContext(ToastContext);
+
   const methods = useForm(formOpts);
   const { handleSubmit, setError } = methods;
-  const { loading, error } = useSelector(selectUIState(userLogin));
 
-  const onSubmit = async data => {
-    await dispatch(userLogin(data));
+  const loginMutation = useLogin();
+
+  const onSubmit = values => {
+    loginMutation.mutate(values);
   };
 
-  useFormServerErrors(error, setError);
+  const onError = () => {
+    toast.error('Form has errors, please check the details');
+  };
+
+  useFormServerErrors(loginMutation?.error, setError);
 
   return (
     <Container component='main' maxWidth='xs'>
@@ -73,14 +78,14 @@ function LoginForm() {
           Login
         </Typography>
 
-        {loading && <CircularProgress />}
-        {error && <ErrorMessage message={error.message} />}
+        {loginMutation?.isLoading && <CircularProgress />}
+        {loginMutation?.isError && <ErrorMessage message={loginMutation?.error?.message} />}
 
         <FormProvider {...methods}>
-          <form onSubmit={handleSubmit(onSubmit)} noValidate>
+          <form onSubmit={handleSubmit(onSubmit, onError)} noValidate>
             <FormTextField name='email' type='email' fullWidth />
             <FormTextField name='password' type='password' fullWidth />
-            <FormSubmitButton className={classes.submit} fullWidth>
+            <FormSubmitButton className={classes.submit} fullWidth loading={loginMutation?.isLoading}>
               Login
             </FormSubmitButton>
 

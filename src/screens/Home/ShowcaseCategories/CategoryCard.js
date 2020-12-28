@@ -1,10 +1,9 @@
-import React from 'react';
+import React, { useContext } from 'react';
 
 import { makeStyles } from '@material-ui/core';
 import { Link } from '@reach/router';
-import { useDispatch } from 'react-redux';
 
-import searchSlice from '../../../store/search/searchSlice';
+import { ShopContext } from '../../Shop/ShopContext';
 
 const useStyles = makeStyles(() => ({
   figure: {
@@ -85,10 +84,10 @@ const useStyles = makeStyles(() => ({
 
 function CategoryCard({ category }) {
   const classes = useStyles();
-  const dispatch = useDispatch();
+  const { clickMainFilterChoice } = useContext(ShopContext);
 
   const handleCategoryChoice = () => {
-    dispatch(searchSlice.actions.filterChoiceClicked({ name: 'categories', value: category.name }));
+    clickMainFilterChoice({ name: 'categories', value: category.name });
   };
 
   return (

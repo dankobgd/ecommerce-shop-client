@@ -1,7 +1,7 @@
 import React, { useContext } from 'react';
 
-import { ToastContext } from '../../store/toast/toast';
 import Toast from './Toast';
+import { ToastContext } from './ToastContext';
 
 function ToastList() {
   const toastCtx = useContext(ToastContext);

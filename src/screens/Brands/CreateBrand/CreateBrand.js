@@ -5,14 +5,13 @@ import { Avatar, CircularProgress, Container, Typography } from '@material-ui/co
 import ClassIcon from '@material-ui/icons/Class';
 import { makeStyles } from '@material-ui/styles';
 import { FormProvider, useForm } from 'react-hook-form';
-import { useMutation, useQueryCache } from 'react-query';
 import * as Yup from 'yup';
 
-import api from '../../../api';
 import { FormTextField, FormSubmitButton } from '../../../components/Form';
 import ErrorMessage from '../../../components/Message/ErrorMessage';
+import { ToastContext } from '../../../components/Toast/ToastContext';
+import { useCreateBrand } from '../../../hooks/queries/brandQueries';
 import { useFormServerErrors } from '../../../hooks/useFormServerErrors';
-import { ToastContext } from '../../../store/toast/toast';
 import { rules } from '../../../utils/validation';
 import { BrandLogoUploadField } from './FileUploadInputs';
 
@@ -63,34 +62,13 @@ const formOpts = {
 function CreateProductForm() {
   const classes = useStyles();
   const toast = useContext(ToastContext);
-  const cache = useQueryCache();
 
   const methods = useForm(formOpts);
   const { handleSubmit, setError } = methods;
 
-  const [createBrand, { isLoading, isError, error }] = useMutation(formData => api.brands.create(formData), {
-    onMutate: formData => {
-      cache.cancelQueries('brands');
-      const previousValue = cache.getQueryData('brands');
-      cache.setQueryData('brands', old => ({
-        ...old,
-        formData,
-      }));
-      return previousValue;
-    },
-    onSuccess: () => {
-      toast.success('Brand created');
-    },
-    onError: (_, __, previousValue) => {
-      cache.setQueryData('brands', previousValue);
-      toast.error('Form has errors, please check the details');
-    },
-    onSettled: () => {
-      cache.invalidateQueries('brands');
-    },
-  });
+  const createBrandMutation = useCreateBrand();
 
-  const onSubmit = async values => {
+  const onSubmit = values => {
     const { logo, ...rest } = values;
     const formData = new FormData();
 
@@ -99,14 +77,14 @@ function CreateProductForm() {
       formData.append(name, rest[name]);
     });
 
-    await createBrand(formData);
+    createBrandMutation.mutate(formData);
   };
 
   const onError = () => {
     toast.error('Form has errors, please check the details');
   };
 
-  useFormServerErrors(error, setError);
+  useFormServerErrors(createBrandMutation?.error, setError);
 
   return (
     <Container component='main' maxWidth='xs'>
@@ -118,8 +96,8 @@ function CreateProductForm() {
           Create Brand
         </Typography>
 
-        {isLoading && <CircularProgress />}
-        {isError && <ErrorMessage message={error.message} />}
+        {createBrandMutation?.isLoading && <CircularProgress />}
+        {createBrandMutation?.isError && <ErrorMessage message={createBrandMutation?.error?.message} />}
 
         <FormProvider {...methods}>
           <form onSubmit={handleSubmit(onSubmit, onError)} noValidate>
@@ -131,7 +109,7 @@ function CreateProductForm() {
             <FormTextField name='websiteUrl' fullWidth />
             <BrandLogoUploadField name='logo' />
 
-            <FormSubmitButton className={classes.submit} fullWidth loading={isLoading}>
+            <FormSubmitButton className={classes.submit} fullWidth loading={createBrandMutation?.isLoading}>
               Add Brand
             </FormSubmitButton>
           </form>

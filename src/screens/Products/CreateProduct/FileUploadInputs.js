@@ -91,7 +91,6 @@ export function ProductThumbnailUploadField({ name }) {
 
   React.useEffect(
     () => () => {
-      // Revoke the data URIs' to avoid memory leaks
       files.forEach(file => URL.revokeObjectURL(file.preview));
     },
     [files]
@@ -130,7 +129,6 @@ export function ProductImagesDropzoneField({ name }) {
 
   React.useEffect(
     () => () => {
-      // Revoke the data URIs' to avoid memory leaks
       files.forEach(file => URL.revokeObjectURL(file.preview));
     },
     [files]

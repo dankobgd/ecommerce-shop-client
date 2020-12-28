@@ -1,11 +1,10 @@
-import React from 'react';
+import React, { useContext } from 'react';
 
 import { Badge, makeStyles, Popover, Typography } from '@material-ui/core';
 import ShoppingCartIcon from '@material-ui/icons/ShoppingCartOutlined';
-import { useDispatch, useSelector } from 'react-redux';
 
+import { CartContext } from '../../../components/ShoppingCart/CartContext';
 import ShoppingCart from '../../../components/ShoppingCart/ShoppingCart';
-import cartSlice, { selectCartLength, selectCartTotalQuantity } from '../../../store/cart/cartSlice';
 import Search from './Search';
 
 const useStyles = makeStyles(theme => ({
@@ -47,10 +46,7 @@ const useStyles = makeStyles(theme => ({
 
 function Header() {
   const classes = useStyles();
-  const dispatch = useDispatch();
-
-  const cartLength = useSelector(selectCartLength);
-  const cartTotalQuantity = useSelector(selectCartTotalQuantity);
+  const { items, openDrawer, totalQuantity } = useContext(CartContext);
 
   const [anchorEl, setAnchorEl] = React.useState(null);
 
@@ -61,10 +57,10 @@ function Header() {
   const id = anchorEl ? 'simple-popover' : undefined;
 
   const handleDrawer = event => {
-    if (!cartLength || cartLength === 0) {
+    if (!items?.length || items?.length === 0) {
       setAnchorEl(event.currentTarget);
-    } else if (cartLength > 0) {
-      dispatch(cartSlice.actions.toggleDrawerOpen());
+    } else if (items?.length > 0) {
+      openDrawer();
     }
   };
 
@@ -91,7 +87,7 @@ function Header() {
 
       <div className={classes.headerOuter}>
         <div className={classes.subHeader}>
-          <Badge badgeContent={cartTotalQuantity} color='primary' onClick={handleDrawer}>
+          <Badge badgeContent={totalQuantity} color='primary' onClick={handleDrawer}>
             <ShoppingCartIcon className={classes.cartIcon} />
           </Badge>
         </div>

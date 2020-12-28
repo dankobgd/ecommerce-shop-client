@@ -1,18 +1,12 @@
-import React from 'react';
+import React, { useContext } from 'react';
 
 import { Button } from '@material-ui/core';
 import Chip from '@material-ui/core/Chip';
 import Paper from '@material-ui/core/Paper';
 import { makeStyles } from '@material-ui/core/styles';
 import { nanoid } from 'nanoid';
-import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 
-import searchSlice, {
-  selectChipFilters,
-  selectHasFilters,
-  selectMainFilters,
-  selectSpecificFilters,
-} from '../../../store/search/searchSlice';
+import { ShopContext } from '../ShopContext';
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -28,44 +22,64 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
-function ChipsSection() {
-  const dispatch = useDispatch();
+function ChipsSection({
+  setHasSearched,
+  setFilterQueryString,
+  setShouldFetchAllByFilter,
+  setShouldShowDefaultProducts,
+}) {
   const classes = useStyles();
-  const chipFilters = useSelector(selectChipFilters, shallowEqual);
-  const mainFilters = useSelector(selectMainFilters, shallowEqual);
-  const specificFilters = useSelector(selectSpecificFilters, shallowEqual);
-  const hasFilters = useSelector(selectHasFilters);
+  const {
+    hasFilters,
+    mainFilters,
+    specificFilters,
+    getChipFiltersData,
+    setMainFilters,
+    setSpecificTextFilters,
+    clearPriceMin,
+    clearPriceMax,
+    clearAllFilters,
+  } = useContext(ShopContext);
 
   const handleDelete = chipToDelete => () => {
     const { name, value } = chipToDelete;
-
     if (name === 'categories' || name === 'tags' || name === 'brands') {
       const items = mainFilters[name].filter(x => x !== value);
-      dispatch(searchSlice.actions.setMainFilters({ name, items }));
+      setMainFilters({ name, items });
     } else if (name === 'priceMin') {
-      dispatch(searchSlice.actions.clearPriceMin());
+      clearPriceMin();
     } else if (name === 'priceMax') {
-      dispatch(searchSlice.actions.clearPriceMax());
+      clearPriceMax();
     } else {
       const items = specificFilters[name].filter(x => x !== value);
-      dispatch(searchSlice.actions.setSpecificFilters({ name, items }));
+      setSpecificTextFilters({ name, items });
     }
   };
 
-  const clearAllFilters = () => () => {
-    dispatch(searchSlice.actions.clearAllFilters());
+  const handleClearAllFilters = () => {
+    clearAllFilters();
+    setFilterQueryString('');
+    setShouldFetchAllByFilter(true);
+    setShouldShowDefaultProducts(true);
+    setHasSearched(true);
   };
+
+  const chipsArray = getChipFiltersData();
 
   return (
     hasFilters && (
       <Paper component='ul' className={classes.root}>
-        <Button variant='contained' size='small' onClick={clearAllFilters()}>
+        <Button variant='contained' size='small' onClick={handleClearAllFilters}>
           Clear All
         </Button>
-
-        {chipFilters.map(data => (
+        {chipsArray?.map(data => (
           <li key={nanoid()}>
-            <Chip color='primary' label={data.label} onDelete={handleDelete(data)} className={classes.chip} />
+            <Chip
+              color='primary'
+              label={data.label.split('_').join(' ')}
+              onDelete={handleDelete(data)}
+              className={classes.chip}
+            />
           </li>
         ))}
       </Paper>

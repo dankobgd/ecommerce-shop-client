@@ -14,12 +14,10 @@ import {
 import CloudUploadIcon from '@material-ui/icons/CloudUpload';
 import { makeStyles } from '@material-ui/styles';
 import clsx from 'clsx';
-import { useSelector, useDispatch } from 'react-redux';
 
 import AvatarFallback from '../../../components/AvatarFallback/AvatarFallback';
 import ErrorMessage from '../../../components/Message/ErrorMessage';
-import { selectUIState } from '../../../store/ui';
-import { userUploadAvatar, userDeleteAvatar, selectUserProfile } from '../../../store/user/userSlice';
+import { useDeleteAvatar, useUploadAvatar, useUserFromCache } from '../../../hooks/queries/userQueries';
 
 const useStyles = makeStyles(theme => ({
   root: {},
@@ -47,13 +45,11 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
-function AccountAvatar(props) {
-  const { className, ...rest } = props;
+function AccountAvatar({ className, ...rest }) {
   const classes = useStyles();
-  const dispatch = useDispatch();
-  const { loading: loadingUpload, error: errorUpload } = useSelector(selectUIState(userUploadAvatar));
-  const { loading: loadingDelete, error: errorDelete } = useSelector(selectUIState(userDeleteAvatar));
-  const user = useSelector(selectUserProfile);
+
+  const user = useUserFromCache();
+
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState('');
   const [showUploadButton, setShowUploadButton] = useState(false);
@@ -63,23 +59,21 @@ function AccountAvatar(props) {
     setSelectedFile(e.target.files[0]);
   };
 
-  const handleUploadAvatar = async e => {
+  const uploadAvatarMutation = useUploadAvatar({ setShowUploadButton });
+
+  const deleteAvatarMutation = useDeleteAvatar();
+
+  const handleUploadAvatar = e => {
     e.preventDefault();
     const formData = new FormData();
 
     formData.append('avatar', selectedFile);
-    try {
-      await dispatch(userUploadAvatar(formData));
-      // eslint-disable-next-line no-empty
-    } catch (error) {
-    } finally {
-      setShowUploadButton(false);
-    }
+    uploadAvatarMutation.mutate(formData);
   };
 
   const handleDeleteAvatar = e => {
     e.preventDefault();
-    dispatch(userDeleteAvatar());
+    deleteAvatarMutation.mutate();
   };
 
   React.useEffect(() => {
@@ -119,8 +113,8 @@ function AccountAvatar(props) {
       <CardHeader title='Avatar' />
       <Divider />
       <CardContent>
-        {errorUpload && <ErrorMessage message={errorUpload.message} />}
-        {errorDelete && <ErrorMessage message={errorDelete.message} />}
+        {uploadAvatarMutation?.isError && <ErrorMessage message={uploadAvatarMutation?.error?.message} />}
+        {deleteAvatarMutation?.isError && <ErrorMessage message={deleteAvatarMutation?.error?.message} />}
 
         <div className={classes.details}>
           <div className={classes.pictureSection}>
@@ -136,12 +130,12 @@ function AccountAvatar(props) {
           </div>
         </div>
 
-        {loadingUpload && (
+        {uploadAvatarMutation?.isLoading && (
           <div className={classes.progress}>
             <LinearProgress variant='indeterminate' />
           </div>
         )}
-        {loadingDelete && (
+        {deleteAvatarMutation?.isLoading && (
           <div className={classes.progress}>
             <CircularProgress variant='indeterminate' />
           </div>

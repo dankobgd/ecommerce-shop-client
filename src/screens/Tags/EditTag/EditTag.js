@@ -5,14 +5,13 @@ import { Avatar, CircularProgress, Container, Typography } from '@material-ui/co
 import LabelIcon from '@material-ui/icons/Label';
 import { makeStyles } from '@material-ui/styles';
 import { FormProvider, useForm } from 'react-hook-form';
-import { useMutation, useQuery, useQueryCache } from 'react-query';
 import * as Yup from 'yup';
 
-import api from '../../../api';
 import { FormTextField, FormSubmitButton } from '../../../components/Form';
 import ErrorMessage from '../../../components/Message/ErrorMessage';
+import { ToastContext } from '../../../components/Toast/ToastContext';
+import { useTag, useTags, useUpdateTag } from '../../../hooks/queries/tagQueries';
 import { useFormServerErrors } from '../../../hooks/useFormServerErrors';
-import { ToastContext } from '../../../store/toast/toast';
 import { diff } from '../../../utils/diff';
 
 const useStyles = makeStyles(theme => ({
@@ -53,45 +52,24 @@ const formOpts = {
 
 function EditTagForm({ tagId }) {
   const classes = useStyles();
-  const cache = useQueryCache();
   const toast = useContext(ToastContext);
   const [baseFormObj, setBaseFormObj] = React.useState({});
 
   const methods = useForm(formOpts);
   const { handleSubmit, setError, reset } = methods;
 
-  const { data: tag } = useQuery(['tags', tagId], () => api.tags.get(tagId), {
-    initialData: () => cache.getQueryData('tags')?.data?.find(x => x.id === tagId),
-  });
+  const { data: tag } = useTag(tagId);
 
-  const [editTag, { isLoading, isError, error }] = useMutation(({ id, values }) => api.tags.update(id, values), {
-    onMutate: values => {
-      cache.cancelQueries(['tags', tagId]);
-      const previousValue = cache.getQueryData(['tags', tagId]);
-      cache.setQueryData(['tags', tagId], values);
-      return previousValue;
-    },
-    onSuccess: () => {
-      toast.success('Tag updated');
-    },
-    onError: (_, __, previousValue) => {
-      cache.setQueryData(['tags', tagId], previousValue);
-      toast.error('Form has errors, please check the details');
-    },
-    onSettled: () => {
-      cache.invalidateQueries(['tags', tagId]);
-    },
-  });
+  const editTagMutation = useUpdateTag(tagId);
 
-  const onSubmit = async values => {
+  const onSubmit = values => {
     const changes = diff(baseFormObj, values);
 
     if (Object.keys(changes).length === 0) {
       toast.info('No changes applied');
     }
-
     if (Object.keys(changes).length > 0) {
-      await editTag({ id: tag.id, values });
+      editTagMutation.mutate({ id: tag.id, values });
     }
   };
 
@@ -106,7 +84,7 @@ function EditTagForm({ tagId }) {
     }
   }, [tag, reset]);
 
-  useFormServerErrors(error, setError);
+  useFormServerErrors(editTagMutation?.error, setError);
 
   return (
     <Container component='main' maxWidth='xs'>
@@ -118,8 +96,8 @@ function EditTagForm({ tagId }) {
           Edit Tag
         </Typography>
 
-        {isLoading && <CircularProgress />}
-        {isError && <ErrorMessage message={error.message} />}
+        {editTagMutation?.isLoading && <CircularProgress />}
+        {editTagMutation?.isError && <ErrorMessage message={editTagMutation?.error?.message} />}
 
         <FormProvider {...methods}>
           <form onSubmit={handleSubmit(onSubmit, onError)} noValidate>
@@ -127,7 +105,7 @@ function EditTagForm({ tagId }) {
             <FormTextField name='name' fullWidth />
             <FormTextField name='slug' fullWidth />
             <FormTextField name='description' fullWidth />
-            <FormSubmitButton className={classes.submit} fullWidth loading={isLoading}>
+            <FormSubmitButton className={classes.submit} fullWidth loading={editTagMutation?.isLoading}>
               Save Changes
             </FormSubmitButton>
           </form>

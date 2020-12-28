@@ -96,7 +96,7 @@ function ProductsSlider({ products }) {
   return (
     <div>
       <Slider {...settings} style={{ position: 'relative' }}>
-        {products.map(product => (
+        {products?.map(product => (
           <ProductCard key={product.sku} product={product} />
         ))}
       </Slider>

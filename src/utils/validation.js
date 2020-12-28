@@ -48,7 +48,18 @@ export const rules = {
       .nullable()
       .default(undefined),
 
-  properties: Yup.array()
+  categoryProperties: Yup.array()
+    .of(
+      Yup.object().shape({
+        name: Yup.string().required(),
+        label: Yup.string().required(),
+        type: Yup.string().required(),
+        filterable: Yup.bool().required(),
+      })
+    )
+    .nullable(),
+
+  productProperties: Yup.array()
     .of(
       Yup.object().shape({
         name: Yup.string().required(),

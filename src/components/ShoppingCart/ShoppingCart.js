@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 
-import { Button, Divider, IconButton, Tooltip, Typography } from '@material-ui/core';
+import { Button, Divider, IconButton, Typography } from '@material-ui/core';
 import Drawer from '@material-ui/core/Drawer';
 import { makeStyles } from '@material-ui/core/styles';
 import AddIcon from '@material-ui/icons/Add';
@@ -8,19 +8,11 @@ import ClearAllIcon from '@material-ui/icons/ClearAll';
 import CloseIcon from '@material-ui/icons/Close';
 import DeleteIcon from '@material-ui/icons/Delete';
 import RemoveIcon from '@material-ui/icons/Remove';
-import { withStyles } from '@material-ui/styles';
 import { Link } from '@reach/router';
-import { useDispatch, useSelector } from 'react-redux';
 
-import cartSlice, {
-  selectCartItems,
-  selectCartLength,
-  selectCartSubtotalPrice,
-  selectCartTotalQuantity,
-  selectDrawerOpen,
-} from '../../store/cart/cartSlice';
-import productSlice from '../../store/product/productSlice';
 import { formatPriceForDisplay, formatPriceUnitSum } from '../../utils/priceFormat';
+import CustomTooltip from '../CustomTooltip/CustomTooltip';
+import { CartContext } from './CartContext';
 
 const useStyles = makeStyles({
   cartContent: {
@@ -150,30 +142,21 @@ const useStyles = makeStyles({
 
 function ShoppingCart({ anchor = 'right' }) {
   const classes = useStyles();
-  const dispatch = useDispatch();
-  const drawerOpen = useSelector(selectDrawerOpen);
-  const cartSubotalPrice = useSelector(selectCartSubtotalPrice);
-  const cartTotalQuantity = useSelector(selectCartTotalQuantity);
-  const cartItems = useSelector(selectCartItems);
-  const cartLength = useSelector(selectCartLength);
+  const {
+    drawerOpen,
 
-  const toggleDrawer = () => {
-    dispatch(cartSlice.actions.toggleDrawer());
-  };
-
-  const toggleDrawerClose = () => {
-    dispatch(cartSlice.actions.toggleDrawerClose());
-  };
-
-  React.useEffect(() => {
-    toggleDrawerClose();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    clearItems,
+    toggleDrawer,
+    closeDrawer,
+    subtotalPrice,
+    totalQuantity,
+    items,
+  } = useContext(CartContext);
 
   return (
     <Drawer anchor={anchor} open={drawerOpen} onClose={toggleDrawer}>
       <div className={classes.cartContent}>
-        {cartLength > 0 ? (
+        {items?.length > 0 ? (
           <>
             <Typography variant='subtitle1' component='h2' className={classes.cartTitle}>
               Shopping Cart Items
@@ -181,12 +164,12 @@ function ShoppingCart({ anchor = 'right' }) {
 
             <Divider variant='middle' orientation='horizontal' className={classes.divider} />
 
-            <button type='button' className={classes.close} onClick={toggleDrawerClose}>
+            <button type='button' className={classes.close} onClick={() => closeDrawer()}>
               <CloseIcon />
             </button>
 
             <div className={classes.list}>
-              {cartItems.map(({ product, quantity }) => (
+              {items.map(({ product, quantity }) => (
                 <CartListItem key={product.id} product={product} quantity={quantity} />
               ))}
             </div>
@@ -197,7 +180,7 @@ function ShoppingCart({ anchor = 'right' }) {
               variant='outlined'
               className={classes.clearCartBtn}
               endIcon={<ClearAllIcon />}
-              onClick={() => dispatch(cartSlice.actions.clearCartItems())}
+              onClick={() => clearItems()}
             >
               Clear Cart
             </Button>
@@ -211,10 +194,10 @@ function ShoppingCart({ anchor = 'right' }) {
 
             <div className={classes.summary}>
               <Typography component='span' variant='subtitle2' color='textPrimary'>
-                Total Quantity: {cartTotalQuantity}
+                Total Quantity: {totalQuantity}
               </Typography>
               <Typography component='span' variant='subtitle2' color='textPrimary'>
-                Subtotal Price: <strong>${formatPriceForDisplay(cartSubotalPrice)}</strong>
+                Subtotal Price: <strong>${formatPriceForDisplay(subtotalPrice)}</strong>
               </Typography>
             </div>
 
@@ -230,7 +213,7 @@ function ShoppingCart({ anchor = 'right' }) {
           </>
         ) : (
           <>
-            <button type='button' className={classes.close} onClick={toggleDrawerClose}>
+            <button type='button' className={classes.close} onClick={() => toggleDrawer()}>
               <CloseIcon />
             </button>
             <Typography component='h3' variant='subtitle1' color='textPrimary'>
@@ -243,20 +226,10 @@ function ShoppingCart({ anchor = 'right' }) {
   );
 }
 
-const CustomTooltip = withStyles(theme => ({
-  tooltip: {
-    backgroundColor: '#f5f5f9',
-    color: 'rgba(0, 0, 0, 0.87)',
-    maxWidth: 220,
-    fontSize: theme.typography.pxToRem(16),
-    border: '1px solid #dadde9',
-  },
-}))(Tooltip);
-
 function CartListItem({ product, quantity }) {
-  const dispatch = useDispatch();
   const [isHover, setIsHover] = useState(false);
   const classes = useStyles({ isHover });
+  const { addProduct, removeProduct, clearProduct } = useContext(CartContext);
 
   const onMouseEnter = () => {
     setIsHover(true);
@@ -265,20 +238,16 @@ function CartListItem({ product, quantity }) {
     setIsHover(false);
   };
 
-  const handleCardClick = () => {
-    dispatch(productSlice.actions.setCurrentId(product.id));
-  };
-
   return (
     <div className={classes.listItem} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}>
       <div className={classes.listItemContent}>
-        <Link to={`/${product.id}/${product.slug}`} onClick={handleCardClick} className={classes.link}>
+        <Link to={`/${product.id}/${product.slug}`} className={classes.link}>
           <img className={classes.listItemImage} src={product.imageUrl} alt={product.name} />
         </Link>
         <div className={classes.listItemInner}>
           <div className={classes.listItemDetails}>
             <div className={classes.details}>
-              <Link to={`/${product.id}/${product.slug}`} onClick={handleCardClick} className={classes.link}>
+              <Link to={`/${product.id}/${product.slug}`} className={classes.link}>
                 <Typography className={classes.listItemName} component='h3' variant='subtitle2'>
                   {product.name}
                 </Typography>
@@ -292,17 +261,17 @@ function CartListItem({ product, quantity }) {
             {isHover && (
               <div className={classes.controls}>
                 <CustomTooltip title={<Typography color='inherit'>Increase Quantity</Typography>}>
-                  <IconButton onClick={() => dispatch(cartSlice.actions.addProductToCart(product))}>
+                  <IconButton onClick={() => addProduct(product)}>
                     <AddIcon />
                   </IconButton>
                 </CustomTooltip>
                 <CustomTooltip title={<Typography color='inherit'>Decrease Quantity</Typography>}>
-                  <IconButton onClick={() => dispatch(cartSlice.actions.removeProductFromCart(product.id))}>
+                  <IconButton onClick={() => removeProduct(product.id)}>
                     <RemoveIcon />
                   </IconButton>
                 </CustomTooltip>
                 <CustomTooltip title={<Typography color='inherit'>Remove Item</Typography>}>
-                  <IconButton onClick={() => dispatch(cartSlice.actions.clearProductFromCart(product.id))}>
+                  <IconButton onClick={() => clearProduct(product.id)}>
                     <DeleteIcon />
                   </IconButton>
                 </CustomTooltip>

@@ -5,9 +5,8 @@ import LogoutIcon from '@material-ui/icons/Input';
 import { makeStyles } from '@material-ui/styles';
 import { Link } from '@reach/router';
 import clsx from 'clsx';
-import { useDispatch } from 'react-redux';
 
-import { userLogout } from '../../../../store/user/userSlice';
+import { useLogout } from '../../../../hooks/queries/userQueries';
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -57,10 +56,10 @@ const CustomRouterLink = forwardRef((props, ref) => (
   </div>
 ));
 
-function SidebarNav(props) {
-  const { pages, className, ...rest } = props;
+function SidebarNav({ pages, className, ...rest }) {
   const classes = useStyles();
-  const dispatch = useDispatch();
+
+  const logoutMutation = useLogout();
 
   return (
     <List {...rest} className={clsx(classes.root, className)}>
@@ -74,7 +73,14 @@ function SidebarNav(props) {
       ))}
 
       <ListItem className={clsx(classes.item, classes.lastItem)} disableGutters>
-        <Button className={classes.button} component={CustomRouterLink} to='/' onClick={() => dispatch(userLogout())}>
+        <Button
+          className={classes.button}
+          component={CustomRouterLink}
+          to='/'
+          onClick={() => {
+            logoutMutation.mutate();
+          }}
+        >
           <div className={classes.icon}>
             <LogoutIcon />
           </div>
