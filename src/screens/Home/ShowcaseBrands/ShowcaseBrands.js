@@ -91,7 +91,7 @@ function BrandSlide({ brand }) {
   const { clickMainFilterChoice } = useContext(ShopContext);
 
   const handleBrandChoice = () => {
-    clickMainFilterChoice({ name: 'brands', value: brand.name });
+    clickMainFilterChoice({ name: 'brands', value: brand.slug });
   };
 
   return (

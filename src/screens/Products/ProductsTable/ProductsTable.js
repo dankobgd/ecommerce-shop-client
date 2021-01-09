@@ -13,7 +13,10 @@ import {
   TableRow,
   Typography,
   TablePagination,
+  Chip,
 } from '@material-ui/core';
+import CheckIcon from '@material-ui/icons/Check';
+import CloseIcon from '@material-ui/icons/Close';
 import { makeStyles } from '@material-ui/styles';
 import clsx from 'clsx';
 
@@ -21,6 +24,7 @@ import DeleteDialog from '../../../components/TableComponents/DeleteDialog';
 import { DeleteButton, EditButton, PreviewButton } from '../../../components/TableComponents/TableButtons';
 import { useDeleteProduct, useProducts } from '../../../hooks/queries/productQueries';
 import { diff } from '../../../utils/diff';
+import { formatDate } from '../../../utils/formatDate';
 import { persistPagination, getPersistedPagination, paginationRanges } from '../../../utils/pagination';
 import { formatPriceForDisplay } from '../../../utils/priceFormat';
 import { truncateText } from '../../../utils/truncateText';
@@ -142,7 +146,7 @@ const ProductsTable = ({ className, ...rest }) => {
                   <TableRow
                     className={classes.tableRow}
                     hover
-                    key={product.sku}
+                    key={product.id}
                     selected={selectedData.indexOf(product.id) !== -1}
                   >
                     <TableCell padding='checkbox'>
@@ -161,14 +165,31 @@ const ProductsTable = ({ className, ...rest }) => {
                     </TableCell>
                     <TableCell>{product.id}</TableCell>
                     <TableCell>{product.slug}</TableCell>
-                    <TableCell>${formatPriceForDisplay(product.price)}</TableCell>
+                    <TableCell>
+                      <Chip
+                        label={`$${formatPriceForDisplay(product.price)}`}
+                        style={{ background: 'green', color: '#fff' }}
+                      />
+                    </TableCell>
                     <TableCell>{truncateText(product.description, 50)}</TableCell>
                     <TableCell>{product.sku}</TableCell>
-                    <TableCell>{product.isFeatured.toString()}</TableCell>
-                    <TableCell>{product.inStock.toString()}</TableCell>
+                    <TableCell>
+                      {product.isFeatured ? (
+                        <CheckIcon style={{ fill: 'green' }} />
+                      ) : (
+                        <CloseIcon style={{ fill: 'red' }} />
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {product.inStock ? (
+                        <CheckIcon style={{ fill: 'green' }} />
+                      ) : (
+                        <CloseIcon style={{ fill: 'red' }} />
+                      )}
+                    </TableCell>
                     <TableCell>{product.imageUrl}</TableCell>
-                    <TableCell>{product.createdAt}</TableCell>
-                    <TableCell>{product.updatedAt}</TableCell>
+                    <TableCell>{formatDate(product.createdAt)}</TableCell>
+                    <TableCell>{formatDate(product.updatedAt)}</TableCell>
                     <TableCell>
                       <PreviewButton to={`${product.id}/${product.slug}/preview`} />
                     </TableCell>

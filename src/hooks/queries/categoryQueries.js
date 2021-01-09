@@ -18,7 +18,7 @@ export function useCategory(categoryId) {
 
 export function useCategories(query, config) {
   const queryClient = useQueryClient();
-  const params = query ? new URLSearchParams(query) : undefined;
+  const params = new URLSearchParams(query || '');
   const key = query ? ['categories', query] : ['categories'];
 
   return useQuery(key, () => api.categories.getAll(params), {
@@ -29,7 +29,7 @@ export function useCategories(query, config) {
 
 export function useFeaturedCategories(query, config) {
   const queryClient = useQueryClient();
-  const params = query ? new URLSearchParams(query) : undefined;
+  const params = new URLSearchParams(query || '');
   const key = query ? ['categories', query, 'featured'] : ['categories', 'featured'];
 
   return useQuery(key, () => api.categories.getFeatured(params), {
@@ -141,9 +141,4 @@ export function useDeleteCategory() {
       queryClient.invalidateQueries('categories');
     },
   });
-}
-
-export function useCategoriesFromCache() {
-  const queryClient = useQueryClient();
-  return queryClient.getQueryData(['categories'], { exact: true });
 }

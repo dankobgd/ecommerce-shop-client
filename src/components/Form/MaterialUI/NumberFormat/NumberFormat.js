@@ -18,6 +18,9 @@ export default function FormNumberField({
   isAllowed,
   defaultValue = '',
   allowLeadingZeros,
+  format,
+  mask,
+  isString = false,
   ...rest
 }) {
   const { control, errors, setValue, trigger } = useFormContext();
@@ -31,26 +34,33 @@ export default function FormNumberField({
         {...rest}
         render={props => (
           <ReactNumberFormat
+            thousandSeparator={thousandSeparator}
             isAllowed={isAllowed}
             margin={margin}
             placeholder={placeholder}
             variant={variant}
-            thousandSeparator={thousandSeparator}
             label={label}
             prefix={prefix}
             customInput={TextField}
             value={props.value}
             inputProps={inputProps}
             allowLeadingZeros={allowLeadingZeros}
+            format={format}
+            mask={mask}
             onValueChange={target => {
               props.onChange();
-              setValue(name, target.value);
+              if (isString) {
+                setValue(name, target.value || defaultValue);
+              } else {
+                setValue(name, target.floatValue || defaultValue);
+              }
               trigger(name);
             }}
             onBlur={props.onBlur}
           />
         )}
       />
+
       <FormHelperText error={!!errors[name]} margin='dense' variant={variant}>
         {errors && errors[name] && errors[name].message}
       </FormHelperText>

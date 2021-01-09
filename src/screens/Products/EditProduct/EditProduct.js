@@ -4,6 +4,7 @@ import { yupResolver } from '@hookform/resolvers';
 import { Avatar, CircularProgress, Container, Typography } from '@material-ui/core';
 import ShoppingBasketIcon from '@material-ui/icons/ShoppingBasket';
 import { makeStyles } from '@material-ui/styles';
+import _ from 'lodash';
 import { FormProvider, useForm } from 'react-hook-form';
 import * as Yup from 'yup';
 
@@ -21,9 +22,11 @@ import { useBrands } from '../../../hooks/queries/brandQueries';
 import { useCategories } from '../../../hooks/queries/categoryQueries';
 import { useProduct, useUpdateProduct } from '../../../hooks/queries/productQueries';
 import { useFormServerErrors } from '../../../hooks/useFormServerErrors';
-import { diff } from '../../../utils/diff';
+import { isEmptyObject, diff } from '../../../utils/diff';
 import { formatPriceForDisplay, priceToLowestCurrencyDenomination } from '../../../utils/priceFormat';
+import { transformKeysToSnakeCase } from '../../../utils/transformObjectKeys';
 import { rules } from '../../../utils/validation';
+import { ProductThumbnailUploadField } from '../CreateProduct/FileUploadInputs';
 
 const useStyles = makeStyles(theme => ({
   paper: {
@@ -54,7 +57,7 @@ const schema = Yup.object({
   name: Yup.string().required(),
   slug: Yup.string().required(),
   description: Yup.string(),
-  price: Yup.string().required(),
+  price: rules.requiredPositiveNumber,
   inStock: Yup.boolean().required(),
   isFeatured: Yup.boolean().required(),
   image: rules.optionalImage,
@@ -70,51 +73,50 @@ const formOpts = {
     name: '',
     slug: '',
     description: '',
-    price: 50,
+    price: '',
     image: '',
     inStock: false,
     isFeatured: false,
+    properties: {},
   },
   resolver: yupResolver(schema),
 };
 
-const renderPropertyInputType = property => {
-  if (property.type === 'text') {
+function PropertyInputType({ prop }) {
+  if (prop.type === 'text') {
     return (
       <FormAutoComplete
-        key={property.name}
-        name={`properties.${property.name}`}
-        label={property.label}
-        options={property.choices}
-        getOptionLabel={option => (option.name ? option.name : option) || ''}
-        getOptionSelected={(option, value) => (option ? option.name === value.name : option === value || '')}
+        key={prop.name}
+        name={`properties.${prop.name}`}
+        label={prop.label}
+        options={prop.choices.map(c => c.name)}
+        getOptionLabel={option => option || ''}
+        getOptionSelected={(option, value) => option?.name === value}
         fullWidth
       />
     );
   }
-  // @TODO: init default form property vals to fix uncontroll field err
-  if (property.type === 'bool') {
-    return <FormCheckbox key={property.name} name={`properties.${property.name}`} label={property.label} fullWidth />;
+  if (prop.type === 'bool') {
+    return <FormCheckbox key={prop.name} name={`properties.${prop.name}`} label={prop.label} fullWidth />;
   }
   return null;
-};
+}
 
-const ProductProperties = ({ chosenCategory, product }) => {
+function ProductProperties({ chosenCategory, product }) {
   const cat = chosenCategory || product?.category;
-
-  const properties = cat?.properties
-    ? cat?.properties.filter(x => Boolean(x.filterable)).sort((a, b) => a.importance - b.importance)
-    : [];
+  const properties = cat?.properties ? cat?.properties?.sort((a, b) => a.importance - b.importance) : [];
 
   return (
     properties.length > 0 && (
       <div style={{ marginTop: '1rem' }}>
         <Typography variant='subtitle1'>Properties</Typography>
-        {properties.map(prop => renderPropertyInputType(prop))}
+        {properties.map((prop, idx) => (
+          <PropertyInputType prop={prop} key={idx} />
+        ))}
       </div>
     )
   );
-};
+}
 
 function EditProductForm({ productId }) {
   const classes = useStyles();
@@ -128,27 +130,35 @@ function EditProductForm({ productId }) {
   const { data: brandsList } = useBrands();
   const { data: categoriesList } = useCategories();
 
-  const editProductMutation = useUpdateProduct();
+  const editProductMutation = useUpdateProduct(productId);
 
   const onSubmit = values => {
     const changes = diff(baseFormObj, values);
-    const { image, ...rest } = changes;
+    const { properties } = values;
+    const { image, properties: changedProperties, price, ...rest } = changes;
     const formData = new FormData();
 
-    rest.price = priceToLowestCurrencyDenomination(rest.price);
+    const fields = transformKeysToSnakeCase(rest);
 
+    if (price) {
+      formData.append('price', priceToLowestCurrencyDenomination(price));
+    }
     if (image) {
       formData.append('image', image);
     }
-    Object.keys(rest).forEach(name => {
-      formData.append(name, rest[name]);
+    Object.keys(fields).forEach(name => {
+      formData.append(name, fields[name]);
     });
+    if (changedProperties && !isEmptyObject(changedProperties)) {
+      formData.append('properties', JSON.stringify(transformKeysToSnakeCase(properties)));
+    }
 
-    if (Object.keys(changes).length === 0) {
+    if (_.isEmpty(changes) || (!_.isEmpty(changes) && _.isEqual(changes, { properties: {} }))) {
       toast.info('No changes applied');
     }
-    if (Object.keys(changes).length > 0) {
-      editProductMutation.mutate(product.id, formData);
+
+    if (!_.isEmpty(changes) && !_.isEqual(changes, { properties: {} })) {
+      editProductMutation.mutate({ id: product.id, formData });
     }
   };
 
@@ -159,8 +169,16 @@ function EditProductForm({ productId }) {
   React.useEffect(() => {
     if (product) {
       // eslint-disable-next-line no-unused-vars
-      const { image, ...rest } = product;
-      const obj = { ...rest, image: '', price: 50 };
+      const { image, price, brand, category, properties, ...rest } = product;
+
+      const obj = {
+        ...rest,
+        image: '',
+        price: formatPriceForDisplay(price),
+        brandId: brand,
+        categoryId: category,
+        properties: transformKeysToSnakeCase(properties),
+      };
 
       setBaseFormObj(obj);
       reset(obj);
@@ -173,7 +191,6 @@ function EditProductForm({ productId }) {
 
   return (
     <Container component='main' maxWidth='xs'>
-      <pre>watch: {JSON.stringify(methods.watch(), null, 2)}</pre>
       <div className={classes.paper}>
         <Avatar className={classes.avatar}>
           <ShoppingBasketIcon />
@@ -195,6 +212,7 @@ function EditProductForm({ productId }) {
             <FormNumberField name='price' fullWidth prefix='$' />
             <FormSwitch name='inStock' />
             <FormSwitch name='isFeatured' />
+            <ProductThumbnailUploadField name='image' />
             <ProductProperties chosenCategory={chosenCategory} product={product} />
 
             <FormSubmitButton className={classes.submit} fullWidth loading={editProductMutation?.isLoading}>
@@ -226,17 +244,6 @@ const CategoryDropdown = ({ options, ...rest }) => (
     {...rest}
     name='categoryId'
     label='Category'
-    options={options}
-    getOptionLabel={getOptionLabel}
-    getOptionSelected={getOptionSelected}
-  />
-);
-
-const TagsDropdown = ({ options, ...rest }) => (
-  <FormAutoComplete
-    {...rest}
-    multiple
-    name='tags'
     options={options}
     getOptionLabel={getOptionLabel}
     getOptionSelected={getOptionSelected}

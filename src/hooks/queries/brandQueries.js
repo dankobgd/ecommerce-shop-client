@@ -17,7 +17,7 @@ export function useBrand(brandId) {
 
 export function useBrands(query, config) {
   const queryClient = useQueryClient();
-  const params = query ? new URLSearchParams(query) : undefined;
+  const params = new URLSearchParams(query || '');
   const key = query ? ['brands', query] : ['brands'];
 
   return useQuery(key, () => api.brands.getAll(params), {

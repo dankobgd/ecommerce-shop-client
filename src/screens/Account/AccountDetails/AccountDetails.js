@@ -12,7 +12,7 @@ import ErrorMessage from '../../../components/Message/ErrorMessage';
 import { ToastContext } from '../../../components/Toast/ToastContext';
 import { useEditProfile, useUserFromCache } from '../../../hooks/queries/userQueries';
 import { useFormServerErrors } from '../../../hooks/useFormServerErrors';
-import { diff } from '../../../utils/diff';
+import { diff, isEmptyObject } from '../../../utils/diff';
 import { rules } from '../../../utils/validation';
 
 const useStyles = makeStyles(() => ({
@@ -55,10 +55,10 @@ function AccountDetails({ className, ...rest }) {
   const onSubmit = values => {
     const changes = diff(baseFormObj, values);
 
-    if (Object.keys(changes).length === 0) {
+    if (isEmptyObject(changes)) {
       toast.info('No changes applied');
     }
-    if (Object.keys(changes).length > 0) {
+    if (!isEmptyObject(changes)) {
       editProfileMutation.mutate(values);
     }
   };

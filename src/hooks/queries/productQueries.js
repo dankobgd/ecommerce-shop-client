@@ -1,7 +1,7 @@
 import { useContext } from 'react';
 
 import { nanoid } from 'nanoid';
-import { useMutation, useQuery, useQueryClient } from 'react-query';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from 'react-query';
 
 import api from '../../api';
 import { ToastContext } from '../../components/Toast/ToastContext';
@@ -17,7 +17,7 @@ export function useProduct(productID) {
 
 export function useProducts(query, config) {
   const queryClient = useQueryClient();
-  const params = query ? new URLSearchParams(query) : undefined;
+  const params = new URLSearchParams(query || '');
   const key = query ? ['products', query] : ['products'];
 
   return useQuery(key, () => api.products.getAll(params), {
@@ -26,14 +26,36 @@ export function useProducts(query, config) {
   });
 }
 
+export function useInfiniteProducts(query, config) {
+  const params = new URLSearchParams(query || '');
+
+  return useInfiniteQuery(
+    ['products', params],
+    ({ pageParam }) => {
+      if (pageParam && pageParam > Number.parseInt(params.get('page'), 10)) {
+        params.set('page', pageParam);
+      }
+      return api.products.getAll(params);
+    },
+    {
+      getNextPageParam: lastPage => {
+        if (lastPage?.meta?.pageCount > lastPage?.meta?.page) {
+          return lastPage?.meta?.page + 1;
+        }
+      },
+      ...config,
+    }
+  );
+}
+
 export function useSearchProducts(query, config) {
-  const params = query ? new URLSearchParams(query) : undefined;
+  const params = new URLSearchParams(query || '');
   return useQuery(['products', 'search'], () => api.products.search(params), config);
 }
 
 export function useFeaturedProducts(query, config) {
   const queryClient = useQueryClient();
-  const params = query ? new URLSearchParams(query) : undefined;
+  const params = new URLSearchParams(query || '');
   const key = query ? ['products', query, 'featured'] : ['products', 'featured'];
 
   return useQuery(key, () => api.products.getFeatured(params), {

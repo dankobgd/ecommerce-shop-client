@@ -1,8 +1,8 @@
 import React from 'react';
 
-import { makeStyles, Typography } from '@material-ui/core';
+import { CircularProgress, makeStyles, Typography } from '@material-ui/core';
 
-import ProductCard from '../../../components/ProductCard/ProductCard';
+import ProductCard, { SkeletonCard } from '../../../components/ProductCard/ProductCard';
 import ChipsSection from './ChipsSection';
 
 const useStyles = makeStyles(() => ({
@@ -42,10 +42,18 @@ function ProductsGrid({
   setHasSearched,
   setFilterQueryString,
   setShouldFetchAllByFilter,
-  shouldShowDefaultProducts,
-  setShouldShowDefaultProducts,
+  loadMoreRef,
+  isLoading,
+  isFetchingNextPage,
+  hasNextPage,
 }) {
   const classes = useStyles();
+
+  React.useEffect(() => {
+    setShouldFetchAllByFilter(true);
+    setHasSearched(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className={classes.outer}>
@@ -55,29 +63,61 @@ function ProductsGrid({
             setHasSearched={setHasSearched}
             setFilterQueryString={setFilterQueryString}
             setShouldFetchAllByFilter={setShouldFetchAllByFilter}
-            setShouldShowDefaultProducts={setShouldShowDefaultProducts}
           />
         </div>
 
+        {isLoading && (
+          <div
+            style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', padding: '1rem' }}
+          >
+            <CircularProgress size={30} />
+          </div>
+        )}
+
+        {isLoading && (
+          <div className={classes.productAre}>
+            {new Array(20).fill().map((e, idx) => (
+              <SkeletonCard key={idx} />
+            ))}
+          </div>
+        )}
+
         <div className={classes.productAre}>
           {products?.map(product => (
-            <ProductCard key={product.sku} product={product} />
+            <ProductCard key={product.sku} product={product} isLoading={isLoading} />
           ))}
         </div>
 
-        {products?.length === 0 && !hasSearched && !shouldShowDefaultProducts && (
-          <div style={{ padding: '2rem' }}>
-            <Typography variant='h4'>Choose filters from the sidebar to search products</Typography>
-            <Typography variant='subtitle2' style={{ marginTop: '10px' }}>
-              Filter by category, tags, brands, price as well as product specific variants
-            </Typography>
+        {isFetchingNextPage && (
+          <div
+            style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', padding: '1rem' }}
+          >
+            <CircularProgress size={30} />
           </div>
         )}
-        {products?.length === 0 && hasSearched && (
+
+        {!hasNextPage && products?.length > 0 && (
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              width: '100%',
+              padding: '1rem',
+              marginTop: '1rem',
+            }}
+          >
+            <span>No more results</span>
+          </div>
+        )}
+
+        <div ref={loadMoreRef} />
+
+        {products?.length === 0 && hasSearched && !isLoading && (
           <div style={{ padding: '2rem' }}>
             <Typography variant='h4'>No products found matching the search criteria</Typography>
             <Typography variant='subtitle2' style={{ marginTop: '10px' }}>
-              Try broadening the search filters to get better results
+              Broaden your search filters to find more products
             </Typography>
           </div>
         )}

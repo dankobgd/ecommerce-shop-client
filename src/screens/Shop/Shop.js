@@ -5,8 +5,9 @@ import { Container, makeStyles } from '@material-ui/core';
 import ScrollTopButton from '../../components/ScrollTop/ScrollTopButton';
 import { useBrands } from '../../hooks/queries/brandQueries';
 import { useCategories } from '../../hooks/queries/categoryQueries';
-import { useProducts } from '../../hooks/queries/productQueries';
+import { useInfiniteProducts } from '../../hooks/queries/productQueries';
 import { useTags } from '../../hooks/queries/tagQueries';
+import useIntersectionObserver from '../../hooks/useIntersectionObserver';
 import Header from '../Home/Header/Header';
 import Filter from './Filter/Filter';
 import ProductsGrid from './ProductsGrid/ProductsGrid';
@@ -25,27 +26,37 @@ const useStyles = makeStyles(() => ({
 function Shop() {
   const classes = useStyles();
   const { hasSearched, setHasSearched } = useContext(ShopContext);
-  const [filterQueryString, setFilterQueryString] = useState('');
+  const [filterQueryString, setFilterQueryString] = useState('page=1&per_page=20');
   const [shouldFetchAllByFilter, setShouldFetchAllByFilter] = useState(false);
-  const [shouldShowDefaultProducts, setShouldShowDefaultProducts] = useState(false);
+  const loadMoreRef = React.useRef();
 
   const { data: brands } = useBrands();
   const { data: tags } = useTags();
   const { data: categories } = useCategories();
-  const { data: products, refetch } = useProducts(filterQueryString, { enabled: false });
+
+  const qs = () => new URLSearchParams(filterQueryString).toString();
+  const { data, isFetchingNextPage, fetchNextPage, hasNextPage, isLoading, refetch } = useInfiniteProducts(qs(), {
+    enabled: false,
+  });
 
   React.useEffect(() => {
-    if (
-      (shouldFetchAllByFilter && hasSearched && !!filterQueryString) ||
-      (shouldFetchAllByFilter && hasSearched && filterQueryString === '' && shouldShowDefaultProducts)
-    ) {
+    if (shouldFetchAllByFilter && hasSearched) {
       refetch();
     }
-  }, [filterQueryString, hasSearched, refetch, shouldFetchAllByFilter, shouldShowDefaultProducts]);
+  }, [filterQueryString, hasSearched, refetch, shouldFetchAllByFilter]);
+
+  useIntersectionObserver({
+    target: loadMoreRef,
+    onIntersect: fetchNextPage,
+    enabled: hasNextPage,
+  });
+
+  const products = data?.pages?.flatMap(page => page.data) ?? [];
 
   return (
     <div>
       <Header />
+
       <Container className={classes.shop}>
         <section className={classes.filter}>
           <Filter
@@ -58,13 +69,15 @@ function Shop() {
         </section>
         <section className={classes.main}>
           <ProductsGrid
-            products={products?.data ?? []}
+            products={products}
             hasSearched={hasSearched}
             setFilterQueryString={setFilterQueryString}
             setShouldFetchAllByFilter={setShouldFetchAllByFilter}
             setHasSearched={setHasSearched}
-            shouldShowDefaultProducts={shouldShowDefaultProducts}
-            setShouldShowDefaultProducts={setShouldShowDefaultProducts}
+            isLoading={isLoading}
+            loadMoreRef={loadMoreRef}
+            isFetchingNextPage={isFetchingNextPage}
+            hasNextPage={hasNextPage}
           />
         </section>
       </Container>

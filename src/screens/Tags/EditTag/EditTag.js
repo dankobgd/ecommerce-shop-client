@@ -10,9 +10,9 @@ import * as Yup from 'yup';
 import { FormTextField, FormSubmitButton } from '../../../components/Form';
 import ErrorMessage from '../../../components/Message/ErrorMessage';
 import { ToastContext } from '../../../components/Toast/ToastContext';
-import { useTag, useTags, useUpdateTag } from '../../../hooks/queries/tagQueries';
+import { useTag, useUpdateTag } from '../../../hooks/queries/tagQueries';
 import { useFormServerErrors } from '../../../hooks/useFormServerErrors';
-import { diff } from '../../../utils/diff';
+import { diff, isEmptyObject } from '../../../utils/diff';
 
 const useStyles = makeStyles(theme => ({
   paper: {
@@ -65,11 +65,11 @@ function EditTagForm({ tagId }) {
   const onSubmit = values => {
     const changes = diff(baseFormObj, values);
 
-    if (Object.keys(changes).length === 0) {
+    if (isEmptyObject(changes)) {
       toast.info('No changes applied');
     }
-    if (Object.keys(changes).length > 0) {
-      editTagMutation.mutate({ id: tag.id, values });
+    if (!isEmptyObject(changes)) {
+      editTagMutation.mutate({ id: tag.id, values: changes });
     }
   };
 

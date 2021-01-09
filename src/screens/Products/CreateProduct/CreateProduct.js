@@ -22,6 +22,7 @@ import { useCategories } from '../../../hooks/queries/categoryQueries';
 import { useCreateProduct } from '../../../hooks/queries/productQueries';
 import { useTags } from '../../../hooks/queries/tagQueries';
 import { useFormServerErrors } from '../../../hooks/useFormServerErrors';
+import { isEmptyObject } from '../../../utils/diff';
 import { priceToLowestCurrencyDenomination } from '../../../utils/priceFormat';
 import { transformKeysToSnakeCase } from '../../../utils/transformObjectKeys';
 import { rules } from '../../../utils/validation';
@@ -56,7 +57,7 @@ const schema = Yup.object({
   name: Yup.string().required(),
   slug: Yup.string().required(),
   description: Yup.string(),
-  price: Yup.string().required(),
+  price: rules.requiredPositiveNumber,
   inStock: Yup.boolean().required(),
   isFeatured: Yup.boolean().required(),
   image: rules.requiredImage,
@@ -72,62 +73,74 @@ const formOpts = {
     name: '',
     slug: '',
     description: '',
-    // price: '',
+    price: '',
     inStock: true,
     isFeatured: false,
     image: '',
-    properties: null,
     tags: [],
     images: [],
-    Pricing: {
-      price: '',
-    },
+    properties: {},
   },
   resolver: yupResolver(schema),
 };
 
-const renderPropertyInputType = property => {
-  if (property.type === 'text') {
+function PropertyInputType({ prop }) {
+  if (prop.type === 'text') {
     return (
       <FormAutoComplete
-        key={property.name}
-        name={`properties.${property.name}`}
-        label={property.label}
-        options={property.choices}
-        getOptionLabel={option => option.name || ''}
-        getOptionSelected={(option, value) => option.name === value.name}
+        key={prop.name}
+        name={`properties.${prop.name}`}
+        label={prop.label}
+        options={prop.choices.map(c => c.name)}
+        getOptionLabel={option => option || ''}
+        getOptionSelected={(option, value) => option === value}
         fullWidth
       />
     );
   }
-  // @TODO: init default form property vals to fix uncontroll field err
-  if (property.type === 'bool') {
-    return <FormCheckbox key={property.name} name={`properties.${property.name}`} label={property.label} fullWidth />;
-  }
-  return null;
-};
 
-const CategoryProperties = ({ chosenCategory }) => {
+  if (prop.type === 'bool') {
+    return <FormCheckbox key={prop.name} name={`properties.${prop.name}`} label={prop.label} fullWidth />;
+  }
+
+  return null;
+}
+
+function CategoryProperties({ chosenCategory, setValue }) {
   const properties = chosenCategory?.properties
-    ? chosenCategory?.properties.filter(x => Boolean(x.filterable)).sort((a, b) => a.importance - b.importance)
+    ? chosenCategory?.properties?.sort((a, b) => a.importance - b.importance)
     : [];
+
+  React.useEffect(() => {
+    if (properties.length > 0) {
+      properties.forEach(p => {
+        if (p.type === 'bool') {
+          setValue(`properties.${p.name}`, false);
+        } else if (p.type === 'text') {
+          setValue(`properties.${p.name}`, '');
+        }
+      });
+    }
+  }, [properties, setValue]);
 
   return (
     properties.length > 0 && (
       <div style={{ marginTop: '1rem' }}>
         <Typography variant='subtitle1'>Properties</Typography>
-        {properties.map(prop => renderPropertyInputType(prop))}
+        {properties.map((prop, idx) => (
+          <PropertyInputType prop={prop} key={idx} />
+        ))}
       </div>
     )
   );
-};
+}
 
 function CreateProductForm() {
   const classes = useStyles();
   const toast = useContext(ToastContext);
 
   const methods = useForm(formOpts);
-  const { handleSubmit, setError, watch } = methods;
+  const { handleSubmit, setError, watch, setValue } = methods;
 
   const { data: brandsList } = useBrands();
   const { data: tagsList } = useTags();
@@ -143,7 +156,7 @@ function CreateProductForm() {
 
     const fields = transformKeysToSnakeCase(rest);
 
-    formData.append('price', priceToLowestCurrencyDenomination(Number.parseFloat(price)));
+    formData.append('price', priceToLowestCurrencyDenomination(price));
     formData.append('image', image);
     formData.append('brand_id', brandId.id);
     formData.append('category_id', categoryId.id);
@@ -156,7 +169,7 @@ function CreateProductForm() {
     tags.forEach(tag => {
       formData.append('tags', tag.id);
     });
-    if (properties) {
+    if (!isEmptyObject(properties)) {
       formData.append('properties', JSON.stringify(transformKeysToSnakeCase(properties)));
     }
 
@@ -195,7 +208,7 @@ function CreateProductForm() {
             <ProductThumbnailUploadField name='image' />
             <TagsDropdown fullWidth options={tagsList?.data || []} />
             <ProductImagesDropzoneField name='images' />
-            <CategoryProperties chosenCategory={chosenCategory} />
+            <CategoryProperties chosenCategory={chosenCategory} setValue={setValue} />
 
             <FormSubmitButton className={classes.submit} fullWidth loading={createProductMutation?.isLoading}>
               Add product

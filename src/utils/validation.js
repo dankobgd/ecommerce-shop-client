@@ -69,4 +69,10 @@ export const rules = {
       })
     )
     .nullable(),
+
+  requiredPositiveNumber: Yup.number()
+    .positive()
+    .required()
+    .nullable()
+    .transform((v, o) => (o === '' ? null : v)),
 };

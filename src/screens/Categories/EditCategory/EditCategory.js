@@ -16,7 +16,7 @@ import ErrorMessage from '../../../components/Message/ErrorMessage';
 import { ToastContext } from '../../../components/Toast/ToastContext';
 import { useCategory, useUpdateCategory } from '../../../hooks/queries/categoryQueries';
 import { useFormServerErrors } from '../../../hooks/useFormServerErrors';
-import { diff } from '../../../utils/diff';
+import { diff, isEmptyObject } from '../../../utils/diff';
 import { transformKeysToSnakeCase } from '../../../utils/transformObjectKeys';
 import { rules } from '../../../utils/validation';
 import PropertyCard from '../CreateCategory/PropertyCard';
@@ -95,7 +95,7 @@ function EditCategoryForm({ categoryId }) {
       formData.append(name, rest[name]);
     });
 
-    if (Object.keys(changes).length === 0) {
+    if (isEmptyObject(changes)) {
       toast.info('No changes applied');
     }
 
@@ -115,7 +115,7 @@ function EditCategoryForm({ categoryId }) {
       formData.append('properties', '');
     }
 
-    if (Object.keys(changes).length > 0) {
+    if (!isEmptyObject(changes)) {
       editCategoryMutation.mutate({ id: category.id, formData });
     }
   };

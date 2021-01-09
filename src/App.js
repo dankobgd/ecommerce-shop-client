@@ -32,7 +32,7 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ReactQueryDevtools initialIsOpen />
+      <ReactQueryDevtools />
 
       <ToastProvider>
         <CartProvider>

@@ -22,12 +22,7 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
-function ChipsSection({
-  setHasSearched,
-  setFilterQueryString,
-  setShouldFetchAllByFilter,
-  setShouldShowDefaultProducts,
-}) {
+function ChipsSection({ setHasSearched, setFilterQueryString, setShouldFetchAllByFilter }) {
   const classes = useStyles();
   const {
     hasFilters,
@@ -58,9 +53,8 @@ function ChipsSection({
 
   const handleClearAllFilters = () => {
     clearAllFilters();
-    setFilterQueryString('');
+    setFilterQueryString('page=1&per_page=20');
     setShouldFetchAllByFilter(true);
-    setShouldShowDefaultProducts(true);
     setHasSearched(true);
   };
 

@@ -14,7 +14,7 @@ import CheckBoxIcon from '@material-ui/icons/CheckBox';
 import CheckBoxOutlineBlankIcon from '@material-ui/icons/CheckBoxOutlineBlank';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 
-import { useCategoriesFromCache } from '../../../hooks/queries/categoryQueries';
+import { useCategories } from '../../../hooks/queries/categoryQueries';
 import { ShopContext } from '../ShopContext';
 
 const useStyles = makeStyles(() => ({
@@ -37,14 +37,15 @@ function PropFilters() {
   const classes = useStyles();
   const { mainFilters, specificFilters, setSpecificTextFilters, setSpecificBoolFilter } = useContext(ShopContext);
 
-  const allCachedCategories = useCategoriesFromCache();
+  const { data: allCategories } = useCategories();
 
-  const chosenCategoriesProperties = allCachedCategories?.data
+  const chosenCategoriesProperties = allCategories?.data
     ?.filter(x => mainFilters?.categories?.includes(x.slug))
+    ?.sort((a, b) => a.importance - b.importance)
     ?.map(x => ({
       name: x.name,
       slug: x.slug,
-      properties: x.properties,
+      properties: x.properties.filter(p => !!p.filterable),
     }));
 
   const handleChangeBoolCheckbox = event => {

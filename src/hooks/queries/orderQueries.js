@@ -18,7 +18,7 @@ export function useOrder(orderId) {
 
 export function useOrders(query, config) {
   const queryClient = useQueryClient();
-  const params = query ? new URLSearchParams(query) : undefined;
+  const params = new URLSearchParams(query || '');
   const key = query ? ['orders', query] : ['orders'];
 
   return useQuery(key, () => api.orders.getAll(params), {

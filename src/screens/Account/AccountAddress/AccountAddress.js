@@ -27,7 +27,7 @@ import {
   useUpdateAddress,
 } from '../../../hooks/queries/userQueries';
 import { useFormServerErrors } from '../../../hooks/useFormServerErrors';
-import { diff } from '../../../utils/diff';
+import { diff, isEmptyObject } from '../../../utils/diff';
 import AddressTable from './AddressTable/AddressTable';
 import AddressToolbar from './AddressToolbar/AddressToolbar';
 
@@ -110,10 +110,11 @@ function AccountAddress() {
     const changes = diff(baseFormObj, values);
     const payload = { id: address?.id, details: values };
 
-    if (Object.keys(changes).length === 0) {
+    if (isEmptyObject(changes)) {
       toast.info('No changes applied');
     }
-    if (Object.keys(changes).length > 0) {
+
+    if (!isEmptyObject(changes)) {
       editAddressMutation.mutate(payload);
     }
   };

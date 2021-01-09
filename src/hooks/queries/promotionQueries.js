@@ -21,7 +21,7 @@ export function usePromotionStatus(promoCode, config) {
 
 export function usePromotions(query, config) {
   const queryClient = useQueryClient();
-  const params = query ? new URLSearchParams(query) : undefined;
+  const params = new URLSearchParams(query || '');
   const key = query ? ['promotions', query] : ['promotions'];
 
   return useQuery(key, () => api.promotions.getAll(params), {
@@ -45,7 +45,14 @@ export function useCreatePromotion() {
         if (matches(key)) {
           queryClient.setQueryData(key, old => ({
             ...old,
-            data: [...old.data, values],
+            data: [
+              ...old.data,
+              {
+                ...values,
+                startsAt: values.startsAt.toISOString(),
+                endsAt: values.endsAt.toISOString(),
+              },
+            ],
           }));
         }
       });

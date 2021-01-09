@@ -51,13 +51,6 @@ export function ShopProvider({ children }) {
     }));
   };
 
-  const initSpecificFilters = obj => {
-    setSpecific(old => ({
-      ...old,
-      ...obj,
-    }));
-  };
-
   const setSpecificTextFilters = ({ name, items }) => {
     setSpecific(old => ({
       ...old,
@@ -173,7 +166,6 @@ export function ShopProvider({ children }) {
         priceFilters,
         priceValues,
         setMainFilters,
-        initSpecificFilters,
         setSpecificTextFilters,
         updateSpecificFilters,
         setPriceValues,

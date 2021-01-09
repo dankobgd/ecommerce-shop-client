@@ -1,9 +1,11 @@
 import React from 'react';
 
-import { Card, CardContent, Container, Typography } from '@material-ui/core';
+import { Card, CardContent, Container } from '@material-ui/core';
 import { makeStyles } from '@material-ui/styles';
 
+import PreviewItem from '../../../components/TableComponents/PreviewItem';
 import { usePromotion } from '../../../hooks/queries/promotionQueries';
+import { formatDate } from '../../../utils/formatDate';
 import PreviewToolbar from '../PromotionsToolbar/PreviewToolbar';
 
 const useStyles = makeStyles({
@@ -15,30 +17,25 @@ const useStyles = makeStyles({
 
 function PreviewPromotion({ promoCode }) {
   const classes = useStyles();
-
   const { data: promotion } = usePromotion(promoCode);
 
   return (
-    <>
-      <Container component='main' maxWidth='md'>
-        <PreviewToolbar />
-        <Card className={classes.root} variant='outlined'>
-          <CardContent>
-            {promotion &&
-              Object.entries(promotion).map(([key, val], idx) => (
-                <div key={key} style={{ marginTop: idx !== 0 ? '1rem' : 0 }}>
-                  <Typography variant='subtitle2' color='textSecondary' gutterBottom>
-                    {key}
-                  </Typography>
-                  <Typography variant='h5' color='textPrimary' gutterBottom>
-                    {val}
-                  </Typography>
-                </div>
-              ))}
-          </CardContent>
-        </Card>
-      </Container>
-    </>
+    <Container component='main' maxWidth='md'>
+      <PreviewToolbar />
+      <Card className={classes.root} variant='outlined'>
+        <CardContent>
+          <PreviewItem title='Promo Code' value={promotion?.promoCode} />
+          <PreviewItem title='Type' value={promotion?.type} />
+          <PreviewItem
+            title='Amount'
+            value={promotion?.type === 'fixed' ? `$${promotion?.amount}` : `${promotion?.amount}%`}
+          />
+          <PreviewItem title='Description' value={promotion?.description} />
+          <PreviewItem title='Starts at' value={formatDate(promotion?.startsAt)} />
+          <PreviewItem title='Ends at' value={formatDate(promotion?.endsAt)} />
+        </CardContent>
+      </Card>
+    </Container>
   );
 }
 

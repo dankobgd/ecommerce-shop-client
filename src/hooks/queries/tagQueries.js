@@ -17,7 +17,7 @@ export function useTag(tagId) {
 
 export function useTags(query, config) {
   const queryClient = useQueryClient();
-  const params = query ? new URLSearchParams(query) : undefined;
+  const params = new URLSearchParams(query || '');
   const key = query ? ['tags', query] : ['tags'];
 
   return useQuery(key, () => api.tags.getAll(params), {

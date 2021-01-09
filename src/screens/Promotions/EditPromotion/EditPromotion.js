@@ -18,8 +18,7 @@ import ErrorMessage from '../../../components/Message/ErrorMessage';
 import { ToastContext } from '../../../components/Toast/ToastContext';
 import { usePromotion, useUpdatePromotion } from '../../../hooks/queries/promotionQueries';
 import { useFormServerErrors } from '../../../hooks/useFormServerErrors';
-import { diff } from '../../../utils/diff';
-import { transformValuesToNumbers } from '../../../utils/transformObjectKeys';
+import { diff, isEmptyObject } from '../../../utils/diff';
 import { rules } from '../../../utils/validation';
 
 const useStyles = makeStyles(theme => ({
@@ -42,9 +41,8 @@ const useStyles = makeStyles(theme => ({
 }));
 
 const schema = Yup.object({
-  // promoCode: Yup.string().required(),
   type: Yup.string().required(),
-  amount: Yup.string().required(),
+  amount: rules.requiredPositiveNumber,
   description: Yup.string(),
   startsAt: rules.startDate,
   endsAt: rules.endDate('startsAt'),
@@ -77,8 +75,8 @@ function EditPromotionForm({ promoCode }) {
   const editPromotionMutation = useUpdatePromotion(promoCode);
 
   const onSubmit = values => {
-    // because date is in different format so it looks like form has changed fields
-    // so i convert all to iso string see if it has changed...
+    // i convert all dates to iso to check deep equal for changed data
+    // because returned data from server is iso string and form contains date object...
     const base = {
       ...baseFormObj,
       startsAt: new Date(baseFormObj.startsAt).toISOString(),
@@ -91,13 +89,12 @@ function EditPromotionForm({ promoCode }) {
     };
 
     const changes = diff(base, vals);
-    const transformed = transformValuesToNumbers(values, ['amount']);
 
-    if (Object.keys(changes).length === 0) {
+    if (isEmptyObject(changes)) {
       toast.info('No changes applied');
     }
-    if (Object.keys(changes).length > 0) {
-      editPromotionMutation.mutate({ code: promotion.promoCode, values: transformed });
+    if (!isEmptyObject(changes)) {
+      editPromotionMutation.mutate({ code: promotion.promoCode, values: changes });
     }
   };
 
@@ -107,12 +104,8 @@ function EditPromotionForm({ promoCode }) {
 
   React.useEffect(() => {
     if (promotion) {
-      // eslint-disable-next-line no-unused-vars
-      const { amount, startsAt, endsAt, ...rest } = promotion;
-      const obj = { ...rest, amount: amount?.toString() || '', startsAt, endsAt };
-
-      setBaseFormObj(obj);
-      reset(obj);
+      setBaseFormObj(promotion);
+      reset(promotion);
     }
   }, [promotion, reset]);
 

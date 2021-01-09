@@ -89,7 +89,7 @@ function Filter({ tagsList, brandsList, categoriesList, setFilterQueryString, se
 
     const { priceMin, priceMax, categories, tags, brands, ...restFilters } = filtered;
 
-    const params = new URLSearchParams();
+    const params = new URLSearchParams({ page: 1, per_page: 20 });
 
     if (priceMin) {
       params.append('price_min', priceMin);
@@ -127,8 +127,12 @@ function Filter({ tagsList, brandsList, categoriesList, setFilterQueryString, se
 
     if (priceMin || priceMax || brands?.length > 0 || tags?.length > 0 || categories?.length > 0) {
       setShouldFetchAllByFilter(true);
-      setFilterQueryString(params.toString());
       setHasSearched(true);
+      setFilterQueryString(params.toString());
+    } else {
+      setShouldFetchAllByFilter(true);
+      setHasSearched(true);
+      setFilterQueryString('page=1&per_page=20');
     }
   }, [mainFilters, priceFilters, setFilterQueryString, setHasSearched, setShouldFetchAllByFilter, specificFilters]);
 

@@ -18,7 +18,6 @@ import ErrorMessage from '../../../components/Message/ErrorMessage';
 import { ToastContext } from '../../../components/Toast/ToastContext';
 import { useCreatePromotion } from '../../../hooks/queries/promotionQueries';
 import { useFormServerErrors } from '../../../hooks/useFormServerErrors';
-import { transformValuesToNumbers } from '../../../utils/transformObjectKeys';
 import { rules } from '../../../utils/validation';
 
 const useStyles = makeStyles(theme => ({
@@ -43,7 +42,7 @@ const useStyles = makeStyles(theme => ({
 const schema = Yup.object({
   promoCode: Yup.string().required(),
   type: Yup.string().required(),
-  amount: Yup.string().required(),
+  amount: rules.requiredPositiveNumber,
   description: Yup.string(),
   startsAt: rules.startDate,
   endsAt: rules.endDate('startsAt'),
@@ -72,9 +71,8 @@ function CreatePromotionForm() {
 
   const createPromotionMutation = useCreatePromotion();
 
-  const onSubmit = async data => {
-    const transformed = transformValuesToNumbers(data, ['amount']);
-    createPromotionMutation.mutate(transformed);
+  const onSubmit = async values => {
+    createPromotionMutation.mutate(values);
   };
 
   const onError = () => {

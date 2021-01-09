@@ -17,7 +17,7 @@ export function useReview(reviewId) {
 
 export function useReviews(query, config) {
   const queryClient = useQueryClient();
-  const params = query ? new URLSearchParams(query) : undefined;
+  const params = new URLSearchParams(query || '');
   const key = query ? ['reviews', query] : ['reviews'];
 
   return useQuery(key, () => api.reviews.getAll(params), {

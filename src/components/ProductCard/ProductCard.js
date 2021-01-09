@@ -1,9 +1,10 @@
 import React, { useContext } from 'react';
 
-import { Fab } from '@material-ui/core';
+import { Card, Fab } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
 import AddShoppingCartIcon from '@material-ui/icons/AddShoppingCart';
+import { Skeleton } from '@material-ui/lab';
 import { Link } from '@reach/router';
 
 import { formatPriceForDisplay } from '../../utils/priceFormat';
@@ -107,6 +108,27 @@ function ProductCard({ product }) {
         </div>
       </div>
     </div>
+  );
+}
+
+export function SkeletonCard() {
+  return (
+    <Card
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'flex-start',
+        width: '100%',
+        padding: '1rem',
+      }}
+    >
+      <Skeleton variant='circle' width={50} height={50} style={{ marginBottom: 4 }} />
+      <Skeleton variant='rect' style={{ width: '100%' }} height={250} />
+      <Skeleton variant='text' width={170} height={30} />
+      <Skeleton variant='text' width={60} height={30} />
+      <Skeleton variant='circle' width={50} height={50} style={{ marginLeft: 'auto', marginTop: 4 }} />
+    </Card>
   );
 }
 

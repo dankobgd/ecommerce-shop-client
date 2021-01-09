@@ -87,7 +87,7 @@ function CategoryCard({ category }) {
   const { clickMainFilterChoice } = useContext(ShopContext);
 
   const handleCategoryChoice = () => {
-    clickMainFilterChoice({ name: 'categories', value: category.name });
+    clickMainFilterChoice({ name: 'categories', value: category.slug });
   };
 
   return (

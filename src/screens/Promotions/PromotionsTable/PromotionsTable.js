@@ -11,6 +11,7 @@ import {
   TableHead,
   TableRow,
   TablePagination,
+  Chip,
 } from '@material-ui/core';
 import { makeStyles } from '@material-ui/styles';
 import clsx from 'clsx';
@@ -19,6 +20,7 @@ import DeleteDialog from '../../../components/TableComponents/DeleteDialog';
 import { DeleteButton, EditButton, PreviewButton } from '../../../components/TableComponents/TableButtons';
 import { useDeletePromotion, usePromotions } from '../../../hooks/queries/promotionQueries';
 import { diff } from '../../../utils/diff';
+import { formatDate } from '../../../utils/formatDate';
 import { getPersistedPagination, paginationRanges, persistPagination } from '../../../utils/pagination';
 
 const useStyles = makeStyles(theme => ({
@@ -145,11 +147,21 @@ const PromotionsTable = ({ className, ...rest }) => {
                       />
                     </TableCell>
                     <TableCell>{promotion.promoCode}</TableCell>
-                    <TableCell>{promotion.type}</TableCell>
-                    <TableCell>{promotion.amount}</TableCell>
+                    <TableCell>
+                      <Chip
+                        label={promotion.type}
+                        style={{ background: promotion.type === 'fixed' ? '#5b5bd6' : '#9a2424', color: '#fff' }}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={promotion.type === 'fixed' ? `$${promotion.amount}` : `${promotion.amount}%`}
+                        style={{ background: 'green', color: '#fff' }}
+                      />
+                    </TableCell>
                     <TableCell>{promotion.description}</TableCell>
-                    <TableCell>{promotion.startsAt}</TableCell>
-                    <TableCell>{promotion.endsAt}</TableCell>
+                    <TableCell>{formatDate(promotion.startsAt)}</TableCell>
+                    <TableCell>{formatDate(promotion.endsAt)}</TableCell>
                     <TableCell>
                       <PreviewButton to={`${promotion.promoCode}/preview`} />
                     </TableCell>

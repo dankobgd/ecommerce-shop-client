@@ -12,7 +12,7 @@ import ErrorMessage from '../../../components/Message/ErrorMessage';
 import { ToastContext } from '../../../components/Toast/ToastContext';
 import { useBrand, useUpdateBrand } from '../../../hooks/queries/brandQueries';
 import { useFormServerErrors } from '../../../hooks/useFormServerErrors';
-import { diff } from '../../../utils/diff';
+import { diff, isEmptyObject } from '../../../utils/diff';
 import { rules } from '../../../utils/validation';
 import { BrandLogoUploadField } from './FileUploadInputs';
 
@@ -84,10 +84,10 @@ function EditBrandForm({ brandId }) {
       formData.append(name, rest[name]);
     });
 
-    if (Object.keys(changes).length === 0) {
+    if (isEmptyObject(changes)) {
       toast.info('No changes applied');
     }
-    if (Object.keys(changes).length > 0) {
+    if (!isEmptyObject(changes)) {
       editBrandMutation.mutate({ id: brand.id, formData });
     }
   };

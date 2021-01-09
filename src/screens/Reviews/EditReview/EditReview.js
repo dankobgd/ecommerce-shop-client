@@ -12,7 +12,7 @@ import ErrorMessage from '../../../components/Message/ErrorMessage';
 import { ToastContext } from '../../../components/Toast/ToastContext';
 import { useReview, useUpdateReview } from '../../../hooks/queries/reviewQueries';
 import { useFormServerErrors } from '../../../hooks/useFormServerErrors';
-import { diff } from '../../../utils/diff';
+import { diff, isEmptyObject } from '../../../utils/diff';
 
 const useStyles = makeStyles(theme => ({
   paper: {
@@ -64,10 +64,10 @@ function EditReviewForm({ reviewId }) {
   const onSubmit = values => {
     const changes = diff(baseFormObj, values);
 
-    if (Object.keys(changes).length === 0) {
+    if (isEmptyObject(changes)) {
       toast.info('No changes applied');
     }
-    if (Object.keys(changes).length > 0) {
+    if (!isEmptyObject(changes)) {
       const obj = {
         ...values,
         rating: Number.parseInt(values.rating, 10),

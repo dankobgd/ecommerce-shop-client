@@ -15,7 +15,9 @@ export default function FormCheckbox({ name, label = defaultLabel(name), default
           <Controller
             name={name}
             control={control}
-            render={props => <Checkbox onChange={e => props.onChange(e.target.checked)} checked={props.value} />}
+            render={props => (
+              <Checkbox onChange={e => props.onChange(e.target.checked)} checked={props.value || false} />
+            )}
           />
         }
         label={label}

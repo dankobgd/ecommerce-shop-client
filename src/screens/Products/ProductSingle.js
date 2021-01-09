@@ -40,7 +40,7 @@ import {
   useWishlist,
 } from '../../hooks/queries/userQueries';
 import { useFormServerErrors } from '../../hooks/useFormServerErrors';
-import { diff } from '../../utils/diff';
+import { diff, isEmptyObject } from '../../utils/diff';
 import { formatPriceForDisplay } from '../../utils/priceFormat';
 
 const useStyles = makeStyles(() => ({
@@ -249,10 +249,10 @@ function ProductSingle({ productId }) {
   const onSubmitEditReview = values => {
     const changes = diff(baseFormObj, values);
 
-    if (Object.keys(changes).length === 0) {
+    if (isEmptyObject(changes)) {
       toast.info('No changes applied');
     }
-    if (Object.keys(changes).length > 0) {
+    if (!isEmptyObject(changes)) {
       const payload = { productId: Number.parseInt(productId, 10), userId: user.id, ...changes };
       editReviewMutation.mutate({ id: userReview.id, values: payload });
     }

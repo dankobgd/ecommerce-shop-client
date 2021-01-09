@@ -1,9 +1,11 @@
 import React from 'react';
 
-import { Card, CardContent, Container, Typography } from '@material-ui/core';
+import { Card, CardContent, Container } from '@material-ui/core';
 import { makeStyles } from '@material-ui/styles';
 
+import PreviewItem from '../../../components/TableComponents/PreviewItem';
 import { useBrand } from '../../../hooks/queries/brandQueries';
+import { formatDate } from '../../../utils/formatDate';
 import PreviewToolbar from '../BrandsToolbar/PreviewToolbar';
 
 const useStyles = makeStyles({
@@ -24,17 +26,17 @@ function PreviewBrand({ brandId }) {
         <PreviewToolbar />
         <Card className={classes.root} variant='outlined'>
           <CardContent>
-            {brand &&
-              Object.entries(brand).map(([key, val], idx) => (
-                <div key={key} style={{ marginTop: idx !== 0 ? '1rem' : 0 }}>
-                  <Typography variant='subtitle2' color='textSecondary' gutterBottom>
-                    {key}
-                  </Typography>
-                  <Typography variant='h5' color='textPrimary' gutterBottom>
-                    {val}
-                  </Typography>
-                </div>
-              ))}
+            <PreviewItem title='ID' value={brand?.id} />
+            <PreviewItem title='Name' value={brand?.name} />
+            <PreviewItem title='Slug' value={brand?.slug} />
+            <PreviewItem title='Type' value={brand?.type} />
+            <PreviewItem title='Description' value={brand?.description} />
+            <PreviewItem title='Email' value={brand?.email} />
+            <PreviewItem title='Website URL' value={brand?.websiteUrl} />
+            <PreviewItem title='Logo' value={brand?.logo} />
+            <PreviewItem title='Logo Public ID' value={brand?.logoPublicId} />
+            <PreviewItem title='Created at' value={formatDate(brand?.createdAt)} />
+            <PreviewItem title='Updated at' value={formatDate(brand?.updatedAt)} />
           </CardContent>
         </Card>
       </Container>

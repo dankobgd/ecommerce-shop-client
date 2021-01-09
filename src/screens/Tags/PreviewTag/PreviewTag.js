@@ -1,8 +1,9 @@
 import React from 'react';
 
-import { Card, CardContent, Container, Typography } from '@material-ui/core';
+import { Card, CardContent, Container } from '@material-ui/core';
 import { makeStyles } from '@material-ui/styles';
 
+import PreviewItem from '../../../components/TableComponents/PreviewItem';
 import { useTag } from '../../../hooks/queries/tagQueries';
 import PreviewToolbar from '../TagsToolbar/PreviewToolbar';
 
@@ -24,17 +25,10 @@ function PreviewTag({ tagId }) {
         <PreviewToolbar />
         <Card className={classes.root} variant='outlined'>
           <CardContent>
-            {tag &&
-              Object.entries(tag).map(([key, val], idx) => (
-                <div key={key} style={{ marginTop: idx !== 0 ? '1rem' : 0 }}>
-                  <Typography variant='subtitle2' color='textSecondary' gutterBottom>
-                    {key}
-                  </Typography>
-                  <Typography variant='h5' color='textPrimary' gutterBottom>
-                    {val}
-                  </Typography>
-                </div>
-              ))}
+            <PreviewItem title='ID' value={tag?.id} />
+            <PreviewItem title='Name' value={tag?.name} />
+            <PreviewItem title='Slug' value={tag?.slug} />
+            <PreviewItem title='Description' value={tag?.description} />
           </CardContent>
         </Card>
       </Container>
