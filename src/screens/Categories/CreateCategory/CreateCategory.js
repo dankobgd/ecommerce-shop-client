@@ -135,7 +135,7 @@ function CreateCategoryForm() {
           <form onSubmit={handleSubmit(onSubmit, onError)} noValidate>
             <FormTextField name='name' fullWidth />
             <FormTextField name='slug' fullWidth />
-            <FormTextField name='description' fullWidth />
+            <FormTextField name='description' multiline fullWidth rows={5} />
             <FormSwitch name='isFeatured' />
             <CategoryLogoUploadField name='logo' />
 

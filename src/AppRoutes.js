@@ -20,7 +20,6 @@ import PasswordReset from './screens/PasswordRecovery/PasswordReset';
 import ProductRoutes from './screens/Products/ProductRoutes';
 import ProductSingle from './screens/Products/ProductSingle';
 import PromotionRoutes from './screens/Promotions/PromotionRoutes';
-import ReviewRoutes from './screens/Reviews/ReviewRoutes';
 import Shop from './screens/Shop/Shop';
 import TagRoutes from './screens/Tags/TagRoutes';
 import UserRoutes from './screens/Users/UserRoutes';
@@ -43,7 +42,6 @@ function AppRoutes() {
       <AuthRoute path='/wishlist' access='private' component={Wishlist} layout={Main} />
       <AuthRoute path='/users/*' access='private' allowed={['admin']} component={UserRoutes} layout={Main} />
       <AuthRoute path='/products/*' access='private' allowed={['admin']} component={ProductRoutes} layout={Main} />
-      <AuthRoute path='/reviews/*' access='private' allowed={['admin']} component={ReviewRoutes} layout={Main} />
       <AuthRoute path='/promotions/*' access='private' allowed={['admin']} component={PromotionRoutes} layout={Main} />
       <AuthRoute path='/orders/*' access='private' component={OrderRoutes} layout={Main} />
       <AuthRoute path='/categories/*' access='private' allowed={['admin']} component={CategoryRoutes} layout={Main} />

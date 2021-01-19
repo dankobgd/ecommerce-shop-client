@@ -208,7 +208,7 @@ function EditProductForm({ productId }) {
             <CategoryDropdown fullWidth options={categoriesList?.data ?? []} defaultValue={product?.category || ''} />
             <FormTextField name='name' fullWidth />
             <FormTextField name='slug' fullWidth />
-            <FormTextField name='description' fullWidth />
+            <FormTextField name='description' multiline fullWidth rows={5} />
             <FormNumberField name='price' fullWidth prefix='$' />
             <FormSwitch name='inStock' />
             <FormSwitch name='isFeatured' />

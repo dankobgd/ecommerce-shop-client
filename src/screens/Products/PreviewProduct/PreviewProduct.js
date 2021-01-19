@@ -4,10 +4,14 @@ import { Box, Card, CardContent, Container, Tab, Tabs, Typography } from '@mater
 import { makeStyles } from '@material-ui/styles';
 
 import PreviewItem from '../../../components/TableComponents/PreviewItem';
+import { CreateButton, EditButton } from '../../../components/TableComponents/TableButtons';
 import { useProduct, useProductImages, useProductReviews, useProductTags } from '../../../hooks/queries/productQueries';
 import { formatDate } from '../../../utils/formatDate';
 import { formatPriceForDisplay } from '../../../utils/priceFormat';
 import { transformKeysToSnakeCase } from '../../../utils/transformObjectKeys';
+import ProductImagesGrid from './ProductImages/ProductImagesGrid';
+import ProductReviewsTable from './ProductReviews/ProductReviewsTable';
+import ProductTagsTable from './ProductTags/ProductTagsTable';
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -70,7 +74,10 @@ function PreviewProduct({ productId }) {
               <PreviewItem title='Description' value={productData?.description} />
               <PreviewItem title='SKU' value={productData?.sku} />
               <PreviewItem title='Price' value={`$${formatPriceForDisplay(productData?.price)}`} />
-              <PreviewItem title='Image URL' value={productData?.imageUrl} />
+              <PreviewItem
+                title='Image URL'
+                value={<a href={productData?.imageUrl || ''}>{productData?.imageUrl}</a>}
+              />
               <PreviewItem title='Image Public ID' value={productData?.imagePublicId} />
               <PreviewItem title='In Stock' value={category?.inStock ? 'Yes' : 'No'} />
               <PreviewItem title='Is Featured' value={category?.isFeatured ? 'Yes' : 'No'} />
@@ -86,7 +93,7 @@ function PreviewProduct({ productId }) {
                   <Typography variant='h5' color='textPrimary' gutterBottom style={{ marginLeft: 10 }}>
                     {typeof properties?.[prop?.name] === 'boolean'
                       ? properties?.[prop?.name]?.toString()
-                      : prop?.choices?.find(x => x.name === properties?.[prop?.name]).label}
+                      : prop?.choices?.find(x => x?.name === properties?.[prop?.name])?.label}
                   </Typography>
                 </div>
               ))}
@@ -97,7 +104,7 @@ function PreviewProduct({ productId }) {
               <PreviewItem title='Slug' value={category?.slug} />
               <PreviewItem title='Description' value={category?.description} />
               <PreviewItem title='Is Featured' value={category?.isFeatured ? 'Yes' : 'No'} />
-              <PreviewItem title='Logo' value={category?.logo} />
+              <PreviewItem title='Logo' value={<a href={category?.logo || ''}>{category?.logo}</a>} />
               <PreviewItem title='Logo Public ID' value={category?.logoPublicId} />
               <PreviewItem title='Created at' value={formatDate(category?.createdAt)} />
               <PreviewItem title='Updated at' value={formatDate(category?.updatedAt)} />
@@ -126,20 +133,46 @@ function PreviewProduct({ productId }) {
               <PreviewItem title='Type' value={brand?.type} />
               <PreviewItem title='Description' value={brand?.description} />
               <PreviewItem title='Email' value={brand?.email} />
-              <PreviewItem title='Website URL' value={brand?.websiteUrl} />
-              <PreviewItem title='Logo' value={brand?.logo} />
+              <PreviewItem title='Website URL' value={<a href={brand?.websiteUrl || ''}>{brand?.websiteUrl}</a>} />
+              <PreviewItem title='Logo' value={<a href={brand?.logo || ''}>{brand?.logo}</a>} />
               <PreviewItem title='Logo Public ID' value={brand?.logoPublicId} />
               <PreviewItem title='Created at' value={formatDate(brand?.createdAt)} />
               <PreviewItem title='Updated at' value={formatDate(brand?.updatedAt)} />
             </TabPanel>
-            <TabPanel value={value} index={3}>
-              <pre>{JSON.stringify(productTags, null, 2)}</pre>
+            <TabPanel value={value} index={3} disabled>
+              <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: '2rem' }}>
+                <div>
+                  <CreateButton title='Add Tag' to={`/products/${product?.id}/${product?.slug}/tags/create`} />
+                </div>
+                <div style={{ marginLeft: '1rem' }}>
+                  <EditButton title='Edit Tags' to={`/products/${product?.id}/${product?.slug}/tags/edit`} />
+                </div>
+              </div>
+              {productTags?.length === 0 ? (
+                <span>No Tags</span>
+              ) : (
+                <ProductTagsTable tags={productTags} productId={productId} />
+              )}
             </TabPanel>
             <TabPanel value={value} index={4}>
-              <pre>{JSON.stringify(productImages, null, 2)}</pre>
+              <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: '2rem' }}>
+                <CreateButton title='Add Images' to={`/products/${product?.id}/${product?.slug}/images/create`} />
+              </div>
+              {productImages?.length === 0 ? (
+                <span>No Images</span>
+              ) : (
+                <ProductImagesGrid images={productImages} product={product} />
+              )}
             </TabPanel>
             <TabPanel value={value} index={5}>
-              <pre>{JSON.stringify(productReviews, null, 2)}</pre>
+              <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: '2rem' }}>
+                <CreateButton title='Add Review' to={`/products/${product?.id}/${product?.slug}/reviews/create`} />
+              </div>
+              {productReviews?.length === 0 ? (
+                <span>No Reviews</span>
+              ) : (
+                <ProductReviewsTable reviews={productReviews} product={product} />
+              )}
             </TabPanel>
           </CardContent>
         </div>
@@ -161,7 +194,7 @@ function TabPanel(props) {
     >
       {value === index && (
         <Box p={3}>
-          <Typography>{children}</Typography>
+          <div>{children}</div>
         </Box>
       )}
     </div>

@@ -1,18 +1,17 @@
 import React, { useContext } from 'react';
 
-import { yupResolver } from '@hookform/resolvers';
 import { Avatar, CircularProgress, Container, Typography } from '@material-ui/core';
 import LabelIcon from '@material-ui/icons/Label';
 import { makeStyles } from '@material-ui/styles';
 import { FormProvider, useForm } from 'react-hook-form';
-import * as Yup from 'yup';
 
-import { FormTextField, FormSubmitButton } from '../../../components/Form';
-import ErrorMessage from '../../../components/Message/ErrorMessage';
-import { ToastContext } from '../../../components/Toast/ToastContext';
-import { useTag, useUpdateTag } from '../../../hooks/queries/tagQueries';
-import { useFormServerErrors } from '../../../hooks/useFormServerErrors';
-import { diff, isEmptyObject } from '../../../utils/diff';
+import { FormSubmitButton, FormAutoComplete } from '../../../../components/Form';
+import ErrorMessage from '../../../../components/Message/ErrorMessage';
+import { ToastContext } from '../../../../components/Toast/ToastContext';
+import { useUpdateProductTags, useProductTags } from '../../../../hooks/queries/productQueries';
+import { useTags } from '../../../../hooks/queries/tagQueries';
+import { useFormServerErrors } from '../../../../hooks/useFormServerErrors';
+import { diff, isEmptyObject } from '../../../../utils/diff';
 
 const useStyles = makeStyles(theme => ({
   paper: {
@@ -33,24 +32,15 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
-const schema = Yup.object({
-  name: Yup.string().required(),
-  slug: Yup.string().required(),
-  description: Yup.string(),
-});
-
 const formOpts = {
   mode: 'onChange',
   reValidateMode: 'onChange',
   defaultValues: {
-    name: '',
-    slug: '',
-    description: '',
+    tags: [],
   },
-  resolver: yupResolver(schema),
 };
 
-function EditTagForm({ tagId }) {
+function EditProductTags({ productId }) {
   const classes = useStyles();
   const toast = useContext(ToastContext);
   const [baseFormObj, setBaseFormObj] = React.useState({});
@@ -58,9 +48,10 @@ function EditTagForm({ tagId }) {
   const methods = useForm(formOpts);
   const { handleSubmit, setError, reset } = methods;
 
-  const { data: tag } = useTag(tagId);
+  const { data: tags } = useTags();
+  const { data: productTags } = useProductTags(productId);
 
-  const editTagMutation = useUpdateTag(tagId);
+  const editProductTagsMutation = useUpdateProductTags(productId);
 
   const onSubmit = values => {
     const changes = diff(baseFormObj, values);
@@ -69,7 +60,8 @@ function EditTagForm({ tagId }) {
       toast.info('No changes applied');
     }
     if (!isEmptyObject(changes)) {
-      editTagMutation.mutate({ id: tag.id, values: changes });
+      const tagIds = values?.tags?.map(x => x.tagId || x.id);
+      editProductTagsMutation.mutate(tagIds);
     }
   };
 
@@ -77,14 +69,14 @@ function EditTagForm({ tagId }) {
     toast.error('Form has errors, please check the details');
   };
 
-  React.useEffect(() => {
-    if (tag) {
-      setBaseFormObj(tag);
-      reset(tag);
-    }
-  }, [tag, reset]);
+  useFormServerErrors(editProductTagsMutation?.error, setError);
 
-  useFormServerErrors(editTagMutation?.error, setError);
+  React.useEffect(() => {
+    if (productTags) {
+      setBaseFormObj({ tags: productTags });
+      reset({ tags: productTags });
+    }
+  }, [productTags, reset]);
 
   return (
     <Container component='main' maxWidth='xs'>
@@ -93,20 +85,26 @@ function EditTagForm({ tagId }) {
           <LabelIcon />
         </Avatar>
         <Typography component='h1' variant='h5'>
-          Edit Tag
+          Edit Tags
         </Typography>
 
-        {editTagMutation?.isLoading && <CircularProgress />}
-        {editTagMutation?.isError && <ErrorMessage message={editTagMutation?.error?.message} />}
+        {editProductTagsMutation?.isLoading && <CircularProgress />}
+        {editProductTagsMutation?.isError && <ErrorMessage message={editProductTagsMutation?.error?.message} />}
 
         <FormProvider {...methods}>
           <form onSubmit={handleSubmit(onSubmit, onError)} noValidate>
-            <FormTextField name='id' fullWidth inputProps={{ readOnly: true }} disabled />
-            <FormTextField name='name' fullWidth />
-            <FormTextField name='slug' fullWidth />
-            <FormTextField name='description' multiline fullWidth rows={5} />
-            <FormSubmitButton className={classes.submit} fullWidth loading={editTagMutation?.isLoading}>
-              Save Changes
+            <FormAutoComplete
+              filterSelectedOptions
+              multiple
+              name='tags'
+              options={tags?.data || []}
+              getOptionLabel={option => option?.name || ''}
+              getOptionSelected={(option, value) => option?.name === value?.name}
+              fullWidth
+            />
+
+            <FormSubmitButton className={classes.submit} fullWidth loading={editProductTagsMutation?.isLoading}>
+              Update Tags
             </FormSubmitButton>
           </form>
         </FormProvider>
@@ -115,4 +113,4 @@ function EditTagForm({ tagId }) {
   );
 }
 
-export default EditTagForm;
+export default EditProductTags;

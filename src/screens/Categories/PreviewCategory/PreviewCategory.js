@@ -30,7 +30,7 @@ function PreviewCategory({ categoryId }) {
             <PreviewItem title='Slug' value={category?.slug} />
             <PreviewItem title='Description' value={category?.description} />
             <PreviewItem title='Is Featured' value={category?.isFeatured ? 'Yes' : 'No'} />
-            <PreviewItem title='Logo' value={category?.logo} />
+            <PreviewItem title='Logo' value={<a href={category?.logo || ''}>{category?.logo}</a>} />
             <PreviewItem title='Logo Public ID' value={category?.logoPublicId} />
             <PreviewItem title='Created at' value={formatDate(category?.createdAt)} />
             <PreviewItem title='Updated at' value={formatDate(category?.updatedAt)} />

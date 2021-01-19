@@ -11,7 +11,7 @@ export function useBrand(brandId) {
   const queryClient = useQueryClient();
 
   return useQuery(['brands', brandId], () => api.brands.get(brandId), {
-    initialData: () => queryClient.getQueryData('brands')?.data?.find(x => x.id === Number.parseInt(brandId, 10)),
+    initialData: () => queryClient.getQueryData('brands')?.data?.find(x => x.id === Number(brandId)),
   });
 }
 
@@ -76,7 +76,7 @@ export function useUpdateBrand(brandId) {
         if (matches(key)) {
           queryClient.setQueryData(key, old => ({
             ...old,
-            data: [...old.data.map(x => (x.id === Number.parseInt(brandId, 10) ? { ...x, ...data.values } : x))],
+            data: [...old.data.map(x => (x.id === Number(brandId) ? { ...x, ...data.values } : x))],
           }));
         }
       });

@@ -13,7 +13,8 @@ export default function AutoComplete({
   margin = 'normal',
   fullWidth,
   options,
-  defaultValue = '',
+  multiple = false,
+  defaultValue = multiple ? [] : '',
   ...rest
 }) {
   const { control, errors } = useFormContext();
@@ -25,6 +26,7 @@ export default function AutoComplete({
           <Autocomplete
             {...rest}
             {...props}
+            multiple={!!multiple}
             options={options}
             autoHighlight
             renderInput={params => <TextField {...params} label={label} margin={margin} variant={variant} />}

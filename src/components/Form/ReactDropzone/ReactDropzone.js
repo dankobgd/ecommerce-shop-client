@@ -6,24 +6,27 @@ import { useFormContext, Controller } from 'react-hook-form';
 
 export default function DropzoneField({
   name,
-  multiple,
+  multiple = false,
   children,
   fullWidth,
   dropzoneStyles = {},
   containerClassName,
+  defaultValue = multiple ? [] : '',
   ...rest
 }) {
-  const { control, errors } = useFormContext();
+  const { control, errors, getValues } = useFormContext();
+
+  const vals = getValues(name);
 
   return (
     <FormControl fullWidth={fullWidth}>
       <Controller
         render={({ onChange }) => (
           <Dropzone
-            multiple={multiple}
+            multiple={!!multiple}
             containerClassName={containerClassName}
             dropzoneStyles={dropzoneStyles}
-            onChange={e => onChange(multiple ? e.target.files : e.target.files[0])}
+            onChange={e => onChange(multiple ? [...e.target.files] : e.target.files[0])}
             {...rest}
           >
             {children}
@@ -31,11 +34,20 @@ export default function DropzoneField({
         )}
         name={name}
         control={control}
-        defaultValue=''
+        defaultValue={defaultValue}
       />
-      <FormHelperText error={!!errors[name]} margin='dense' variant='outlined'>
-        {errors && errors[name] && errors[name].message}
-      </FormHelperText>
+
+      {multiple ? (
+        errors[name]?.map((e, i) => (
+          <FormHelperText key={i} error={!!errors[name]} margin='dense' variant='outlined'>
+            {vals?.[i]?.name} - {e?.message}
+          </FormHelperText>
+        ))
+      ) : (
+        <FormHelperText error={!!errors[name]} margin='dense' variant='outlined'>
+          {errors && errors[name] && errors[name].message}
+        </FormHelperText>
+      )}
     </FormControl>
   );
 }

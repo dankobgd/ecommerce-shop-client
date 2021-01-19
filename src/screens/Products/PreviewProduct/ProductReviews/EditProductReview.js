@@ -7,12 +7,13 @@ import { makeStyles } from '@material-ui/styles';
 import { FormProvider, useForm } from 'react-hook-form';
 import * as Yup from 'yup';
 
-import { FormTextField, FormSubmitButton, FormRadioGroup } from '../../../components/Form';
-import ErrorMessage from '../../../components/Message/ErrorMessage';
-import { ToastContext } from '../../../components/Toast/ToastContext';
-import { useReview, useUpdateReview } from '../../../hooks/queries/reviewQueries';
-import { useFormServerErrors } from '../../../hooks/useFormServerErrors';
-import { diff, isEmptyObject } from '../../../utils/diff';
+import { FormTextField, FormSubmitButton, FormRating } from '../../../../components/Form';
+import ErrorMessage from '../../../../components/Message/ErrorMessage';
+import { ToastContext } from '../../../../components/Toast/ToastContext';
+import { useProductReview, useUpdateProductReview } from '../../../../hooks/queries/productQueries';
+import { useFormServerErrors } from '../../../../hooks/useFormServerErrors';
+import { diff, isEmptyObject } from '../../../../utils/diff';
+import { rules } from '../../../../utils/validation';
 
 const useStyles = makeStyles(theme => ({
   paper: {
@@ -34,8 +35,9 @@ const useStyles = makeStyles(theme => ({
 }));
 
 const schema = Yup.object({
-  rating: Yup.number().required(),
+  rating: rules.requiredPositiveNumber,
   comment: Yup.string().required(),
+  title: Yup.string().required(),
 });
 
 const formOpts = {
@@ -49,7 +51,7 @@ const formOpts = {
   resolver: yupResolver(schema),
 };
 
-function EditReviewForm({ reviewId }) {
+function EditProductReviewForm({ productId, reviewId }) {
   const classes = useStyles();
   const toast = useContext(ToastContext);
   const [baseFormObj, setBaseFormObj] = React.useState({});
@@ -57,9 +59,9 @@ function EditReviewForm({ reviewId }) {
   const methods = useForm(formOpts);
   const { handleSubmit, setError, reset } = methods;
 
-  const { data: review } = useReview(reviewId);
+  const { data: review } = useProductReview(productId, reviewId);
 
-  const editReviewMutation = useUpdateReview(reviewId);
+  const editProductReviewMutation = useUpdateProductReview(productId, reviewId);
 
   const onSubmit = values => {
     const changes = diff(baseFormObj, values);
@@ -68,12 +70,7 @@ function EditReviewForm({ reviewId }) {
       toast.info('No changes applied');
     }
     if (!isEmptyObject(changes)) {
-      const obj = {
-        ...values,
-        rating: Number.parseInt(values.rating, 10),
-      };
-
-      editReviewMutation.mutate({ id: review.id, values: obj });
+      editProductReviewMutation.mutate(changes);
     }
   };
 
@@ -83,17 +80,12 @@ function EditReviewForm({ reviewId }) {
 
   React.useEffect(() => {
     if (review) {
-      const obj = {
-        ...review,
-        rating: review?.rating?.toString() || '',
-      };
-
-      setBaseFormObj(obj);
-      reset(obj);
+      setBaseFormObj(review);
+      reset(review);
     }
   }, [review, reset]);
 
-  useFormServerErrors(editReviewMutation?.error, setError);
+  useFormServerErrors(editProductReviewMutation?.error, setError);
 
   return (
     <Container component='main' maxWidth='xs'>
@@ -105,30 +97,20 @@ function EditReviewForm({ reviewId }) {
           Edit Review
         </Typography>
 
-        {editReviewMutation?.isLoading && <CircularProgress />}
-        {editReviewMutation?.isError && <ErrorMessage message={editReviewMutation?.error?.message} />}
+        {editProductReviewMutation?.isLoading && <CircularProgress />}
+        {editProductReviewMutation?.isError && <ErrorMessage message={editProductReviewMutation?.error?.message} />}
 
         <FormProvider {...methods}>
           <form onSubmit={handleSubmit(onSubmit, onError)} noValidate>
-            <FormTextField name='id' fullWidth inputProps={{ readOnly: true }} disabled />
             <FormTextField name='productId' fullWidth inputProps={{ readOnly: true }} disabled />
+            <FormTextField name='id' label='Review Id' fullWidth inputProps={{ readOnly: true }} disabled />
 
             <p style={{ marginBottom: 0, paddingBottom: 0 }}>rating</p>
-            <FormRadioGroup
-              row
-              name='rating'
-              options={[
-                { label: '1', value: '1' },
-                { label: '2', value: '2' },
-                { label: '3', value: '3' },
-                { label: '4', value: '4' },
-                { label: '5', value: '5' },
-              ]}
-            />
+            <FormRating name='rating' />
             <FormTextField name='title' fullWidth />
-            <FormTextField name='comment' multiline rowsMax={6} fullWidth />
+            <FormTextField name='comment' multiline fullWidth rows={5} />
 
-            <FormSubmitButton className={classes.submit} fullWidth loading={editReviewMutation?.isLoading}>
+            <FormSubmitButton className={classes.submit} fullWidth loading={editProductReviewMutation?.isLoading}>
               Save Changes
             </FormSubmitButton>
           </form>
@@ -138,4 +120,4 @@ function EditReviewForm({ reviewId }) {
   );
 }
 
-export default EditReviewForm;
+export default EditProductReviewForm;

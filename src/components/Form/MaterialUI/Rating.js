@@ -4,7 +4,7 @@ import { FormControl, FormHelperText } from '@material-ui/core';
 import { Rating } from '@material-ui/lab';
 import { useFormContext, Controller } from 'react-hook-form';
 
-export default function FormNumberField({ name, variant = 'outlined', ...rest }) {
+export default function FormRating({ name, variant = 'outlined', ...rest }) {
   const { control, errors, setValue, trigger } = useFormContext();
 
   return (
@@ -19,7 +19,7 @@ export default function FormNumberField({ name, variant = 'outlined', ...rest })
             value={props.value}
             onChange={(_, value) => {
               props.onChange();
-              setValue(name, value ? Number.parseInt(value) : 0);
+              setValue(name, value ? Number.parseInt(value, 10) : 0);
               trigger(name);
             }}
           />

@@ -115,7 +115,7 @@ function CreatePromotionForm() {
               fullWidth
               isAllowed={values => isAllowedAmountValue(values, watch('type'))}
             />
-            <FormTextField name='description' fullWidth />
+            <FormTextField name='description' multiline fullWidth rows={5} />
 
             <FormDateTimePicker name='startsAt' fullWidth minutesStep={1} disablePast />
             <FormDateTimePicker name='endsAt' fullWidth minutesStep={1} disablePast />

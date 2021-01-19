@@ -11,8 +11,7 @@ export function useCategory(categoryId) {
   const queryClient = useQueryClient();
 
   return useQuery(['categories', categoryId], () => api.categories.get(categoryId), {
-    initialData: () =>
-      queryClient.getQueryData('categories')?.data?.find(x => x.id === Number.parseInt(categoryId, 10)),
+    initialData: () => queryClient.getQueryData('categories')?.data?.find(x => x.id === Number(categoryId)),
   });
 }
 
@@ -88,7 +87,7 @@ export function useUpdateCategory(categoryId) {
         if (matches(key)) {
           queryClient.setQueryData(key, old => ({
             ...old,
-            data: [...old.data.map(x => (x.id === Number.parseInt(categoryId, 10) ? { ...x, ...data.values } : x))],
+            data: [...old.data.map(x => (x.id === Number(categoryId) ? { ...x, ...data.values } : x))],
           }));
         }
       });

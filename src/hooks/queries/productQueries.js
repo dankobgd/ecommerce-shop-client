@@ -7,11 +7,11 @@ import api from '../../api';
 import { ToastContext } from '../../components/Toast/ToastContext';
 import { getPersistedPagination, matches } from '../../utils/pagination';
 
-export function useProduct(productID) {
+export function useProduct(productId) {
   const queryClient = useQueryClient();
 
-  return useQuery(['products', productID], () => api.products.get(productID), {
-    initialData: () => queryClient.getQueryData('products')?.data?.find(x => x.id === Number.parseInt(productID, 10)),
+  return useQuery(['products', productId], () => api.products.get(productId), {
+    initialData: () => queryClient.getQueryData('products')?.data?.find(x => x.id === Number(productId)),
   });
 }
 
@@ -99,7 +99,7 @@ export function useCreateProduct() {
   });
 }
 
-export function useUpdateProduct(productID) {
+export function useUpdateProduct(productId) {
   const queryClient = useQueryClient();
   const toast = useContext(ToastContext);
 
@@ -108,25 +108,25 @@ export function useUpdateProduct(productID) {
   return useMutation(({ id, formData }) => api.products.update(id, formData), {
     onMutate: data => {
       queryClient.cancelQueries('products');
-      const previousValue = queryClient.getQueryData(['products', productID]);
+      const previousValue = queryClient.getQueryData(['products', productId]);
 
       keys.forEach(key => {
         if (matches(key)) {
           queryClient.setQueryData(key, old => ({
             ...old,
-            data: [...old.data.map(x => (x.id === Number.parseInt(productID, 10) ? { ...x, ...data.values } : x))],
+            data: [...old.data.map(x => (x.id === Number(productId) ? { ...x, ...data.values } : x))],
           }));
         }
       });
 
-      queryClient.setQueryData(['products', productID], data.values);
+      queryClient.setQueryData(['products', productId], data.values);
       return previousValue;
     },
     onSuccess: () => {
       toast.success('Product updated');
     },
     onError: (_, __, previousValue) => {
-      queryClient.setQueryData(['products', productID], previousValue);
+      queryClient.setQueryData(['products', productId], previousValue);
       toast.error('Form has errors, please check the details');
     },
     onSettled: () => {
@@ -169,12 +169,125 @@ export function useDeleteProduct() {
   });
 }
 
+// Product Tag Queries
+
+export function useCreateProductTag(productId, config) {
+  const queryClient = useQueryClient();
+  const toast = useContext(ToastContext);
+
+  return useMutation(values => api.products.createTag(productId, values), {
+    onMutate: values => {
+      queryClient.cancelQueries(['product', productId, 'tags']);
+      const previousValue = queryClient.getQueryData(['product', productId, 'tags']);
+      queryClient.setQueryData(['product', productId, 'tags'], old => [...old, { id: nanoid(), ...values }]);
+      return previousValue;
+    },
+    onSuccess: () => {
+      toast.success('Product tag created');
+      if (config?.onSuccess) {
+        config.onSuccess();
+      }
+    },
+    onError: (_, __, previousValue) => {
+      queryClient.setQueryData(['product', productId, 'tags'], previousValue);
+      toast.error('Form has errors, please check the details');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries(['product', productId, 'tags']);
+    },
+  });
+}
+
+export function useUpdateProductTags(productId) {
+  const queryClient = useQueryClient();
+  const toast = useContext(ToastContext);
+
+  return useMutation(values => api.products.replaceTags(productId, values), {
+    onSuccess: () => {
+      toast.success('Product tags updated');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries(['product', productId, 'tags']);
+    },
+  });
+}
+
 export function useProductTags(productId, cfg) {
   const queryClient = useQueryClient();
 
   return useQuery(['product', productId, 'tags'], () => api.products.getTags(productId), {
     initialData: () => queryClient.getQueryData(['product', productId, 'tags']),
     ...cfg,
+  });
+}
+
+export function useDeleteProductTag() {
+  const queryClient = useQueryClient();
+  const toast = useContext(ToastContext);
+
+  return useMutation(values => api.products.deleteTag(values.productId, values.tagId), {
+    onMutate: values => {
+      const previousValue = queryClient.getQueryData(['product', values.productId, 'tags']);
+      const filtered = previousValue?.filter(x => x.tagId !== values.tagId);
+      queryClient.setQueryData(['product', values.productId, 'tags'], filtered);
+      return previousValue;
+    },
+    onSuccess: () => {
+      toast.success('Product tag deleted');
+    },
+    onError: (_, variables, previousValue) => {
+      queryClient.setQueryData(['product', variables.productId, 'tags'], previousValue);
+      toast.error('Error deleting the product tag');
+    },
+    onSettled: (_, __, variables) => {
+      queryClient.invalidateQueries(['product', variables.productId, 'tags']);
+    },
+  });
+}
+
+// Product Image Queries
+
+export function useCreateProductImages(productId, config) {
+  const queryClient = useQueryClient();
+  const toast = useContext(ToastContext);
+
+  return useMutation(formData => api.products.createImages(productId, formData), {
+    onSuccess: () => {
+      toast.success('Product images created');
+      if (config?.onSuccess) {
+        config.onSuccess();
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries(['product', productId, 'images']);
+    },
+  });
+}
+
+export function useCreateProductImage(productId, config) {
+  const queryClient = useQueryClient();
+  const toast = useContext(ToastContext);
+
+  return useMutation(formData => api.products.createImage(productId, formData), {
+    onMutate: formData => {
+      queryClient.cancelQueries(['product', productId, 'images']);
+      const previousValue = queryClient.getQueryData(['product', productId, 'images']);
+      queryClient.setQueryData(['product', productId, 'images'], old => [...old, { id: nanoid(), ...formData }]);
+      return previousValue;
+    },
+    onSuccess: () => {
+      toast.success('Product image created');
+      if (config?.onSuccess) {
+        config.onSuccess();
+      }
+    },
+    onError: (_, __, previousValue) => {
+      queryClient.setQueryData(['product', productId, 'images'], previousValue);
+      toast.error('Form has errors, please check the details');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries(['product', productId, 'images']);
+    },
   });
 }
 
@@ -187,11 +300,150 @@ export function useProductImages(productId, cfg) {
   });
 }
 
+export function useUpdateProductImage(productId, imageId) {
+  const queryClient = useQueryClient();
+  const toast = useContext(ToastContext);
+
+  return useMutation(formData => api.products.updateImage(productId, imageId, formData), {
+    onSuccess: () => {
+      toast.success('Image updated');
+    },
+    onError: () => {
+      toast.error('Form has errors, please check the details');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries(['product', productId, 'images']);
+    },
+  });
+}
+
+export function useDeleteProductImage() {
+  const queryClient = useQueryClient();
+  const toast = useContext(ToastContext);
+
+  return useMutation(values => api.products.deleteImage(values.productId, values.imageId), {
+    onMutate: values => {
+      const previousValue = queryClient.getQueryData(['product', values.productId, 'images']);
+      const filtered = previousValue?.filter(x => x.id !== Number(values.imageId));
+      queryClient.setQueryData(['product', values.productId, 'images'], filtered);
+      return previousValue;
+    },
+    onSuccess: () => {
+      toast.success('Product image deleted');
+    },
+    onError: (_, variables, previousValue) => {
+      queryClient.setQueryData(['product', variables.productId, 'images'], previousValue);
+      toast.error('Error deleting the product image');
+    },
+    onSettled: (_, __, variables) => {
+      queryClient.invalidateQueries(['product', variables.productId, 'images']);
+    },
+  });
+}
+
+// Product Review Queries
+
+export function useCreateProductReview(productId, config) {
+  const queryClient = useQueryClient();
+  const toast = useContext(ToastContext);
+
+  return useMutation(values => api.products.createReview(productId, values), {
+    onMutate: values => {
+      queryClient.cancelQueries(['product', productId, 'reviews']);
+      const previousValue = queryClient.getQueryData(['product', productId, 'reviews']);
+      queryClient.setQueryData(['product', productId, 'reviews'], old => [...old, { id: nanoid(), ...values }]);
+      return previousValue;
+    },
+    onSuccess: () => {
+      toast.success('Product review created');
+      if (config?.onSuccess) {
+        config.onSuccess();
+      }
+    },
+    onError: (_, __, previousValue) => {
+      queryClient.setQueryData(['product', productId, 'reviews'], previousValue);
+      toast.error('Form has errors, please check the details');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries(['product', productId, 'reviews']);
+    },
+  });
+}
+
+export function useUpdateProductReview(productId, reviewId, config) {
+  const queryClient = useQueryClient();
+  const toast = useContext(ToastContext);
+
+  return useMutation(values => api.products.updateReview(productId, reviewId, values), {
+    onMutate: values => {
+      queryClient.cancelQueries(['product', productId, 'reviews']);
+      const previousValue = queryClient.getQueryData(['product', productId, 'reviews']);
+
+      queryClient.setQueryData(['product', productId, 'reviews'], old => [
+        ...old.map(x => (x.id === Number(reviewId) ? { ...x, ...values } : x)),
+      ]);
+
+      queryClient.setQueryData(['product', productId, 'reviews', reviewId], values);
+      return previousValue;
+    },
+    onSuccess: () => {
+      toast.success('Review updated');
+      if (config?.onSuccess) {
+        config.onSuccess();
+      }
+    },
+    onError: (_, __, previousValue) => {
+      queryClient.setQueryData(['product', productId, 'reviews'], previousValue);
+      toast.error('Form has errors, please check the details');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries(['product', productId, 'reviews']);
+      queryClient.invalidateQueries(['product', productId, 'reviews', reviewId]);
+    },
+  });
+}
+
 export function useProductReviews(productId, cfg) {
   const queryClient = useQueryClient();
 
   return useQuery(['product', productId, 'reviews'], () => api.products.getReviews(productId), {
     initialData: () => queryClient.getQueryData(['product', productId, 'reviews']),
     ...cfg,
+  });
+}
+
+export function useProductReview(productId, reviewId, cfg) {
+  const queryClient = useQueryClient();
+
+  return useQuery(['product', productId, 'reviews', reviewId], () => api.products.getReview(productId, reviewId), {
+    initialData: () => queryClient.getQueryData(['product', productId, 'reviews', reviewId]),
+    ...cfg,
+  });
+}
+
+export function useDeleteProductReview(config) {
+  const queryClient = useQueryClient();
+  const toast = useContext(ToastContext);
+
+  return useMutation(values => api.products.deleteReview(values.productId, values.reviewId), {
+    onMutate: values => {
+      const previousValue = queryClient.getQueryData(['product', values.productId, 'reviews']);
+      const filtered = previousValue?.filter(x => x.id !== values.reviewId);
+      queryClient.setQueryData(['product', values.productId, 'reviews'], filtered);
+      return previousValue;
+    },
+    onSuccess: () => {
+      toast.success('Product review deleted');
+      if (config?.onSuccess) {
+        config.onSuccess();
+      }
+    },
+    onError: (_, variables, previousValue) => {
+      queryClient.setQueryData(['product', variables.productId, 'reviews'], previousValue);
+      toast.error('Error deleting the product review');
+    },
+    onSettled: (_, __, variables) => {
+      queryClient.invalidateQueries(['product', variables.productId, 'reviews']);
+    },
   });
 }

@@ -31,8 +31,15 @@ import { FormSubmitButton, FormTextField, FormRating } from '../../components/Fo
 import ErrorMessage from '../../components/Message/ErrorMessage';
 import DeleteDialog from '../../components/TableComponents/DeleteDialog';
 import { ToastContext } from '../../components/Toast/ToastContext';
-import { useProduct, useProductImages, useProductReviews, useProductTags } from '../../hooks/queries/productQueries';
-import { useCreateReview, useDeleteReview, useUpdateReview } from '../../hooks/queries/reviewQueries';
+import {
+  useProduct,
+  useProductImages,
+  useProductReviews,
+  useProductTags,
+  useCreateProductReview,
+  useDeleteProductReview,
+  useUpdateProductReview,
+} from '../../hooks/queries/productQueries';
 import {
   useAddProductToWishlist,
   useDeleteProductFromWishlist,
@@ -42,6 +49,7 @@ import {
 import { useFormServerErrors } from '../../hooks/useFormServerErrors';
 import { diff, isEmptyObject } from '../../utils/diff';
 import { formatPriceForDisplay } from '../../utils/priceFormat';
+import { rules } from '../../utils/validation';
 
 const useStyles = makeStyles(() => ({
   gallerySection: {
@@ -155,7 +163,7 @@ const chipColors = [
 const randColor = arr => arr[Math.floor(Math.random() * arr.length)];
 
 const schema = Yup.object({
-  rating: Yup.number().required().moreThan(0),
+  rating: rules.requiredPositiveNumber,
   title: Yup.string().required(),
   comment: Yup.string().required(),
 });
@@ -165,7 +173,7 @@ const formOpts1 = {
   reValidateMode: 'onChange',
   resolver: yupResolver(schema),
   defaultValues: {
-    rating: 0,
+    rating: '',
     title: '',
     comment: '',
   },
@@ -176,7 +184,7 @@ const formOpts2 = {
   reValidateMode: 'onChange',
   resolver: yupResolver(schema),
   defaultValues: {
-    rating: 0,
+    rating: '',
     title: '',
     comment: '',
   },
@@ -185,13 +193,17 @@ const formOpts2 = {
 function ProductSingle({ productId }) {
   const classes = useStyles();
   const toast = useContext(ToastContext);
+
+  const [userReview, setUserReview] = useState(null);
+  const [deleteItem, setDeleteItem] = useState();
   const [baseFormObj, setBaseFormObj] = React.useState({});
   const [selectedImage, setSelectedImage] = useState('');
   const [randomChipColors, setRandomChipColors] = useState([]);
 
   const [reviewDeleteDialogOpen, setReviewDeleteDialogOpen] = useState(false);
-  const handleDeleteReviewDialogOpen = () => {
+  const handleDeleteReviewDialogOpen = review => {
     setReviewDeleteDialogOpen(true);
+    setDeleteItem(review);
   };
   const handleDeleteReviewDialogClose = () => {
     setReviewDeleteDialogOpen(false);
@@ -215,22 +227,25 @@ function ProductSingle({ productId }) {
   });
   const { data: userWishlist } = useWishlist();
 
-  const userReview = productReviews?.find(review => review.userId === user?.id);
   const isOwnReview = rev => rev.userId === user?.id;
 
   const averageRating =
     productReviews?.length > 0 ? productReviews.reduce((sum, r) => sum + r.rating, 0) / productReviews.length : null;
 
-  const isProductWishlisted = userWishlist?.some(x => x.id === Number.parseInt(productId, 10));
+  const isProductWishlisted = userWishlist?.some(x => x.id === Number(productId));
 
-  const createReviewMutation = useCreateReview({
+  const createReviewMutation = useCreateProductReview(productId, {
     onSuccess: () => handleModalClose(),
   });
-  const editReviewMutation = useUpdateReview(productId, {
+  const editProductReviewMutation = useUpdateProductReview(productId, userReview?.id, {
     onSuccess: () => handleModalClose(),
   });
 
-  const deleteReviewMutation = useDeleteReview();
+  const deleteProductReviewMutation = useDeleteProductReview({
+    onSuccess: () => {
+      setUserReview(null);
+    },
+  });
 
   const addToWishlistMutation = useAddProductToWishlist();
   const removeFromWishlistMutation = useDeleteProductFromWishlist();
@@ -242,8 +257,7 @@ function ProductSingle({ productId }) {
   const { handleSubmit: handleSubmitEditReview, setError: setErrorEditReview, reset } = methods2;
 
   const onSubmitCreateReview = values => {
-    const payload = { userId: user.id, productId: Number.parseInt(productId, 10), ...values };
-    createReviewMutation.mutate(payload);
+    createReviewMutation.mutate(values);
   };
 
   const onSubmitEditReview = values => {
@@ -253,8 +267,7 @@ function ProductSingle({ productId }) {
       toast.info('No changes applied');
     }
     if (!isEmptyObject(changes)) {
-      const payload = { productId: Number.parseInt(productId, 10), userId: user.id, ...changes };
-      editReviewMutation.mutate({ id: userReview.id, values: payload });
+      editProductReviewMutation.mutate(changes);
     }
   };
 
@@ -268,14 +281,17 @@ function ProductSingle({ productId }) {
   }, [productTags]);
 
   React.useEffect(() => {
-    if (userReview) {
-      setBaseFormObj(userReview);
-      reset(userReview);
+    const rev = productReviews?.find(review => review.userId === user?.id);
+
+    if (rev) {
+      setUserReview(rev);
+      setBaseFormObj(rev);
+      reset(rev);
     }
-  }, [userReview, reset]);
+  }, [productReviews, reset, user]);
 
   useFormServerErrors(createReviewMutation?.error, setErrorCreateReview);
-  useFormServerErrors(editReviewMutation?.error, setErrorEditReview);
+  useFormServerErrors(editProductReviewMutation?.error, setErrorEditReview);
 
   return (
     <>
@@ -346,9 +362,7 @@ function ProductSingle({ productId }) {
                   </div>
                 ) : (
                   <div>
-                    <IconButton
-                      onClick={() => addToWishlistMutation.mutate({ productId: Number.parseInt(productId, 10) })}
-                    >
+                    <IconButton onClick={() => addToWishlistMutation.mutate({ productId: Number(productId) })}>
                       <FavoriteBorderIcon style={{ color: 'red' }} />
                     </IconButton>
                     <span>Add to wishlist</span>
@@ -429,7 +443,15 @@ function ProductSingle({ productId }) {
                 <div key={nanoid()} className={classes.reviewCard}>
                   {isOwnReview(rev) && (
                     <CustomTooltip title={<Typography color='inherit'>Edit Review</Typography>}>
-                      <IconButton className={classes.reviewEditBtn} color='primary' onClick={handleModalOpen}>
+                      <IconButton
+                        className={classes.reviewEditBtn}
+                        color='primary'
+                        onClick={() => {
+                          handleModalOpen();
+                          setUserReview(rev);
+                          reset(rev);
+                        }}
+                      >
                         <EditIcon />
                       </IconButton>
                     </CustomTooltip>
@@ -437,7 +459,7 @@ function ProductSingle({ productId }) {
 
                   {isOwnReview(rev) && (
                     <CustomTooltip title={<Typography color='inherit'>Delete Review</Typography>}>
-                      <IconButton className={classes.reviewDeleteBtn} onClick={handleDeleteReviewDialogOpen}>
+                      <IconButton className={classes.reviewDeleteBtn} onClick={() => handleDeleteReviewDialogOpen(rev)}>
                         <DeleteIcon />
                       </IconButton>
                     </CustomTooltip>
@@ -471,18 +493,20 @@ function ProductSingle({ productId }) {
           {userReview ? (
             <FormProvider {...methods2}>
               <form onSubmit={handleSubmitEditReview(onSubmitEditReview, onError)} noValidate>
-                {editReviewMutation?.isLoading && <CircularProgress />}
-                {editReviewMutation?.isError && <ErrorMessage message={editReviewMutation.error.message} />}
+                {editProductReviewMutation?.isLoading && <CircularProgress />}
+                {editProductReviewMutation?.isError && (
+                  <ErrorMessage message={editProductReviewMutation.error.message} />
+                )}
 
                 <span>rating: </span>
                 <FormRating name='rating' />
                 <FormTextField name='title' fullWidth />
-                <FormTextField name='comment' multiline fullWidth />
+                <FormTextField name='comment' multiline fullWidth rows={5} />
 
                 <Button onClick={handleModalClose} color='primary'>
                   Cancel
                 </Button>
-                <FormSubmitButton loading={editReviewMutation?.isLoading}>Update Review</FormSubmitButton>
+                <FormSubmitButton loading={editProductReviewMutation?.isLoading}>Update Review</FormSubmitButton>
               </form>
             </FormProvider>
           ) : (
@@ -494,7 +518,7 @@ function ProductSingle({ productId }) {
                 <span>rating: </span>
                 <FormRating name='rating' />
                 <FormTextField name='title' fullWidth />
-                <FormTextField name='comment' multiline fullWidth />
+                <FormTextField name='comment' multiline fullWidth rows={5} />
 
                 <Button onClick={handleModalClose} color='primary'>
                   Cancel
@@ -512,7 +536,7 @@ function ProductSingle({ productId }) {
         dialogOpen={reviewDeleteDialogOpen}
         onClick={() => {
           handleDeleteReviewDialogClose();
-          deleteReviewMutation.mutate(userReview);
+          deleteProductReviewMutation.mutate({ productId, reviewId: deleteItem.id });
         }}
       />
     </>

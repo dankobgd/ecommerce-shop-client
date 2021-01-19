@@ -7,12 +7,12 @@ import { makeStyles } from '@material-ui/styles';
 import { FormProvider, useForm } from 'react-hook-form';
 import * as Yup from 'yup';
 
-import { FormTextField, FormSubmitButton, FormRadioGroup } from '../../../components/Form';
-import ErrorMessage from '../../../components/Message/ErrorMessage';
-import { ToastContext } from '../../../components/Toast/ToastContext';
-import { useCreateReview } from '../../../hooks/queries/reviewQueries';
-import { useUserFromCache } from '../../../hooks/queries/userQueries';
-import { useFormServerErrors } from '../../../hooks/useFormServerErrors';
+import { FormTextField, FormSubmitButton, FormRating } from '../../../../components/Form';
+import ErrorMessage from '../../../../components/Message/ErrorMessage';
+import { ToastContext } from '../../../../components/Toast/ToastContext';
+import { useCreateProductReview } from '../../../../hooks/queries/productQueries';
+import { useFormServerErrors } from '../../../../hooks/useFormServerErrors';
+import { rules } from '../../../../utils/validation';
 
 const useStyles = makeStyles(theme => ({
   paper: {
@@ -34,8 +34,7 @@ const useStyles = makeStyles(theme => ({
 }));
 
 const schema = Yup.object({
-  productId: Yup.string().required(),
-  rating: Yup.string().required(),
+  rating: rules.requiredPositiveNumber,
   title: Yup.string().required(),
   comment: Yup.string().required(),
 });
@@ -44,7 +43,6 @@ const formOpts = {
   mode: 'onChange',
   reValidateMode: 'onChange',
   defaultValues: {
-    productId: '',
     rating: '',
     title: '',
     comment: '',
@@ -52,26 +50,17 @@ const formOpts = {
   resolver: yupResolver(schema),
 };
 
-function CreateReviewForm() {
+function CreateProductReviewForm({ productId }) {
   const classes = useStyles();
   const toast = useContext(ToastContext);
 
   const methods = useForm(formOpts);
   const { handleSubmit, setError } = methods;
 
-  const user = useUserFromCache();
-
-  const createReviewMutation = useCreateReview();
+  const createReviewMutation = useCreateProductReview(productId);
 
   const onSubmit = values => {
-    const obj = {
-      ...values,
-      rating: Number.parseInt(values.rating, 10),
-      productId: Number.parseInt(values.productId, 10),
-      user_id: user.id,
-    };
-
-    createReviewMutation.mutate(obj);
+    createReviewMutation.mutate(values);
   };
 
   const onError = () => {
@@ -96,20 +85,9 @@ function CreateReviewForm() {
         <FormProvider {...methods}>
           <form onSubmit={handleSubmit(onSubmit, onError)} noValidate>
             <p style={{ marginBottom: 0, paddingBottom: 0 }}>rating</p>
-            <FormTextField name='productId' fullWidth />
-            <FormRadioGroup
-              row
-              name='rating'
-              options={[
-                { label: '1', value: '1' },
-                { label: '2', value: '2' },
-                { label: '3', value: '3' },
-                { label: '4', value: '4' },
-                { label: '5', value: '5' },
-              ]}
-            />
+            <FormRating name='rating' />
             <FormTextField name='title' fullWidth />
-            <FormTextField name='comment' multiline rowsMax={6} fullWidth />
+            <FormTextField name='comment' multiline fullWidth rows={5} />
 
             <FormSubmitButton className={classes.submit} fullWidth loading={createReviewMutation?.isLoading}>
               Add Review
@@ -121,4 +99,4 @@ function CreateReviewForm() {
   );
 }
 
-export default CreateReviewForm;
+export default CreateProductReviewForm;

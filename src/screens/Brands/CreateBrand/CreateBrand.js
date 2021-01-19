@@ -104,7 +104,7 @@ function CreateProductForm() {
             <FormTextField name='name' fullWidth />
             <FormTextField name='slug' fullWidth />
             <FormTextField name='type' fullWidth />
-            <FormTextField name='description' fullWidth />
+            <FormTextField name='description' multiline fullWidth rows={5} />
             <FormTextField name='email' fullWidth />
             <FormTextField name='websiteUrl' fullWidth />
             <BrandLogoUploadField name='logo' />

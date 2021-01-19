@@ -33,7 +33,7 @@ function PreviewBrand({ brandId }) {
             <PreviewItem title='Description' value={brand?.description} />
             <PreviewItem title='Email' value={brand?.email} />
             <PreviewItem title='Website URL' value={brand?.websiteUrl} />
-            <PreviewItem title='Logo' value={brand?.logo} />
+            <PreviewItem title='Logo' value={<a href={brand?.logo || ''}>{brand?.logo}</a>} />
             <PreviewItem title='Logo Public ID' value={brand?.logoPublicId} />
             <PreviewItem title='Created at' value={formatDate(brand?.createdAt)} />
             <PreviewItem title='Updated at' value={formatDate(brand?.updatedAt)} />

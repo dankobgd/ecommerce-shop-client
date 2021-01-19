@@ -22,11 +22,11 @@ export default {
   async changePassword(credentials) {
     return apiClient.put(`v1/users/password`, { data: credentials });
   },
-  async update(details) {
-    return apiClient.patch(`v1/users`, { data: details });
+  async update(data) {
+    return apiClient.patch(`v1/users`, { data });
   },
-  async uploadAvatar(formData) {
-    return apiClient.post(`v1/users/avatar`, { data: formData, headers: { 'Content-Type': 'multipart/form-data' } });
+  async uploadAvatar(data) {
+    return apiClient.post(`v1/users/avatar`, { data, headers: { 'Content-Type': 'multipart/form-data' } });
   },
   async deleteAvatar() {
     return apiClient.patch(`v1/users/avatar`);
@@ -34,8 +34,8 @@ export default {
   async getOrders(id, params) {
     return apiClient.get(`v1/users/${id}/orders`, { params });
   },
-  async wishlistAdd(details) {
-    return apiClient.post(`v1/users/wishlist`, { data: details });
+  async wishlistAdd(data) {
+    return apiClient.post(`v1/users/wishlist`, { data });
   },
   async wishlistGet(params) {
     return apiClient.get(`v1/users/wishlist`, { params });
@@ -46,8 +46,8 @@ export default {
   async wishlistClear() {
     return apiClient.delete(`v1/users/wishlist/clear`);
   },
-  async createAddress(details) {
-    return apiClient.post(`v1/users/addresses`, { data: details });
+  async createAddress(data) {
+    return apiClient.post(`v1/users/addresses`, { data });
   },
   async getAddress(id) {
     return apiClient.get(`v1/users/addresses/${id}`);
@@ -55,8 +55,8 @@ export default {
   async getAddresses() {
     return apiClient.get(`v1/users/addresses`);
   },
-  async updateAddress(id, details) {
-    return apiClient.patch(`v1/users/addresses/${id}`, { data: details });
+  async updateAddress(id, data) {
+    return apiClient.patch(`v1/users/addresses/${id}`, { data });
   },
   async deleteAddress(id) {
     return apiClient.delete(`v1/users/addresses/${id}`);

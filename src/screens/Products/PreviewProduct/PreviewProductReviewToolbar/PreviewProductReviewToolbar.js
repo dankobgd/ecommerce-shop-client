@@ -2,14 +2,15 @@ import React from 'react';
 
 import { Button } from '@material-ui/core';
 import AddIcon from '@material-ui/icons/Add';
+import EditIcon from '@material-ui/icons/Edit';
 import { makeStyles } from '@material-ui/styles';
 import { Link } from '@reach/router';
 import clsx from 'clsx';
 
-import SearchInput from '../../../components/SearchInput/SearchInput';
-
 const useStyles = makeStyles(theme => ({
-  root: {},
+  root: {
+    marginTop: theme.spacing(3),
+  },
   row: {
     height: '42px',
     display: 'flex',
@@ -19,10 +20,7 @@ const useStyles = makeStyles(theme => ({
   spacer: {
     flexGrow: 1,
   },
-  importButton: {
-    marginRight: theme.spacing(1),
-  },
-  exportButton: {
+  editButton: {
     marginRight: theme.spacing(1),
   },
   searchInput: {
@@ -30,27 +28,31 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
-const ReviewsToolbar = props => {
-  const { className, ...rest } = props;
+const PreviewToolbar = props => {
+  const { className, productId, productSlug, reviewId, ...rest } = props;
   const classes = useStyles();
 
   return (
     <div {...rest} className={clsx(classes.root, className)}>
       <div className={classes.row}>
         <span className={classes.spacer} />
-        <Button className={classes.importButton}>Import</Button>
-        <Button className={classes.exportButton}>Export</Button>
-        <Link to='create' style={{ textDecoration: 'none' }}>
+        <Link
+          to={`/products/${productId}/${productSlug}/reviews/${reviewId}/edit`}
+          style={{ textDecoration: 'none' }}
+          className={classes.editButton}
+        >
+          <Button startIcon={<EditIcon />} variant='contained'>
+            Edit Review
+          </Button>
+        </Link>
+        <Link to={`/products/${productId}/${productSlug}/reviews/create`} style={{ textDecoration: 'none' }}>
           <Button startIcon={<AddIcon />} color='primary' variant='contained'>
             Add Review
           </Button>
         </Link>
       </div>
-      <div className={classes.row}>
-        <SearchInput className={classes.searchInput} placeholder='Search Review' />
-      </div>
     </div>
   );
 };
 
-export default ReviewsToolbar;
+export default PreviewToolbar;

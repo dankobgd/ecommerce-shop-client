@@ -33,7 +33,7 @@ const responsiveSettings = numToShow => ({
   infinite: true,
   speed: 500,
   autoplay: true,
-  slidesToShow: Number.parseInt(numToShow),
+  slidesToShow: Number.parseInt(numToShow, 10),
   slidesToScroll: 1,
   arrows: false,
   centerMode: true,

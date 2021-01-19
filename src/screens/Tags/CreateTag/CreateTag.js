@@ -10,7 +10,7 @@ import * as Yup from 'yup';
 import { FormTextField, FormSubmitButton } from '../../../components/Form';
 import ErrorMessage from '../../../components/Message/ErrorMessage';
 import { ToastContext } from '../../../components/Toast/ToastContext';
-import { useCreateTag, useTags } from '../../../hooks/queries/tagQueries';
+import { useCreateTag } from '../../../hooks/queries/tagQueries';
 import { useFormServerErrors } from '../../../hooks/useFormServerErrors';
 
 const useStyles = makeStyles(theme => ({
@@ -85,7 +85,7 @@ function CreateTagForm() {
           <form onSubmit={handleSubmit(onSubmit, onError)} noValidate>
             <FormTextField name='name' fullWidth />
             <FormTextField name='slug' fullWidth />
-            <FormTextField name='description' fullWidth />
+            <FormTextField name='description' multiline fullWidth rows={5} />
 
             <FormSubmitButton className={classes.submit} fullWidth loading={createTagMutation?.isLoading}>
               Add Tag

@@ -63,6 +63,11 @@ function checkTransformData(config, data) {
   if (config.skipTransformRequest) {
     return data;
   }
+
+  if (Array.isArray(data)) {
+    return data;
+  }
+
   const withISODate = Object.keys(data).reduce((acc, key) => {
     acc[key] = data[key] instanceof Date ? data[key].toISOString() : data[key];
     return acc;

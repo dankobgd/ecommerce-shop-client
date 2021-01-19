@@ -11,7 +11,7 @@ export function useTag(tagId) {
   const queryClient = useQueryClient();
 
   return useQuery(['tags', tagId], () => api.tags.get(tagId), {
-    initialData: () => queryClient.getQueryData('tags')?.data?.find(x => x.id === Number.parseInt(tagId, 10)),
+    initialData: () => queryClient.getQueryData('tags')?.data?.find(x => x.id === Number(tagId)),
   });
 }
 
@@ -76,7 +76,7 @@ export function useUpdateTag(tagId) {
         if (matches(key)) {
           queryClient.setQueryData(key, old => ({
             ...old,
-            data: [...old.data.map(x => (x.id === Number.parseInt(tagId, 10) ? { ...x, ...data.values } : x))],
+            data: [...old.data.map(x => (x.id === Number(tagId) ? { ...x, ...data.values } : x))],
           }));
         }
       });

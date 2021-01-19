@@ -12,7 +12,7 @@ export function useOrder(orderId) {
   const queryClient = useQueryClient();
 
   return useQuery(['orders', orderId], () => api.orders.get(orderId), {
-    initialData: () => queryClient.getQueryData('orders')?.data?.find(x => x.id === Number.parseInt(orderId, 10)),
+    initialData: () => queryClient.getQueryData('orders')?.data?.find(x => x.id === Number(orderId)),
   });
 }
 

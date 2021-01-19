@@ -163,15 +163,15 @@ function CreateProductForm() {
     Object.keys(fields).forEach(name => {
       formData.append(name, fields[name]);
     });
-    Object.values(images).forEach(img => {
+    if (!isEmptyObject(properties)) {
+      formData.append('properties', JSON.stringify(transformKeysToSnakeCase(properties)));
+    }
+    images.forEach(img => {
       formData.append('images', img);
     });
     tags.forEach(tag => {
       formData.append('tags', tag.id);
     });
-    if (!isEmptyObject(properties)) {
-      formData.append('properties', JSON.stringify(transformKeysToSnakeCase(properties)));
-    }
 
     createProductMutation.mutate(formData);
   };
@@ -201,7 +201,7 @@ function CreateProductForm() {
             <CategoryDropdown fullWidth options={categoriesList?.data || []} />
             <FormTextField name='name' fullWidth />
             <FormTextField name='slug' fullWidth />
-            <FormTextField name='description' fullWidth />
+            <FormTextField name='description' multiline fullWidth rows={5} />
             <FormNumberField name='price' fullWidth prefix='$' />
             <FormSwitch name='inStock' />
             <FormSwitch name='isFeatured' />
