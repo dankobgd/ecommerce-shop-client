@@ -111,7 +111,7 @@ export function useDeleteTag() {
         if (matches(key)) {
           queryClient.cancelQueries(key);
           const filtered = previousValue?.data?.filter(x => x.id !== id);
-          const obj = { ...previousValue, data: [...filtered] };
+          const obj = { ...previousValue, data: filtered };
           queryClient.setQueryData(key, obj);
         }
       });
@@ -124,6 +124,40 @@ export function useDeleteTag() {
     onError: (_, __, previousValue) => {
       queryClient.setQueryData(['tags', meta], previousValue);
       toast.error('Error deleting the tag');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries('tags');
+    },
+  });
+}
+
+export function useDeleteTags() {
+  const queryClient = useQueryClient();
+  const toast = useContext(ToastContext);
+  const meta = getPersistedPagination('tags');
+  const keys = queryClient.getQueryCache().findAll('tags');
+
+  return useMutation(ids => api.tags.bulkDelete(ids), {
+    onMutate: ids => {
+      const previousValue = queryClient.getQueryData('tags', { active: true });
+
+      keys.forEach(key => {
+        if (matches(key)) {
+          queryClient.cancelQueries(key);
+          const filtered = previousValue?.data?.filter(x => !ids.includes(x.id));
+          const obj = { ...previousValue, data: filtered };
+          queryClient.setQueryData(key, obj);
+        }
+      });
+
+      return previousValue;
+    },
+    onSuccess: () => {
+      toast.success('Tags deleted');
+    },
+    onError: (_, __, previousValue) => {
+      queryClient.setQueryData(['tags', meta], previousValue);
+      toast.error('Error deleting tags');
     },
     onSettled: () => {
       queryClient.invalidateQueries('tags');

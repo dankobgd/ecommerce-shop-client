@@ -14,15 +14,17 @@ import {
   Typography,
   TablePagination,
   Chip,
+  Button,
 } from '@material-ui/core';
 import CheckIcon from '@material-ui/icons/Check';
 import CloseIcon from '@material-ui/icons/Close';
+import DeleteIcon from '@material-ui/icons/Delete';
 import { makeStyles } from '@material-ui/styles';
 import clsx from 'clsx';
 
 import DeleteDialog from '../../../components/TableComponents/DeleteDialog';
 import { DeleteButton, EditButton, PreviewButton } from '../../../components/TableComponents/TableButtons';
-import { useDeleteProduct, useProducts } from '../../../hooks/queries/productQueries';
+import { useDeleteProduct, useDeleteProducts, useProducts } from '../../../hooks/queries/productQueries';
 import { diff } from '../../../utils/diff';
 import { formatDate } from '../../../utils/formatDate';
 import { persistPagination, getPersistedPagination, paginationRanges } from '../../../utils/pagination';
@@ -55,17 +57,25 @@ const ProductsTable = ({ className, ...rest }) => {
   const [pageMeta, setPageMeta] = useState(getPersistedPagination('products'));
   const { data: products } = useProducts(pageMeta, { keepPreviousData: true });
   const deleteProductMutation = useDeleteProduct();
+  const deleteProductsMutation = useDeleteProducts();
 
   const [deleteItem, setDeleteItem] = useState();
   const [selectedData, setSelectedData] = useState([]);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
 
   const handleDialogOpen = () => {
     setDialogOpen(true);
   };
-
   const handleDialogClose = () => {
     setDialogOpen(false);
+  };
+
+  const handleBulkDeleteDialogOpen = () => {
+    setBulkDeleteDialogOpen(true);
+  };
+  const handleBulkDeleteDialogClose = () => {
+    setBulkDeleteDialogOpen(false);
   };
 
   const handleSelectAll = event => {
@@ -115,6 +125,20 @@ const ProductsTable = ({ className, ...rest }) => {
     <>
       <Card {...rest} className={clsx(classes.root, className)}>
         <CardContent className={classes.content}>
+          {selectedData?.length > 0 && (
+            <Button
+              size='small'
+              variant='contained'
+              style={{ backgroundColor: '#dc004e', color: '#fff', margin: '1rem' }}
+              startIcon={<DeleteIcon />}
+              onClick={() => {
+                handleBulkDeleteDialogOpen();
+              }}
+            >
+              Delete {selectedData.length} products
+            </Button>
+          )}
+
           <div className={classes.inner}>
             <Table>
               <TableHead>
@@ -233,6 +257,18 @@ const ProductsTable = ({ className, ...rest }) => {
         onClick={() => {
           handleDialogClose();
           deleteProductMutation.mutate(deleteItem.id);
+        }}
+      />
+
+      <DeleteDialog
+        title={`${selectedData.length} products`}
+        handleDialogClose={handleBulkDeleteDialogClose}
+        dialogOpen={bulkDeleteDialogOpen}
+        onClick={() => {
+          handleBulkDeleteDialogClose();
+          deleteProductsMutation.mutate(selectedData, {
+            onSuccess: () => setSelectedData([]),
+          });
         }}
       />
     </>

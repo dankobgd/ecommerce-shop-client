@@ -179,7 +179,7 @@ export function useDeleteAddress() {
       queryClient.cancelQueries('userAddresses');
       const previousValue = queryClient.getQueryData('userAddresses');
       const filtered = previousValue?.filter(x => x.id !== id);
-      const obj = { ...previousValue, data: [...filtered] };
+      const obj = { ...previousValue, data: filtered };
       queryClient.setQueryData('userAddresses', obj);
       return previousValue;
     },

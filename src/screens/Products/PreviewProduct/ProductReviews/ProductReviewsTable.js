@@ -1,12 +1,23 @@
 import React, { useState } from 'react';
 
-import { Card, CardContent, Checkbox, Table, TableBody, TableCell, TableHead, TableRow } from '@material-ui/core';
+import {
+  Button,
+  Card,
+  CardContent,
+  Checkbox,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+} from '@material-ui/core';
+import DeleteIcon from '@material-ui/icons/Delete';
 import { makeStyles } from '@material-ui/styles';
 import { nanoid } from 'nanoid';
 
 import DeleteDialog from '../../../../components/TableComponents/DeleteDialog';
 import { DeleteButton, EditButton, PreviewButton } from '../../../../components/TableComponents/TableButtons';
-import { useDeleteProductReview } from '../../../../hooks/queries/productQueries';
+import { useDeleteProductReview, useDeleteProductReviews } from '../../../../hooks/queries/productQueries';
 import { truncateText } from '../../../../utils/truncateText';
 
 const useStyles = makeStyles(theme => ({
@@ -32,17 +43,25 @@ const useStyles = makeStyles(theme => ({
 const ProductReviewsTable = ({ reviews, product }) => {
   const classes = useStyles();
   const deleteProductReviewMutation = useDeleteProductReview();
+  const deleteProductReviewsMutation = useDeleteProductReviews();
 
   const [deleteItem, setDeleteItem] = useState();
   const [selectedData, setSelectedData] = useState([]);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
 
   const handleDialogOpen = () => {
     setDialogOpen(true);
   };
-
   const handleDialogClose = () => {
     setDialogOpen(false);
+  };
+
+  const handleBulkDeleteDialogOpen = () => {
+    setBulkDeleteDialogOpen(true);
+  };
+  const handleBulkDeleteDialogClose = () => {
+    setBulkDeleteDialogOpen(false);
   };
 
   const handleSelectAll = event => {
@@ -73,6 +92,19 @@ const ProductReviewsTable = ({ reviews, product }) => {
     <>
       <Card className={classes.root}>
         <CardContent className={classes.content}>
+          {selectedData?.length > 0 && (
+            <Button
+              size='small'
+              variant='contained'
+              style={{ backgroundColor: '#dc004e', color: '#fff', margin: '1rem' }}
+              startIcon={<DeleteIcon />}
+              onClick={() => {
+                handleBulkDeleteDialogOpen();
+              }}
+            >
+              Delete {selectedData.length} reviews
+            </Button>
+          )}
           <div className={classes.inner}>
             <Table>
               <TableHead>
@@ -143,6 +175,21 @@ const ProductReviewsTable = ({ reviews, product }) => {
         onClick={() => {
           handleDialogClose();
           deleteProductReviewMutation.mutate({ productId: product?.id?.toString(), reviewId: deleteItem.id });
+        }}
+      />
+
+      <DeleteDialog
+        title={`${selectedData.length} reviews`}
+        handleDialogClose={handleBulkDeleteDialogClose}
+        dialogOpen={bulkDeleteDialogOpen}
+        onClick={() => {
+          handleBulkDeleteDialogClose();
+          deleteProductReviewsMutation.mutate(
+            { productId: product?.id?.toString(), ids: selectedData },
+            {
+              onSuccess: () => setSelectedData([]),
+            }
+          );
         }}
       />
     </>

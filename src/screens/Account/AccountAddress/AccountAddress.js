@@ -167,7 +167,7 @@ function AccountAddress() {
                 <FormTextField name='city' fullWidth />
                 <FormTextField name='country' fullWidth />
                 <FormTextField name='state' fullWidth />
-                <FormTextField name='phone' fullWidth />
+                <FormTextField name='phone' fullWidth format='(###) ###-####' mask='_' />
 
                 <Button onClick={handleModalClose} color='primary'>
                   Cancel
@@ -186,7 +186,7 @@ function AccountAddress() {
                 <FormTextField name='city' fullWidth />
                 <FormTextField name='country' fullWidth />
                 <FormTextField name='state' fullWidth />
-                <FormTextField name='phone' fullWidth />
+                <FormTextField name='phone' fullWidth format='(###) ###-####' mask='_' />
 
                 <Button onClick={handleModalClose} color='primary'>
                   Cancel

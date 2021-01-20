@@ -16,4 +16,7 @@ export default {
   async delete(id) {
     return apiClient.delete(`v1/tags/${id}`);
   },
+  async bulkDelete(data) {
+    return apiClient.delete(`v1/tags/bulk`, { data });
+  },
 };

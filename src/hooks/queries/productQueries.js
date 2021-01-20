@@ -149,7 +149,7 @@ export function useDeleteProduct() {
         if (matches(key)) {
           queryClient.cancelQueries(key);
           const filtered = previousValue?.data?.filter(x => x.id !== id);
-          const obj = { ...previousValue, data: [...filtered] };
+          const obj = { ...previousValue, data: filtered };
           queryClient.setQueryData(key, obj);
         }
       });
@@ -162,6 +162,43 @@ export function useDeleteProduct() {
     onError: (_, __, previousValue) => {
       queryClient.setQueryData(['products', meta], previousValue);
       toast.error('Error deleting the product');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries('products');
+    },
+  });
+}
+
+export function useDeleteProducts(config) {
+  const queryClient = useQueryClient();
+  const toast = useContext(ToastContext);
+  const meta = getPersistedPagination('products');
+  const keys = queryClient.getQueryCache().findAll('products');
+
+  return useMutation(ids => api.products.bulkDelete(ids), {
+    onMutate: ids => {
+      const previousValue = queryClient.getQueryData('products', { active: true });
+
+      keys.forEach(key => {
+        if (matches(key)) {
+          queryClient.cancelQueries(key);
+          const filtered = previousValue?.data?.filter(x => !ids.includes(x.id));
+          const obj = { ...previousValue, data: filtered };
+          queryClient.setQueryData(key, obj);
+        }
+      });
+
+      return previousValue;
+    },
+    onSuccess: () => {
+      toast.success('Products deleted');
+      if (config?.onSuccess) {
+        config.onSuccess();
+      }
+    },
+    onError: (_, __, previousValue) => {
+      queryClient.setQueryData(['products', meta], previousValue);
+      toast.error('Error deleting products');
     },
     onSettled: () => {
       queryClient.invalidateQueries('products');
@@ -238,6 +275,30 @@ export function useDeleteProductTag() {
     onError: (_, variables, previousValue) => {
       queryClient.setQueryData(['product', variables.productId, 'tags'], previousValue);
       toast.error('Error deleting the product tag');
+    },
+    onSettled: (_, __, variables) => {
+      queryClient.invalidateQueries(['product', variables.productId, 'tags']);
+    },
+  });
+}
+
+export function useDeleteProductTags() {
+  const queryClient = useQueryClient();
+  const toast = useContext(ToastContext);
+
+  return useMutation(values => api.products.bulkDeleteTags(values.productId, values.ids), {
+    onMutate: values => {
+      const previousValue = queryClient.getQueryData(['product', values.productId, 'tags']);
+      const filtered = previousValue?.filter(x => !values.ids.includes(x.tagId));
+      queryClient.setQueryData(['product', values.productId, 'tags'], filtered);
+      return previousValue;
+    },
+    onSuccess: () => {
+      toast.success('Product tags deleted');
+    },
+    onError: (_, variables, previousValue) => {
+      queryClient.setQueryData(['product', variables.productId, 'tags'], previousValue);
+      toast.error('Error deleting product tags');
     },
     onSettled: (_, __, variables) => {
       queryClient.invalidateQueries(['product', variables.productId, 'tags']);
@@ -441,6 +502,33 @@ export function useDeleteProductReview(config) {
     onError: (_, variables, previousValue) => {
       queryClient.setQueryData(['product', variables.productId, 'reviews'], previousValue);
       toast.error('Error deleting the product review');
+    },
+    onSettled: (_, __, variables) => {
+      queryClient.invalidateQueries(['product', variables.productId, 'reviews']);
+    },
+  });
+}
+
+export function useDeleteProductReviews(config) {
+  const queryClient = useQueryClient();
+  const toast = useContext(ToastContext);
+
+  return useMutation(values => api.products.bulkDeleteReviews(values.productId, values.ids), {
+    onMutate: values => {
+      const previousValue = queryClient.getQueryData(['product', values.productId, 'reviews']);
+      const filtered = previousValue?.filter(x => !values.ids.includes(x.id));
+      queryClient.setQueryData(['product', values.productId, 'reviews'], filtered);
+      return previousValue;
+    },
+    onSuccess: () => {
+      toast.success('Product reviews deleted');
+      if (config?.onSuccess) {
+        config.onSuccess();
+      }
+    },
+    onError: (_, variables, previousValue) => {
+      queryClient.setQueryData(['product', variables.productId, 'reviews'], previousValue);
+      toast.error('Error deleting product reviews');
     },
     onSettled: (_, __, variables) => {
       queryClient.invalidateQueries(['product', variables.productId, 'reviews']);

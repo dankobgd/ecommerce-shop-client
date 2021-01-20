@@ -122,7 +122,7 @@ export function useDeletePromotion() {
         if (matches(key)) {
           queryClient.cancelQueries(key);
           const filtered = previousValue?.data?.filter(x => x.promoCode !== promoCode);
-          const obj = { ...previousValue, data: [...filtered] };
+          const obj = { ...previousValue, data: filtered };
           queryClient.setQueryData(key, obj);
         }
       });
@@ -135,6 +135,40 @@ export function useDeletePromotion() {
     onError: (_, __, previousValue) => {
       queryClient.setQueryData(['promotions', meta], previousValue);
       toast.error('Error deleting the promotion');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries('promotions');
+    },
+  });
+}
+
+export function useDeletePromotions() {
+  const queryClient = useQueryClient();
+  const toast = useContext(ToastContext);
+  const meta = getPersistedPagination('promotions');
+  const keys = queryClient.getQueryCache().findAll('promotions');
+
+  return useMutation(codes => api.promotions.bulkDelete(codes), {
+    onMutate: codes => {
+      const previousValue = queryClient.getQueryData('promotions', { active: true });
+
+      keys.forEach(key => {
+        if (matches(key)) {
+          queryClient.cancelQueries(key);
+          const filtered = previousValue?.data?.filter(x => !codes.includes(x.promoCode));
+          const obj = { ...previousValue, data: filtered };
+          queryClient.setQueryData(key, obj);
+        }
+      });
+
+      return previousValue;
+    },
+    onSuccess: () => {
+      toast.success('Promotions deleted');
+    },
+    onError: (_, __, previousValue) => {
+      queryClient.setQueryData(['promotions', meta], previousValue);
+      toast.error('Error deleting promotions');
     },
     onSettled: () => {
       queryClient.invalidateQueries('promotions');

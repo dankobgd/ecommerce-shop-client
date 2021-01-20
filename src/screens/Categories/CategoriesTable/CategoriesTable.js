@@ -13,13 +13,15 @@ import {
   TableRow,
   Typography,
   TablePagination,
+  Button,
 } from '@material-ui/core';
+import DeleteIcon from '@material-ui/icons/Delete';
 import { makeStyles } from '@material-ui/styles';
 import clsx from 'clsx';
 
 import DeleteDialog from '../../../components/TableComponents/DeleteDialog';
 import { DeleteButton, EditButton, PreviewButton } from '../../../components/TableComponents/TableButtons';
-import { useCategories, useDeleteCategory } from '../../../hooks/queries/categoryQueries';
+import { useCategories, useDeleteCategory, useDeleteCategories } from '../../../hooks/queries/categoryQueries';
 import { diff } from '../../../utils/diff';
 import { getPersistedPagination, paginationRanges, persistPagination } from '../../../utils/pagination';
 
@@ -49,17 +51,25 @@ const CategoriesTable = ({ className, ...rest }) => {
   const [pageMeta, setPageMeta] = useState(getPersistedPagination('categories'));
   const { data: categories } = useCategories(pageMeta, { keepPreviousData: true });
   const deleteCategoryMutation = useDeleteCategory();
+  const deleteCategoriesMutation = useDeleteCategories();
 
   const [deleteItem, setDeleteItem] = useState();
   const [selectedData, setSelectedData] = useState([]);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
 
   const handleDialogOpen = () => {
     setDialogOpen(true);
   };
-
   const handleDialogClose = () => {
     setDialogOpen(false);
+  };
+
+  const handleBulkDeleteDialogOpen = () => {
+    setBulkDeleteDialogOpen(true);
+  };
+  const handleBulkDeleteDialogClose = () => {
+    setBulkDeleteDialogOpen(false);
   };
 
   const handleSelectAll = event => {
@@ -109,6 +119,19 @@ const CategoriesTable = ({ className, ...rest }) => {
     <>
       <Card {...rest} className={clsx(classes.root, className)}>
         <CardContent className={classes.content}>
+          {selectedData?.length > 0 && (
+            <Button
+              size='small'
+              variant='contained'
+              style={{ backgroundColor: '#dc004e', color: '#fff', margin: '1rem' }}
+              startIcon={<DeleteIcon />}
+              onClick={() => {
+                handleBulkDeleteDialogOpen();
+              }}
+            >
+              Delete {selectedData.length} categories
+            </Button>
+          )}
           <div className={classes.inner}>
             <Table>
               <TableHead>
@@ -198,6 +221,18 @@ const CategoriesTable = ({ className, ...rest }) => {
         onClick={() => {
           handleDialogClose();
           deleteCategoryMutation.mutate(deleteItem.id);
+        }}
+      />
+
+      <DeleteDialog
+        title={`${selectedData.length} categories`}
+        handleDialogClose={handleBulkDeleteDialogClose}
+        dialogOpen={bulkDeleteDialogOpen}
+        onClick={() => {
+          handleBulkDeleteDialogClose();
+          deleteCategoriesMutation.mutate(selectedData, {
+            onSuccess: () => setSelectedData([]),
+          });
         }}
       />
     </>

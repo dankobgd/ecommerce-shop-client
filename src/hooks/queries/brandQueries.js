@@ -111,7 +111,7 @@ export function useDeleteBrand() {
         if (matches(key)) {
           queryClient.cancelQueries(key);
           const filtered = previousValue?.data?.filter(x => x.id !== id);
-          const obj = { ...previousValue, data: [...filtered] };
+          const obj = { ...previousValue, data: filtered };
           queryClient.setQueryData(key, obj);
         }
       });
@@ -124,6 +124,40 @@ export function useDeleteBrand() {
     onError: (_, __, previousValue) => {
       queryClient.setQueryData(['brands', meta], previousValue);
       toast.error('Error deleting the brand');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries('brands');
+    },
+  });
+}
+
+export function useDeleteBrands() {
+  const queryClient = useQueryClient();
+  const toast = useContext(ToastContext);
+  const meta = getPersistedPagination('brands');
+  const keys = queryClient.getQueryCache().findAll('brands');
+
+  return useMutation(ids => api.brands.bulkDelete(ids), {
+    onMutate: ids => {
+      const previousValue = queryClient.getQueryData('brands', { active: true });
+
+      keys.forEach(key => {
+        if (matches(key)) {
+          queryClient.cancelQueries(key);
+          const filtered = previousValue?.data?.filter(x => !ids.includes(x.id));
+          const obj = { ...previousValue, data: filtered };
+          queryClient.setQueryData(key, obj);
+        }
+      });
+
+      return previousValue;
+    },
+    onSuccess: () => {
+      toast.success('Brands deleted');
+    },
+    onError: (_, __, previousValue) => {
+      queryClient.setQueryData(['brands', meta], previousValue);
+      toast.error('Error deleting brands');
     },
     onSettled: () => {
       queryClient.invalidateQueries('brands');

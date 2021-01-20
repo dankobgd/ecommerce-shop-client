@@ -13,14 +13,16 @@ import {
   TableRow,
   Typography,
   TablePagination,
+  Button,
 } from '@material-ui/core';
+import DeleteIcon from '@material-ui/icons/Delete';
 import { makeStyles } from '@material-ui/styles';
 import clsx from 'clsx';
 import { nanoid } from 'nanoid';
 
 import DeleteDialog from '../../../components/TableComponents/DeleteDialog';
 import { DeleteButton, EditButton, PreviewButton } from '../../../components/TableComponents/TableButtons';
-import { useBrands, useDeleteBrand } from '../../../hooks/queries/brandQueries';
+import { useBrands, useDeleteBrand, useDeleteBrands } from '../../../hooks/queries/brandQueries';
 import { diff } from '../../../utils/diff';
 import { getPersistedPagination, persistPagination } from '../../../utils/pagination';
 
@@ -50,17 +52,25 @@ function BrandsTable({ className, ...rest }) {
   const [pageMeta, setPageMeta] = useState(getPersistedPagination('brands'));
   const { data: brands } = useBrands(pageMeta, { keepPreviousData: true });
   const deleteBrandMutation = useDeleteBrand();
+  const deleteBrandsMutation = useDeleteBrands();
 
   const [deleteItem, setDeleteItem] = useState();
   const [selectedData, setSelectedData] = useState([]);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
 
   const handleDialogOpen = () => {
     setDialogOpen(true);
   };
-
   const handleDialogClose = () => {
     setDialogOpen(false);
+  };
+
+  const handleBulkDeleteDialogOpen = () => {
+    setBulkDeleteDialogOpen(true);
+  };
+  const handleBulkDeleteDialogClose = () => {
+    setBulkDeleteDialogOpen(false);
   };
 
   const handleSelectAll = event => {
@@ -110,6 +120,19 @@ function BrandsTable({ className, ...rest }) {
     <>
       <Card {...rest} className={clsx(classes.root, className)}>
         <CardContent className={classes.content}>
+          {selectedData?.length > 0 && (
+            <Button
+              size='small'
+              variant='contained'
+              style={{ backgroundColor: '#dc004e', color: '#fff', margin: '1rem' }}
+              startIcon={<DeleteIcon />}
+              onClick={() => {
+                handleBulkDeleteDialogOpen();
+              }}
+            >
+              Delete {selectedData.length} brands
+            </Button>
+          )}
           <div className={classes.inner}>
             <Table>
               <TableHead>
@@ -204,6 +227,18 @@ function BrandsTable({ className, ...rest }) {
         onClick={() => {
           handleDialogClose();
           deleteBrandMutation.mutate(deleteItem.id);
+        }}
+      />
+
+      <DeleteDialog
+        title={`${selectedData.length} brands`}
+        handleDialogClose={handleBulkDeleteDialogClose}
+        dialogOpen={bulkDeleteDialogOpen}
+        onClick={() => {
+          handleBulkDeleteDialogClose();
+          deleteBrandsMutation.mutate(selectedData, {
+            onSuccess: () => setSelectedData([]),
+          });
         }}
       />
     </>

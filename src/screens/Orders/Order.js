@@ -128,7 +128,14 @@ function CheckoutForm() {
             <FormTextField name='billingAddress.country' fullWidth />
             <FormTextField name='billingAddress.state' fullWidth />
             <FormTextField name='billingAddress.zip' fullWidth />
-            <FormNumberField name='billingAddress.phone' fullWidth thousandSeparator={false} allowLeadingZeros />
+            <FormNumberField
+              name='billingAddress.phone'
+              fullWidth
+              thousandSeparator={false}
+              allowLeadingZeros
+              format='(###) ###-####'
+              mask='_'
+            />
             <FormCheckbox name='saveAddress' label='Save Address Details For Future Checkouts' />
           </>
         )}
@@ -141,7 +148,14 @@ function CheckoutForm() {
             <FormTextField name='billingAddress.country' fullWidth />
             <FormTextField name='billingAddress.state' fullWidth />
             <FormTextField name='billingAddress.zip' fullWidth />
-            <FormNumberField name='billingAddress.phone' fullWidth thousandSeparator={false} allowLeadingZeros />
+            <FormNumberField
+              name='billingAddress.phone'
+              fullWidth
+              thousandSeparator={false}
+              allowLeadingZeros
+              format='(###) ###-####'
+              mask='_'
+            />
           </>
         )}
 
@@ -161,7 +175,14 @@ function CheckoutForm() {
             <FormTextField name='shippingAddres.country' fullWidth />
             <FormTextField name='shippingAddres.state' fullWidth />
             <FormTextField name='shippingAddress.zip' fullWidth />
-            <FormNumberField name='shippingAddress.phone' fullWidth thousandSeparator={false} allowLeadingZeros />
+            <FormNumberField
+              name='shippingAddress.phone'
+              fullWidth
+              thousandSeparator={false}
+              allowLeadingZeros
+              format='(###) ###-####'
+              mask='_'
+            />
           </>
         )}
 

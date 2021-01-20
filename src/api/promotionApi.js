@@ -19,4 +19,7 @@ export default {
   async getStatus(promoCode) {
     return apiClient.get(`v1/promotions/${promoCode}/status`);
   },
+  async bulkDelete(data) {
+    return apiClient.delete(`v1/promotions/bulk`, { data });
+  },
 };

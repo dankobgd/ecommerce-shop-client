@@ -122,7 +122,7 @@ export function useDeleteCategory() {
         if (matches(key)) {
           queryClient.cancelQueries(key);
           const filtered = previousValue?.data?.filter(x => x.id !== id);
-          const obj = { ...previousValue, data: [...filtered] };
+          const obj = { ...previousValue, data: filtered };
           queryClient.setQueryData(key, obj);
         }
       });
@@ -135,6 +135,40 @@ export function useDeleteCategory() {
     onError: (_, __, previousValue) => {
       queryClient.setQueryData(['categories', meta], previousValue);
       toast.error('Error deleting the category');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries('categories');
+    },
+  });
+}
+
+export function useDeleteCategories() {
+  const queryClient = useQueryClient();
+  const toast = useContext(ToastContext);
+  const meta = getPersistedPagination('categories');
+  const keys = queryClient.getQueryCache().findAll('categories');
+
+  return useMutation(ids => api.categories.bulkDelete(ids), {
+    onMutate: ids => {
+      const previousValue = queryClient.getQueryData('categories', { active: true });
+
+      keys.forEach(key => {
+        if (matches(key)) {
+          queryClient.cancelQueries(key);
+          const filtered = previousValue?.data?.filter(x => !ids.includes(x.id));
+          const obj = { ...previousValue, data: filtered };
+          queryClient.setQueryData(key, obj);
+        }
+      });
+
+      return previousValue;
+    },
+    onSuccess: () => {
+      toast.success('Categories deleted');
+    },
+    onError: (_, __, previousValue) => {
+      queryClient.setQueryData(['categories', meta], previousValue);
+      toast.error('Error deleting categories');
     },
     onSettled: () => {
       queryClient.invalidateQueries('categories');

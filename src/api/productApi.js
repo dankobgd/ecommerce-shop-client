@@ -27,6 +27,9 @@ export default {
   async search(params) {
     return apiClient.get(`v1/products/search`, { params });
   },
+  async bulkDelete(data) {
+    return apiClient.delete(`v1/products/bulk`, { data });
+  },
 
   // product tags
   async createTag(productId, data) {
@@ -43,6 +46,9 @@ export default {
   },
   async deleteTag(productId, tagId) {
     return apiClient.delete(`v1/products/${productId}/tags/${tagId}`);
+  },
+  async bulkDeleteTags(productId, data) {
+    return apiClient.delete(`v1/products/${productId}/tags/bulk`, { data });
   },
 
   // product images
@@ -70,6 +76,9 @@ export default {
   async deleteImage(productId, imageId) {
     return apiClient.delete(`v1/products/${productId}/images/${imageId}`);
   },
+  async bulkDeleteImages(productId, data) {
+    return apiClient.delete(`v1/products/${productId}/images/bulk`, { data });
+  },
 
   // product reviews
   async createReview(productId, data) {
@@ -86,5 +95,8 @@ export default {
   },
   async deleteReview(productId, reviewId) {
     return apiClient.delete(`v1/products/${productId}/reviews/${reviewId}`);
+  },
+  async bulkDeleteReviews(productId, data) {
+    return apiClient.delete(`v1/products/${productId}/reviews/bulk`, { data });
   },
 };
