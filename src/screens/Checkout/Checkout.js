@@ -4,6 +4,7 @@ import { yupResolver } from '@hookform/resolvers';
 import { Button, Chip, Container, Divider, IconButton, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import AddIcon from '@material-ui/icons/Add';
+import ClearIcon from '@material-ui/icons/Clear';
 import ClearAllIcon from '@material-ui/icons/ClearAll';
 import DeleteIcon from '@material-ui/icons/Delete';
 import RemoveIcon from '@material-ui/icons/Remove';
@@ -126,7 +127,7 @@ const useStyles = makeStyles({
 });
 
 const schema = Yup.object({
-  promoCode: Yup.string().required(),
+  promoCode: Yup.string(),
 });
 
 const formOpts = {
@@ -153,7 +154,7 @@ function Checkout() {
   } = useContext(CartContext);
   const [enteredPromoCode, setEnteredPromoCode] = useState('');
 
-  const { isError, error, refetch: fetchStatus } = usePromotionStatus(enteredPromoCode, {
+  const { isError, error, refetch: fetchStatus, remove: resetQuery } = usePromotionStatus(enteredPromoCode, {
     enabled: false,
     retry: false,
     onSuccess: () => setCartPromoCode(enteredPromoCode),
@@ -171,10 +172,24 @@ function Checkout() {
   });
 
   const methods = useForm(formOpts);
-  const { handleSubmit, setError, reset } = methods;
+  const { handleSubmit, setError, reset, watch } = methods;
 
   const onSubmit = values => {
     setEnteredPromoCode(values.promoCode);
+  };
+
+  const handleClearCart = () => {
+    clearItems();
+    setCartPromoCode('');
+    setCartPromotion(null);
+  };
+
+  const handleClearPromoCode = () => {
+    resetQuery();
+    reset({ promoCode: '' });
+    setCartPromoCode('');
+    setCartPromotion(null);
+    setEnteredPromoCode('');
   };
 
   useEffect(() => {
@@ -203,6 +218,8 @@ function Checkout() {
 
   useFormServerErrors(error, setError);
 
+  const watchPromoCode = watch('promoCode');
+
   return (
     <Container>
       <div className={classes.summaryContent}>
@@ -226,11 +243,7 @@ function Checkout() {
               variant='outlined'
               className={classes.clearCartBtn}
               endIcon={<ClearAllIcon />}
-              onClick={() => {
-                clearItems();
-                setCartPromoCode('');
-                setCartPromotion(null);
-              }}
+              onClick={handleClearCart}
             >
               Clear Cart
             </Button>
@@ -248,7 +261,12 @@ function Checkout() {
                   <Typography component='span' variant='subtitle2' color='textPrimary' className={classes.promoCode}>
                     Promo Code: {cartPromoCode}
                   </Typography>
-                  <Chip label={`-${cartPromotion.amount}${cartPromotion.type === 'percentage' ? '%' : '$'}`} />
+
+                  {cartPromotion.type === 'percentage' ? (
+                    <Chip label={`-${cartPromotion.amount}%`} />
+                  ) : (
+                    <Chip label={`-${formatPriceForDisplay(cartPromotion.amount)}$`} />
+                  )}
                 </div>
               </>
             )}
@@ -278,13 +296,27 @@ function Checkout() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <FormProvider {...methods}>
           <form
-            style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+            style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}
             onSubmit={handleSubmit(onSubmit)}
             noValidate
           >
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+              <FormTextField name='promoCode' />
+
+              {enteredPromoCode && (
+                <CustomTooltip title={<Typography color='inherit'>Clear Promo Code</Typography>}>
+                  <IconButton onClick={handleClearPromoCode}>
+                    <ClearIcon />
+                  </IconButton>
+                </CustomTooltip>
+              )}
+
+              <FormSubmitButton disabled={watchPromoCode?.length === 0} style={{ marginLeft: '4px' }}>
+                Redeem
+              </FormSubmitButton>
+            </div>
+
             {isError && <ErrorMessage message={error.message} />}
-            <FormTextField name='promoCode' />
-            <FormSubmitButton style={{ marginLeft: '4px' }}>Redeem</FormSubmitButton>
           </form>
         </FormProvider>
 
@@ -294,6 +326,10 @@ function Checkout() {
           </Button>
         </Link>
       </div>
+
+      <pre>{JSON.stringify({ cartPromoCode }, null, 2)}</pre>
+      <pre>{JSON.stringify({ cartPromotion }, null, 2)}</pre>
+      <pre>{JSON.stringify({ enteredPromoCode }, null, 2)}</pre>
     </Container>
   );
 }

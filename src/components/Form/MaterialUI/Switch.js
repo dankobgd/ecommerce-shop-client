@@ -1,6 +1,7 @@
 import React from 'react';
 
 import { FormControlLabel, Switch, FormControl, FormHelperText } from '@material-ui/core';
+import _ from 'lodash';
 import { useFormContext, Controller } from 'react-hook-form';
 
 import { defaultLabel } from '../helpers';
@@ -8,8 +9,8 @@ import { defaultLabel } from '../helpers';
 export default function FormSwitch({ name, label = defaultLabel(name), error, helperText, defaultValue = false }) {
   const { control, errors } = useFormContext();
 
-  const hasError = error || !!errors?.[name];
-  const errText = helperText || errors?.[name]?.message;
+  const hasError = error || !!(errors && _.get(errors, name));
+  const errText = helperText || (errors && _.get(errors, name)?.message);
 
   return (
     <FormControl>

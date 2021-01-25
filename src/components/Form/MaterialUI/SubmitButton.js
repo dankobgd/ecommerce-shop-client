@@ -8,6 +8,7 @@ export default function SubmitButton({
   color = 'primary',
   margin = 'normal',
   variant = 'contained',
+  disabled = false,
   loading,
   ...rest
 }) {
@@ -17,7 +18,7 @@ export default function SubmitButton({
       color={color}
       margin={margin}
       variant={variant}
-      disabled={loading}
+      disabled={loading || !!disabled}
       className={className}
       {...rest}
     >

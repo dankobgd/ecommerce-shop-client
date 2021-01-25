@@ -20,13 +20,13 @@ export function CartProvider({ children }) {
     setDrawerOpen(prev => !prev);
   };
 
-  const addProduct = product => {
+  const addProduct = (product, quantity = 1) => {
     const item = items.find(x => x.product.id === product.id);
     if (!item) {
-      setItems(old => [...old, { product, quantity: 1 }]);
+      setItems(old => [...old, { product, quantity }]);
     } else {
       setItems(old =>
-        old.map(x => (x.product.id === product.id ? { product: x.product, quantity: x.quantity + 1 } : x))
+        old.map(x => (x.product.id === product.id ? { product: x.product, quantity: x.quantity + quantity } : x))
       );
     }
   };

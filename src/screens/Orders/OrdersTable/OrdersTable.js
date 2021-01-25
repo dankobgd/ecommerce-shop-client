@@ -11,30 +11,15 @@ import {
   TableHead,
   TableRow,
   TablePagination,
-  Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogContentText,
-  DialogActions,
 } from '@material-ui/core';
-import DeleteIcon from '@material-ui/icons/Delete';
-import EditIcon from '@material-ui/icons/Edit';
 import { makeStyles } from '@material-ui/styles';
-import { Link } from '@reach/router';
 import clsx from 'clsx';
 import { nanoid } from 'nanoid';
 
-import { EditButton, PreviewButton } from '../../../components/TableComponents/TableButtons';
+import { PreviewButton } from '../../../components/TableComponents/TableButtons';
 import { useOrders } from '../../../hooks/queries/orderQueries';
-import { useUserFromCache } from '../../../hooks/queries/userQueries';
 import { diff } from '../../../utils/diff';
-import {
-  calculatePaginationStartEndPosition,
-  getPersistedPagination,
-  paginationRanges,
-  persistPagination,
-} from '../../../utils/pagination';
+import { getPersistedPagination, paginationRanges, persistPagination } from '../../../utils/pagination';
 import { formatPriceForDisplay } from '../../../utils/priceFormat';
 
 const useStyles = makeStyles(theme => ({
@@ -62,18 +47,8 @@ const OrdersTable = ({ className, ...rest }) => {
   const classes = useStyles();
   const [pageMeta, setPageMeta] = useState(getPersistedPagination('orders'));
   const { data: orders } = useOrders(pageMeta, { keepPreviousData: true });
-  const user = useUserFromCache();
 
   const [selectedData, setSelectedData] = useState([]);
-  const [dialogOpen, setDialogOpen] = useState(false);
-
-  const handleDialogOpen = () => {
-    setDialogOpen(true);
-  };
-
-  const handleDialogClose = () => {
-    setDialogOpen(false);
-  };
 
   const handleSelectAll = event => {
     const selected = event.target.checked ? orders?.data?.map(x => x.id) : [];
@@ -137,6 +112,7 @@ const OrdersTable = ({ className, ...rest }) => {
                 <TableCell>Status</TableCell>
                 <TableCell>Subtotal</TableCell>
                 <TableCell>Total</TableCell>
+                <TableCell>Promo Code</TableCell>
                 <TableCell>ShippedAt</TableCell>
                 <TableCell>Billing Line1 </TableCell>
                 <TableCell>Billing Line2 </TableCell>
@@ -177,6 +153,7 @@ const OrdersTable = ({ className, ...rest }) => {
                   <TableCell>{order.status}</TableCell>
                   <TableCell>${formatPriceForDisplay(order.subtotal)}</TableCell>
                   <TableCell>${formatPriceForDisplay(order.total)}</TableCell>
+                  <TableCell>{order.promoCode}</TableCell>
                   <TableCell>{order.shippedAt}</TableCell>
                   <TableCell>{order.billingAddressLine1}</TableCell>
                   <TableCell>{order.billingAddressLine2}</TableCell>
@@ -195,10 +172,7 @@ const OrdersTable = ({ className, ...rest }) => {
                   <TableCell>{order.shippingAddressLatitude}</TableCell>
                   <TableCell>{order.shippingAddressLongitude}</TableCell>
                   <TableCell>
-                    <PreviewButton to={`${order.id}/${order.slug}/preview`} />
-                  </TableCell>
-                  <TableCell>
-                    <EditButton to={`${order.id}/${order.slug}/edit`} />
+                    <PreviewButton to={`${order.id}/preview`} />
                   </TableCell>
                 </TableRow>
               ))}

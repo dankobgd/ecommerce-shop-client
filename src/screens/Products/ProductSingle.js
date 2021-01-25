@@ -15,7 +15,12 @@ import {
   makeStyles,
   Typography,
   CircularProgress,
+  Select,
+  FormControl,
+  InputLabel,
+  MenuItem,
 } from '@material-ui/core';
+import AddShoppingCartIcon from '@material-ui/icons/AddShoppingCart';
 import DeleteIcon from '@material-ui/icons/Delete';
 import EditIcon from '@material-ui/icons/Edit';
 import FavoriteIcon from '@material-ui/icons/Favorite';
@@ -29,6 +34,7 @@ import * as Yup from 'yup';
 import CustomTooltip from '../../components/CustomTooltip/CustomTooltip';
 import { FormSubmitButton, FormTextField, FormRating } from '../../components/Form';
 import ErrorMessage from '../../components/Message/ErrorMessage';
+import { CartContext } from '../../components/ShoppingCart/CartContext';
 import DeleteDialog from '../../components/TableComponents/DeleteDialog';
 import { ToastContext } from '../../components/Toast/ToastContext';
 import {
@@ -63,15 +69,15 @@ const useStyles = makeStyles(() => ({
   },
   previewList: {
     marginTop: '1rem',
-    border: '1px solid orange',
     display: 'flex',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-start',
     width: '100%',
   },
 
   imgDiv: {
     width: '100px',
     height: '60px',
+    marginRight: '1rem',
   },
   img: {
     cursor: 'pointer',
@@ -139,6 +145,32 @@ const useStyles = makeStyles(() => ({
   reviewComment: {
     marginTop: '8px',
   },
+  wishlistRemove: {
+    marginLeft: '1rem',
+  },
+  wishlistAdd: {
+    marginLeft: '1rem',
+  },
+
+  originalPrice: {
+    marginTop: '1rem',
+    position: 'relative',
+    color: 'rgba(0, 0, 0, 0.4)',
+
+    '&:before': {
+      position: 'absolute',
+      content: '""',
+      left: 0,
+      top: '50%',
+      right: 0,
+      borderTop: '2px solid',
+      borderColor: 'red',
+      transform: 'rotate(-7deg) scale(1.2)',
+    },
+  },
+  currentPrice: {
+    marginTop: '1rem',
+  },
 }));
 
 const chipColors = [
@@ -193,32 +225,18 @@ const formOpts2 = {
 function ProductSingle({ productId }) {
   const classes = useStyles();
   const toast = useContext(ToastContext);
+  const cart = useContext(CartContext);
 
   const [userReview, setUserReview] = useState(null);
   const [deleteItem, setDeleteItem] = useState();
   const [baseFormObj, setBaseFormObj] = React.useState({});
   const [selectedImage, setSelectedImage] = useState('');
   const [randomChipColors, setRandomChipColors] = useState([]);
-
-  const [reviewDeleteDialogOpen, setReviewDeleteDialogOpen] = useState(false);
-  const handleDeleteReviewDialogOpen = review => {
-    setReviewDeleteDialogOpen(true);
-    setDeleteItem(review);
-  };
-  const handleDeleteReviewDialogClose = () => {
-    setReviewDeleteDialogOpen(false);
-  };
-
   const [modalOpen, setModalOpen] = useState(false);
-  const handleModalOpen = () => {
-    setModalOpen(true);
-  };
-  const handleModalClose = () => {
-    setModalOpen(false);
-  };
+  const [reviewDeleteDialogOpen, setReviewDeleteDialogOpen] = useState(false);
+  const [qty, setQty] = React.useState(1);
 
   const user = useUserFromCache();
-
   const { data: product } = useProduct(productId);
   const { data: productTags } = useProductTags(productId);
   const { data: productReviews } = useProductReviews(productId);
@@ -227,7 +245,28 @@ function ProductSingle({ productId }) {
   });
   const { data: userWishlist } = useWishlist();
 
+  const handleChange = event => {
+    setQty(event.target.value);
+  };
+
+  const handleDeleteReviewDialogOpen = review => {
+    setReviewDeleteDialogOpen(true);
+    setDeleteItem(review);
+  };
+  const handleDeleteReviewDialogClose = () => {
+    setReviewDeleteDialogOpen(false);
+  };
+
+  const handleModalOpen = () => {
+    setModalOpen(true);
+  };
+  const handleModalClose = () => {
+    setModalOpen(false);
+  };
+
   const isOwnReview = rev => rev.userId === user?.id;
+
+  const hasDiscountPrice = product?.price < product?.originalPrice;
 
   const averageRating =
     productReviews?.length > 0 ? productReviews.reduce((sum, r) => sum + r.rating, 0) / productReviews.length : null;
@@ -341,33 +380,73 @@ function ProductSingle({ productId }) {
                 {product?.name}
               </Typography>
 
-              <Typography variant='h4'>${product && formatPriceForDisplay(product.price)}</Typography>
+              {hasDiscountPrice && (
+                <Typography variant='h4' className={classes.originalPrice}>
+                  ${product && formatPriceForDisplay(product.originalPrice)}
+                </Typography>
+              )}
 
-              <div>
+              <Typography variant='h3' className={classes.currentPrice}>
+                ${product && formatPriceForDisplay(product.price)}
+              </Typography>
+
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: '1rem' }}>
                 <Rating name='rating' precision={0.5} value={averageRating || 0} readOnly />
-                <span>{productReviews?.length === 0 ? 'No reviews' : `(${productReviews?.length} reviews)`}</span>
+                <span style={{ marginLeft: '0.625rem' }}>
+                  {productReviews?.length === 0 ? '(No reviews)' : `(${productReviews?.length} reviews)`}
+                </span>
+
+                {isProductWishlisted ? (
+                  <CustomTooltip title={<Typography color='inherit'>Remove from wishlist</Typography>}>
+                    <IconButton
+                      className={classes.wishlistRemove}
+                      onClick={() => removeFromWishlistMutation.mutate(product?.id)}
+                    >
+                      <FavoriteIcon style={{ color: 'red', fontSize: 32 }} />
+                    </IconButton>
+                  </CustomTooltip>
+                ) : (
+                  <CustomTooltip title={<Typography color='inherit'>Add to wishlist</Typography>}>
+                    <IconButton
+                      className={classes.wishlistAdd}
+                      onClick={() => addToWishlistMutation.mutate({ productId: product?.id })}
+                    >
+                      <FavoriteBorderIcon style={{ color: 'red', fontSize: 32 }} />
+                    </IconButton>
+                  </CustomTooltip>
+                )}
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                <Button color='primary' variant='contained'>
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: '1rem' }}>
+                <Button
+                  startIcon={<AddShoppingCartIcon />}
+                  color='primary'
+                  variant='contained'
+                  onClick={() => {
+                    cart.addProduct(product, qty);
+                    toast.success('Product added to cart');
+                  }}
+                >
                   Add to cart
                 </Button>
 
-                {isProductWishlisted ? (
-                  <div>
-                    <IconButton onClick={() => removeFromWishlistMutation.mutate(productId)}>
-                      <FavoriteIcon style={{ color: 'red' }} />
-                    </IconButton>
-                    <span>Remove from wishlist</span>
-                  </div>
-                ) : (
-                  <div>
-                    <IconButton onClick={() => addToWishlistMutation.mutate({ productId: Number(productId) })}>
-                      <FavoriteBorderIcon style={{ color: 'red' }} />
-                    </IconButton>
-                    <span>Add to wishlist</span>
-                  </div>
-                )}
+                <FormControl
+                  variant='outlined'
+                  className={classes.formControl}
+                  size='small'
+                  style={{ marginLeft: '1rem' }}
+                >
+                  <InputLabel id='cart-items-number'>Quantity</InputLabel>
+                  <Select labelId='cart-items-number' value={qty} onChange={handleChange} label='Quantity'>
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 25, 50, 100]
+                      .map(n => ({ value: n, label: n }))
+                      .map(x => (
+                        <MenuItem key={x.value} value={x.value}>
+                          {x.label}
+                        </MenuItem>
+                      ))}
+                  </Select>
+                </FormControl>
               </div>
             </div>
           </Grid>

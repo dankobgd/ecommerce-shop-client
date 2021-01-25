@@ -1,6 +1,7 @@
 import React from 'react';
 
 import { TextField } from '@material-ui/core';
+import _ from 'lodash';
 import { Controller, useFormContext } from 'react-hook-form';
 
 import { defaultLabel } from '../helpers';
@@ -18,8 +19,8 @@ export default function FormTextField({
 }) {
   const { errors, control } = useFormContext();
 
-  const hasError = error || !!errors?.[name];
-  const errText = helperText || errors?.[name]?.message;
+  const hasError = error || !!(errors && _.get(errors, name));
+  const errText = helperText || (errors && _.get(errors, name)?.message);
 
   return (
     <Controller

@@ -1,12 +1,15 @@
 import React, { useContext } from 'react';
 
-import { Card, Fab } from '@material-ui/core';
+import { Card, IconButton } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
 import AddShoppingCartIcon from '@material-ui/icons/AddShoppingCart';
+import FavoriteIcon from '@material-ui/icons/Favorite';
+import FavoriteBorderIcon from '@material-ui/icons/FavoriteBorder';
 import { Skeleton } from '@material-ui/lab';
 import { Link } from '@reach/router';
 
+import { useAddProductToWishlist, useDeleteProductFromWishlist, useWishlist } from '../../hooks/queries/userQueries';
 import { formatPriceForDisplay } from '../../utils/priceFormat';
 import CustomTooltip from '../CustomTooltip/CustomTooltip';
 import { CartContext } from '../ShoppingCart/CartContext';
@@ -58,10 +61,11 @@ const useStyles = makeStyles(theme => ({
     },
   },
   productPrice: {},
-  add: {
+  iconsWrap: {
     marginTop: '1rem',
     display: 'flex',
-    justifyContent: 'flex-end',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
 }));
 
@@ -69,6 +73,12 @@ function ProductCard({ product }) {
   const classes = useStyles();
   const toast = useContext(ToastContext);
   const cart = useContext(CartContext);
+
+  const removeFromWishlistMutation = useDeleteProductFromWishlist();
+  const addToWishlistMutation = useAddProductToWishlist();
+  const { data: userWishlist } = useWishlist();
+
+  const isProductWishlisted = userWishlist?.some(x => x.id === Number(product?.id));
 
   const handleAddToCart = () => {
     cart.addProduct(product);
@@ -99,11 +109,31 @@ function ProductCard({ product }) {
           ${formatPriceForDisplay(product.price)}
         </Typography>
 
-        <div className={classes.add}>
+        <div className={classes.iconsWrap}>
+          {isProductWishlisted ? (
+            <CustomTooltip title={<Typography color='inherit'>Remove from wishlist</Typography>}>
+              <IconButton
+                className={classes.wishlistRemove}
+                onClick={() => removeFromWishlistMutation.mutate(product?.id)}
+              >
+                <FavoriteIcon style={{ color: 'red', fontSize: 32 }} />
+              </IconButton>
+            </CustomTooltip>
+          ) : (
+            <CustomTooltip title={<Typography color='inherit'>Add to wishlist</Typography>}>
+              <IconButton
+                className={classes.wishlistAdd}
+                onClick={() => addToWishlistMutation.mutate({ productId: product?.id })}
+              >
+                <FavoriteBorderIcon style={{ color: 'red', fontSize: 32 }} />
+              </IconButton>
+            </CustomTooltip>
+          )}
+
           <CustomTooltip title={<Typography color='inherit'>Add to cart</Typography>}>
-            <Fab color='primary' variant='round' size='medium' onClick={handleAddToCart}>
-              <AddShoppingCartIcon />
-            </Fab>
+            <IconButton className={classes.cartAdd} onClick={handleAddToCart}>
+              <AddShoppingCartIcon color='primary' style={{ fontSize: 32 }} />
+            </IconButton>
           </CustomTooltip>
         </div>
       </div>

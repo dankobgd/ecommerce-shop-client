@@ -4,6 +4,7 @@ import { makeStyles, Paper, Typography, TextField } from '@material-ui/core';
 import _ from 'lodash';
 import NumberFormat from 'react-number-format';
 
+import { priceToLowestCurrencyDenomination } from '../../../utils/priceFormat';
 import { ShopContext } from '../ShopContext';
 
 const CustomInput = props => <TextField {...props} size='small' variant='outlined' />;
@@ -55,11 +56,11 @@ function PriceFilters() {
   const { priceValues, setPriceMinFilter, setPriceMaxFilter, setPriceValues } = useContext(ShopContext);
 
   const updatePriceMinFilter = value => {
-    setPriceMinFilter(value);
+    setPriceMinFilter(priceToLowestCurrencyDenomination(value));
   };
 
   const updatePriceMaxFilter = value => {
-    setPriceMaxFilter(value);
+    setPriceMaxFilter(priceToLowestCurrencyDenomination(value));
   };
 
   // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -1,7 +1,7 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 
 import { yupResolver } from '@hookform/resolvers';
-import { Container } from '@material-ui/core';
+import { CircularProgress, Container } from '@material-ui/core';
 import { navigate } from '@reach/router';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
@@ -9,16 +9,75 @@ import { FormProvider, useForm } from 'react-hook-form';
 import * as Yup from 'yup';
 
 import { FormCheckbox, FormNumberField, FormSelect, FormSubmitButton, FormTextField } from '../../components/Form';
+import ErrorMessage from '../../components/Message/ErrorMessage';
 import { CartContext } from '../../components/ShoppingCart/CartContext';
+import { ToastContext } from '../../components/Toast/ToastContext';
 import { useCreateOrder } from '../../hooks/queries/orderQueries';
 import { useUserAddresses } from '../../hooks/queries/userQueries';
 import { formatPriceForDisplay } from '../../utils/priceFormat';
-import { rules } from '../../utils/validation';
 import StripeTextField from './StripeFields';
 
 const stripePromise = loadStripe('pk_test_UMv9tcoaZfgnFNKYDou3b1gV');
 
-const schema = Yup.object({});
+const schema = Yup.object({
+  saveAddress: Yup.bool(),
+  useExistingBillingAddress: Yup.bool(),
+  billingAddressId: Yup.number()
+    .positive()
+    .nullable()
+    .transform((v, o) => (o === '' ? null : v))
+    .when('useExistingBillingAddress', {
+      is: true,
+      then: Yup.number().required(),
+    }),
+  sameShippingAsBilling: Yup.bool(),
+  billingAddress: Yup.object({
+    line1: Yup.string()
+      .required()
+      .when('useExistingBillingAddress', {
+        is: val => !val || val === false,
+        then: Yup.string().required(),
+      }),
+    line2: Yup.string(),
+    city: Yup.string()
+      .required()
+      .when('useExistingBillingAddress', {
+        is: val => !val || val === false,
+        then: Yup.string().required(),
+      }),
+    country: Yup.string()
+      .required()
+      .when('useExistingBillingAddress', {
+        is: val => !val || val === false,
+        then: Yup.string().required(),
+      }),
+    state: Yup.string(),
+    zip: Yup.string(),
+    phone: Yup.string(),
+  })
+    .nullable()
+    .default(null),
+  shippingAddress: Yup.object({
+    line1: Yup.string().when('sameShippingAsBilling', {
+      is: val => !val || val === false,
+      then: Yup.string().required(),
+    }),
+    line2: Yup.string(),
+    city: Yup.string().when('sameShippingAsBilling', {
+      is: val => !val || val === false,
+      then: Yup.string().required(),
+    }),
+    country: Yup.string().when('sameShippingAsBilling', {
+      is: val => !val || val === false,
+      then: Yup.string().required(),
+    }),
+    state: Yup.string(),
+    zip: Yup.string(),
+    phone: Yup.string(),
+  })
+    .nullable()
+    .default(null),
+});
 
 const addrValues = {
   line1: '',
@@ -34,25 +93,25 @@ const formOpts = {
   mode: 'onChange',
   reValidateMode: 'onChange',
   defaultValues: {
-    billingAddress: {
-      ...addrValues,
-    },
-    shippingAddress: {
-      ...addrValues,
-    },
-    saveAddress: false,
-    useExistingBillingAddress: false,
     billingAddressId: '',
+    saveAddress: false,
     sameShippingAsBilling: true,
+    useExistingBillingAddress: false,
+    billingAddress: { ...addrValues },
+    shippingAddress: { ...addrValues },
   },
   resolver: yupResolver(schema),
 };
 
 function CheckoutForm() {
+  const toast = useContext(ToastContext);
   const stripe = useStripe();
   const elements = useElements();
   const methods = useForm(formOpts);
   const { watch } = methods;
+
+  const [stripeError, setStripeError] = useState(null);
+  const [stripeComplete, setStripeComplete] = useState(false);
 
   const { items, totalPrice, cartPromoCode, setCartPromoCode, setCartPromotion, resetAll } = useContext(CartContext);
   const { data: userAddresses } = useUserAddresses();
@@ -82,13 +141,11 @@ function CheckoutForm() {
     });
 
     if (error) {
-      console.log(error);
+      setStripeError(error);
     } else {
       const orderPayload = {
         paymentMethodId: paymentMethod.id,
         items: items.map(x => ({ productId: x.product.id, quantity: x.quantity })),
-        billingAddress: data.billingAddress,
-        shippingAddress: data.shippingAddress,
         saveAddress: data.saveAddress,
         useExistingBillingAddress: data.useExistingBillingAddress,
         billingAddressId: data.billingAddressId,
@@ -97,9 +154,21 @@ function CheckoutForm() {
       if (cartPromoCode) {
         orderPayload.promoCode = cartPromoCode;
       }
+      if (data.billingAddress) {
+        orderPayload.billingAddress = data.billingAddress;
+      }
+      if (data.shippingAddress) {
+        orderPayload.shippingAddress = data.shippingAddress;
+      }
 
-      createOrderMutation.mutate(orderPayload);
+      createOrderMutation.mutate(orderPayload, {
+        onSuccess: () => setStripeError(null),
+      });
     }
+  };
+
+  const onError = () => {
+    toast.error('Form has errors, please check the details');
   };
 
   const addressOptions = userAddresses?.map(x => ({
@@ -115,15 +184,29 @@ function CheckoutForm() {
     }
   }, [items.length]);
 
+  const handleStripeCardOnChange = event => {
+    if (event.complete) {
+      setStripeError(null);
+      setStripeComplete(true);
+    } else if (event.error) {
+      setStripeError(event.error);
+      setStripeComplete(false);
+    }
+  };
+
   return (
     <FormProvider {...methods}>
-      <form onSubmit={methods.handleSubmit(onSubmit)} noValidate>
+      <form onSubmit={methods.handleSubmit(onSubmit, onError)} noValidate>
+        {createOrderMutation?.isLoading && <CircularProgress />}
+        {createOrderMutation?.isError && <ErrorMessage message={createOrderMutation?.error?.message} />}
+        {stripeError && <ErrorMessage message={stripeError?.message} />}
+
         {hasAddresses && <FormCheckbox name='useExistingBillingAddress' />}
 
         {!hasAddresses && (
           <>
-            <FormTextField name='billingAddress.line_1' fullWidth />
-            <FormTextField name='billingAddress.line_2' fullWidth />
+            <FormTextField name='billingAddress.line1' fullWidth />
+            <FormTextField name='billingAddress.line2' fullWidth />
             <FormTextField name='billingAddress.city' fullWidth />
             <FormTextField name='billingAddress.country' fullWidth />
             <FormTextField name='billingAddress.state' fullWidth />
@@ -135,6 +218,7 @@ function CheckoutForm() {
               allowLeadingZeros
               format='(###) ###-####'
               mask='_'
+              isString
             />
             <FormCheckbox name='saveAddress' label='Save Address Details For Future Checkouts' />
           </>
@@ -142,8 +226,8 @@ function CheckoutForm() {
 
         {hasAddresses && !existingBilling && (
           <>
-            <FormTextField name='billingAddress.line_1' fullWidth />
-            <FormTextField name='billingAddress.line_2' fullWidth />
+            <FormTextField name='billingAddress.line1' fullWidth />
+            <FormTextField name='billingAddress.line2' fullWidth />
             <FormTextField name='billingAddress.city' fullWidth />
             <FormTextField name='billingAddress.country' fullWidth />
             <FormTextField name='billingAddress.state' fullWidth />
@@ -155,6 +239,7 @@ function CheckoutForm() {
               allowLeadingZeros
               format='(###) ###-####'
               mask='_'
+              isString
             />
           </>
         )}
@@ -172,8 +257,8 @@ function CheckoutForm() {
             <FormTextField name='shippingAddress.line1' fullWidth />
             <FormTextField name='shippingAddress.line2' fullWidth />
             <FormTextField name='shippingAddress.city' fullWidth />
-            <FormTextField name='shippingAddres.country' fullWidth />
-            <FormTextField name='shippingAddres.state' fullWidth />
+            <FormTextField name='shippingAddress.country' fullWidth />
+            <FormTextField name='shippingAddress.state' fullWidth />
             <FormTextField name='shippingAddress.zip' fullWidth />
             <FormNumberField
               name='shippingAddress.phone'
@@ -182,18 +267,23 @@ function CheckoutForm() {
               allowLeadingZeros
               format='(###) ###-####'
               mask='_'
+              isString
             />
           </>
         )}
 
-        <StripeTextField stripeElement={CardElement} style={{ marginTop: '10px' }} />
+        <StripeTextField
+          stripeElement={CardElement}
+          style={{ marginTop: '10px' }}
+          onChange={handleStripeCardOnChange}
+        />
 
         <FormSubmitButton
           color='primary'
           variant='contained'
           type='submit'
           fullWidth
-          disabled={!stripe}
+          disabled={!stripe || !stripeComplete}
           style={{ marginTop: '1rem' }}
           loading={createOrderMutation?.isLoading}
         >

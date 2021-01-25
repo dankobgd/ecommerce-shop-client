@@ -1,6 +1,7 @@
 import React from 'react';
 
 import { FormControl, Select, MenuItem, InputLabel, FormHelperText, OutlinedInput } from '@material-ui/core';
+import _ from 'lodash';
 import { nanoid } from 'nanoid';
 import { useFormContext, Controller } from 'react-hook-form';
 
@@ -26,8 +27,8 @@ export default function MySelect({
     setLabelWidth(labelRef.current.offsetWidth);
   }, [labelRef]);
 
-  const hasError = error || !!errors?.[name];
-  const errText = helperText || errors?.[name]?.message;
+  const hasError = error || !!(errors && _.get(errors, name));
+  const errText = helperText || (errors && _.get(errors, name)?.message);
 
   return (
     <FormControl margin={margin} variant={variant} style={{ minWidth: 115 }} {...rest} fullWidth={fullWidth}>

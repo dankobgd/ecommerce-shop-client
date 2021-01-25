@@ -24,6 +24,7 @@ import { useDeletePromotion, useDeletePromotions, usePromotions } from '../../..
 import { diff } from '../../../utils/diff';
 import { formatDate } from '../../../utils/formatDate';
 import { getPersistedPagination, paginationRanges, persistPagination } from '../../../utils/pagination';
+import { formatPriceForDisplay } from '../../../utils/priceFormat';
 
 const useStyles = makeStyles(theme => ({
   root: {},
@@ -177,10 +178,14 @@ const PromotionsTable = ({ className, ...rest }) => {
                       />
                     </TableCell>
                     <TableCell>
-                      <Chip
-                        label={promotion.type === 'fixed' ? `$${promotion.amount}` : `${promotion.amount}%`}
-                        style={{ background: 'green', color: '#fff' }}
-                      />
+                      {promotion.type === 'percentage' ? (
+                        <Chip label={`${promotion.amount}%`} style={{ background: 'green', color: '#fff' }} />
+                      ) : (
+                        <Chip
+                          label={`$${formatPriceForDisplay(promotion.amount)}`}
+                          style={{ background: 'green', color: '#fff' }}
+                        />
+                      )}
                     </TableCell>
                     <TableCell>{promotion.description}</TableCell>
                     <TableCell>{formatDate(promotion.startsAt)}</TableCell>

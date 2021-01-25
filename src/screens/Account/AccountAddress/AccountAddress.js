@@ -16,7 +16,7 @@ import { makeStyles } from '@material-ui/styles';
 import { FormProvider, useForm } from 'react-hook-form';
 import * as Yup from 'yup';
 
-import { FormSubmitButton, FormTextField } from '../../../components/Form';
+import { FormNumberField, FormSubmitButton, FormTextField } from '../../../components/Form';
 import ErrorMessage from '../../../components/Message/ErrorMessage';
 import { ToastContext } from '../../../components/Toast/ToastContext';
 import {
@@ -167,7 +167,7 @@ function AccountAddress() {
                 <FormTextField name='city' fullWidth />
                 <FormTextField name='country' fullWidth />
                 <FormTextField name='state' fullWidth />
-                <FormTextField name='phone' fullWidth format='(###) ###-####' mask='_' />
+                <FormNumberField name='phone' fullWidth format='(###) ###-####' mask='_' isString />
 
                 <Button onClick={handleModalClose} color='primary'>
                   Cancel
@@ -186,7 +186,7 @@ function AccountAddress() {
                 <FormTextField name='city' fullWidth />
                 <FormTextField name='country' fullWidth />
                 <FormTextField name='state' fullWidth />
-                <FormTextField name='phone' fullWidth format='(###) ###-####' mask='_' />
+                <FormNumberField name='phone' fullWidth format='(###) ###-####' mask='_' isString />
 
                 <Button onClick={handleModalClose} color='primary'>
                   Cancel
