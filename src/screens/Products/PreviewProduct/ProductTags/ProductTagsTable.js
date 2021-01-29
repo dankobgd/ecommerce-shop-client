@@ -47,7 +47,9 @@ const ProductTagsTable = ({ productId, tags }) => {
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
 
   const deleteProductTagMutation = useDeleteProductTag();
-  const deleteProductTagsMutation = useDeleteProductTags();
+  const deleteProductTagsMutation = useDeleteProductTags({
+    onSuccess: () => setSelectedData([]),
+  });
 
   const handleDialogOpen = () => {
     setDialogOpen(true);
@@ -180,12 +182,7 @@ const ProductTagsTable = ({ productId, tags }) => {
         dialogOpen={bulkDeleteDialogOpen}
         onClick={() => {
           handleBulkDeleteDialogClose();
-          deleteProductTagsMutation.mutate(
-            { productId, ids: selectedData },
-            {
-              onSuccess: () => setSelectedData([]),
-            }
-          );
+          deleteProductTagsMutation.mutate({ productId, ids: selectedData });
         }}
       />
     </>

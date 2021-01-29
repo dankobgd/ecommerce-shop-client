@@ -131,7 +131,7 @@ export function useDeleteBrand() {
   });
 }
 
-export function useDeleteBrands() {
+export function useDeleteBrands(config) {
   const queryClient = useQueryClient();
   const toast = useContext(ToastContext);
   const meta = getPersistedPagination('brands');
@@ -154,6 +154,9 @@ export function useDeleteBrands() {
     },
     onSuccess: () => {
       toast.success('Brands deleted');
+      if (config?.onSuccess) {
+        config.onSuccess();
+      }
     },
     onError: (_, __, previousValue) => {
       queryClient.setQueryData(['brands', meta], previousValue);

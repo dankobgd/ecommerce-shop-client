@@ -32,6 +32,13 @@ export function useInfiniteProducts(query, config) {
   return useInfiniteQuery(
     ['products', params],
     ({ pageParam }) => {
+      if (!query || (query && !params.get('page'))) {
+        params.set('page', 1);
+      }
+      if (!query || (query && !params.get('per_page'))) {
+        params.set('per_page', 20);
+      }
+
       if (pageParam && pageParam > Number.parseInt(params.get('page'), 10)) {
         params.set('page', pageParam);
       }
@@ -282,7 +289,7 @@ export function useDeleteProductTag() {
   });
 }
 
-export function useDeleteProductTags() {
+export function useDeleteProductTags(config) {
   const queryClient = useQueryClient();
   const toast = useContext(ToastContext);
 
@@ -295,6 +302,9 @@ export function useDeleteProductTags() {
     },
     onSuccess: () => {
       toast.success('Product tags deleted');
+      if (config?.onSuccess) {
+        config.onSuccess();
+      }
     },
     onError: (_, variables, previousValue) => {
       queryClient.setQueryData(['product', variables.productId, 'tags'], previousValue);

@@ -51,13 +51,16 @@ const PromotionsTable = ({ className, ...rest }) => {
   const classes = useStyles();
   const [pageMeta, setPageMeta] = useState(getPersistedPagination('promotions'));
   const { data: promotions } = usePromotions(pageMeta, { keepPreviousData: true });
-  const deletePromotionMutation = useDeletePromotion();
-  const deletePromotionsMutation = useDeletePromotions();
 
   const [deleteItem, setDeleteItem] = useState();
   const [selectedData, setSelectedData] = useState([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
+
+  const deletePromotionMutation = useDeletePromotion();
+  const deletePromotionsMutation = useDeletePromotions({
+    onSuccess: () => setSelectedData([]),
+  });
 
   const handleDialogOpen = () => {
     setDialogOpen(true);
@@ -242,9 +245,7 @@ const PromotionsTable = ({ className, ...rest }) => {
         dialogOpen={bulkDeleteDialogOpen}
         onClick={() => {
           handleBulkDeleteDialogClose();
-          deletePromotionsMutation.mutate(selectedData, {
-            onSuccess: () => setSelectedData([]),
-          });
+          deletePromotionsMutation.mutate(selectedData);
         }}
       />
     </>

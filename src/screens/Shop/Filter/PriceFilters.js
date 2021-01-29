@@ -5,7 +5,7 @@ import _ from 'lodash';
 import NumberFormat from 'react-number-format';
 
 import { priceToLowestCurrencyDenomination } from '../../../utils/priceFormat';
-import { ShopContext } from '../ShopContext';
+import { setPriceMaxFilter, setPriceMinFilter, setPriceValues, ShopContext } from '../ShopContext';
 
 const CustomInput = props => <TextField {...props} size='small' variant='outlined' />;
 
@@ -53,14 +53,14 @@ const useStyles = makeStyles(() => ({
 
 function PriceFilters() {
   const classes = useStyles();
-  const { priceValues, setPriceMinFilter, setPriceMaxFilter, setPriceValues } = useContext(ShopContext);
+  const { shop, dispatch } = useContext(ShopContext);
 
   const updatePriceMinFilter = value => {
-    setPriceMinFilter(priceToLowestCurrencyDenomination(value));
+    dispatch(setPriceMinFilter(priceToLowestCurrencyDenomination(value)));
   };
 
   const updatePriceMaxFilter = value => {
-    setPriceMaxFilter(priceToLowestCurrencyDenomination(value));
+    dispatch(setPriceMaxFilter(priceToLowestCurrencyDenomination(value)));
   };
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -78,7 +78,7 @@ function PriceFilters() {
 
   const onPriceChange = event => {
     const { name, value } = event.target;
-    setPriceValues({ name, value });
+    dispatch(setPriceValues({ name, value }));
   };
 
   return (
@@ -87,7 +87,7 @@ function PriceFilters() {
       <div className={classes.priceWrapper}>
         <PriceField
           name='priceMin'
-          value={priceValues.priceMin}
+          value={shop.priceValues.priceMin}
           onChange={onPriceChange}
           onValueChange={onPriceMinValueChange}
           label='min'
@@ -95,7 +95,7 @@ function PriceFilters() {
         />
         <PriceField
           name='priceMax'
-          value={priceValues.priceMax}
+          value={shop.priceValues.priceMax}
           onChange={onPriceChange}
           onValueChange={onPriceMaxValueChange}
           label='max'

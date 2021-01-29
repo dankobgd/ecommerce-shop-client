@@ -50,13 +50,16 @@ const CategoriesTable = ({ className, ...rest }) => {
   const classes = useStyles();
   const [pageMeta, setPageMeta] = useState(getPersistedPagination('categories'));
   const { data: categories } = useCategories(pageMeta, { keepPreviousData: true });
-  const deleteCategoryMutation = useDeleteCategory();
-  const deleteCategoriesMutation = useDeleteCategories();
 
   const [deleteItem, setDeleteItem] = useState();
   const [selectedData, setSelectedData] = useState([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
+
+  const deleteCategoryMutation = useDeleteCategory();
+  const deleteCategoriesMutation = useDeleteCategories({
+    onSuccess: () => setSelectedData([]),
+  });
 
   const handleDialogOpen = () => {
     setDialogOpen(true);
@@ -230,9 +233,7 @@ const CategoriesTable = ({ className, ...rest }) => {
         dialogOpen={bulkDeleteDialogOpen}
         onClick={() => {
           handleBulkDeleteDialogClose();
-          deleteCategoriesMutation.mutate(selectedData, {
-            onSuccess: () => setSelectedData([]),
-          });
+          deleteCategoriesMutation.mutate(selectedData);
         }}
       />
     </>

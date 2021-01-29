@@ -48,13 +48,16 @@ const TagsTable = ({ className, ...rest }) => {
   const classes = useStyles();
   const [pageMeta, setPageMeta] = useState(getPersistedPagination('tags'));
   const { data: tags } = useTags(pageMeta, { keepPreviousData: true });
-  const deleteTagMutation = useDeleteTag();
-  const deleteTagsMutation = useDeleteTags();
 
   const [deleteItem, setDeleteItem] = useState();
   const [selectedData, setSelectedData] = useState([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
+
+  const deleteTagMutation = useDeleteTag();
+  const deleteTagsMutation = useDeleteTags({
+    onSuccess: () => setSelectedData([]),
+  });
 
   const handleDialogOpen = () => {
     setDialogOpen(true);
@@ -221,9 +224,7 @@ const TagsTable = ({ className, ...rest }) => {
         dialogOpen={bulkDeleteDialogOpen}
         onClick={() => {
           handleBulkDeleteDialogClose();
-          deleteTagsMutation.mutate(selectedData, {
-            onSuccess: () => setSelectedData([]),
-          });
+          deleteTagsMutation.mutate(selectedData);
         }}
       />
     </>

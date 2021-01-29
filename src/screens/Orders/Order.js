@@ -10,7 +10,13 @@ import * as Yup from 'yup';
 
 import { FormCheckbox, FormNumberField, FormSelect, FormSubmitButton, FormTextField } from '../../components/Form';
 import ErrorMessage from '../../components/Message/ErrorMessage';
-import { CartContext } from '../../components/ShoppingCart/CartContext';
+import {
+  CartContext,
+  resetAll,
+  setCartPromoCode,
+  setCartPromotion,
+  setIsPromoCodeError,
+} from '../../components/ShoppingCart/CartContext';
 import { ToastContext } from '../../components/Toast/ToastContext';
 import { useCreateOrder } from '../../hooks/queries/orderQueries';
 import { useUserAddresses } from '../../hooks/queries/userQueries';
@@ -103,7 +109,7 @@ const formOpts = {
   resolver: yupResolver(schema),
 };
 
-function CheckoutForm() {
+function OrderForm({ location }) {
   const toast = useContext(ToastContext);
   const stripe = useStripe();
   const elements = useElements();
@@ -113,13 +119,17 @@ function CheckoutForm() {
   const [stripeError, setStripeError] = useState(null);
   const [stripeComplete, setStripeComplete] = useState(false);
 
-  const { items, totalPrice, cartPromoCode, setCartPromoCode, setCartPromotion, resetAll } = useContext(CartContext);
+  const { cart, dispatch } = useContext(CartContext);
   const { data: userAddresses } = useUserAddresses();
   const createOrderMutation = useCreateOrder({
-    onSuccess: () => resetAll(),
+    onSuccess: () => {
+      dispatch(resetAll());
+      setStripeError(null);
+      dispatch(setIsPromoCodeError(false));
+    },
     onError: () => {
-      setCartPromoCode('');
-      setCartPromotion(null);
+      dispatch(setCartPromoCode(''));
+      dispatch(setCartPromotion(null));
     },
   });
 
@@ -145,14 +155,14 @@ function CheckoutForm() {
     } else {
       const orderPayload = {
         paymentMethodId: paymentMethod.id,
-        items: items.map(x => ({ productId: x.product.id, quantity: x.quantity })),
+        items: cart.items.map(x => ({ productId: x.product.id, quantity: x.quantity })),
         saveAddress: data.saveAddress,
         useExistingBillingAddress: data.useExistingBillingAddress,
         billingAddressId: data.billingAddressId,
         sameShippingAsBilling: data.sameShippingAsBilling,
       };
-      if (cartPromoCode) {
-        orderPayload.promoCode = cartPromoCode;
+      if (cart?.promoCode && cart?.isPromoCodeError === false) {
+        orderPayload.promoCode = cart.promoCode;
       }
       if (data.billingAddress) {
         orderPayload.billingAddress = data.billingAddress;
@@ -161,9 +171,7 @@ function CheckoutForm() {
         orderPayload.shippingAddress = data.shippingAddress;
       }
 
-      createOrderMutation.mutate(orderPayload, {
-        onSuccess: () => setStripeError(null),
-      });
+      createOrderMutation.mutate(orderPayload);
     }
   };
 
@@ -179,10 +187,14 @@ function CheckoutForm() {
   const hasAddresses = userAddresses?.length > 0;
 
   React.useEffect(() => {
-    if (items?.length === 0) {
+    if (
+      cart?.items?.length === 0 &&
+      location?.state?.prevPath !== '/checkout' &&
+      window.location.pathname !== '/checkout/order'
+    ) {
       navigate('/');
     }
-  }, [items.length]);
+  }, [cart.items.length, location]);
 
   const handleStripeCardOnChange = event => {
     if (event.complete) {
@@ -287,18 +299,18 @@ function CheckoutForm() {
           style={{ marginTop: '1rem' }}
           loading={createOrderMutation?.isLoading}
         >
-          Pay ${formatPriceForDisplay(totalPrice)}
+          Pay ${formatPriceForDisplay(cart?.totalPrice)}
         </FormSubmitButton>
       </form>
     </FormProvider>
   );
 }
 
-function Order() {
+function Order({ location }) {
   return (
     <Container component='main' maxWidth='xs'>
       <Elements stripe={stripePromise}>
-        <CheckoutForm />
+        <OrderForm location={location} />
       </Elements>
     </Container>
   );

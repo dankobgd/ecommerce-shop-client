@@ -142,7 +142,7 @@ export function useDeleteCategory() {
   });
 }
 
-export function useDeleteCategories() {
+export function useDeleteCategories(config) {
   const queryClient = useQueryClient();
   const toast = useContext(ToastContext);
   const meta = getPersistedPagination('categories');
@@ -165,6 +165,9 @@ export function useDeleteCategories() {
     },
     onSuccess: () => {
       toast.success('Categories deleted');
+      if (config?.onSuccess) {
+        config.onSuccess();
+      }
     },
     onError: (_, __, previousValue) => {
       queryClient.setQueryData(['categories', meta], previousValue);

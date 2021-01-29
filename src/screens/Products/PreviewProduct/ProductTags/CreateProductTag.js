@@ -59,13 +59,13 @@ function CreateProductTag({ productId }) {
   const { data: productTags } = useProductTags(productId);
   const options = tags?.data?.filter(t => !productTags?.some(pt => pt.tagId === t.id)) ?? [];
 
-  const createProductTagMutation = useCreateProductTag(productId);
+  const createProductTagMutation = useCreateProductTag(productId, {
+    onSuccess: () => reset(),
+  });
 
   const onSubmit = values => {
     const payload = { tag_id: values.tagId.id };
-    createProductTagMutation.mutate(payload, {
-      onSuccess: () => reset(),
-    });
+    createProductTagMutation.mutate(payload);
   };
 
   const onError = () => {

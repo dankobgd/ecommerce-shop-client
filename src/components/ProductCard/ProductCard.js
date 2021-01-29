@@ -10,9 +10,10 @@ import { Skeleton } from '@material-ui/lab';
 import { Link } from '@reach/router';
 
 import { useAddProductToWishlist, useDeleteProductFromWishlist, useWishlist } from '../../hooks/queries/userQueries';
+import { useIsAuthenticated } from '../../hooks/useIsAuthenticated';
 import { formatPriceForDisplay } from '../../utils/priceFormat';
 import CustomTooltip from '../CustomTooltip/CustomTooltip';
-import { CartContext } from '../ShoppingCart/CartContext';
+import { CartContext, addProduct } from '../ShoppingCart/CartContext';
 import { ToastContext } from '../Toast/ToastContext';
 
 const useStyles = makeStyles(theme => ({
@@ -72,16 +73,17 @@ const useStyles = makeStyles(theme => ({
 function ProductCard({ product }) {
   const classes = useStyles();
   const toast = useContext(ToastContext);
-  const cart = useContext(CartContext);
+  const { dispatch } = useContext(CartContext);
 
+  const isAuthenticated = useIsAuthenticated();
   const removeFromWishlistMutation = useDeleteProductFromWishlist();
   const addToWishlistMutation = useAddProductToWishlist();
-  const { data: userWishlist } = useWishlist();
+  const { data: userWishlist } = useWishlist({ enabled: isAuthenticated });
 
   const isProductWishlisted = userWishlist?.some(x => x.id === Number(product?.id));
 
   const handleAddToCart = () => {
-    cart.addProduct(product);
+    dispatch(addProduct(product));
     toast.success('Product added to cart');
   };
 

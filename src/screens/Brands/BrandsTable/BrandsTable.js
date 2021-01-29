@@ -51,13 +51,16 @@ function BrandsTable({ className, ...rest }) {
   const classes = useStyles();
   const [pageMeta, setPageMeta] = useState(getPersistedPagination('brands'));
   const { data: brands } = useBrands(pageMeta, { keepPreviousData: true });
-  const deleteBrandMutation = useDeleteBrand();
-  const deleteBrandsMutation = useDeleteBrands();
 
   const [deleteItem, setDeleteItem] = useState();
   const [selectedData, setSelectedData] = useState([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
+
+  const deleteBrandMutation = useDeleteBrand();
+  const deleteBrandsMutation = useDeleteBrands({
+    onSuccess: () => setSelectedData([]),
+  });
 
   const handleDialogOpen = () => {
     setDialogOpen(true);
@@ -236,9 +239,7 @@ function BrandsTable({ className, ...rest }) {
         dialogOpen={bulkDeleteDialogOpen}
         onClick={() => {
           handleBulkDeleteDialogClose();
-          deleteBrandsMutation.mutate(selectedData, {
-            onSuccess: () => setSelectedData([]),
-          });
+          deleteBrandsMutation.mutate(selectedData);
         }}
       />
     </>

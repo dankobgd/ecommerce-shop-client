@@ -103,11 +103,12 @@ export function useResetPassword() {
   });
 }
 
-export function useUserAddress() {
+export function useUserAddress(addressId, config) {
   const queryClient = useQueryClient();
 
-  return useQuery(['user', 'address'], () => api.users.getAddress(), {
-    initialData: () => queryClient.getQueryData(['user', 'address']),
+  return useQuery(['user', 'addresses', addressId], () => api.users.getAddress(addressId), {
+    initialData: () => queryClient.getQueryData(['user', 'addresses', addressId?.toString()]),
+    ...config,
   });
 }
 
@@ -119,7 +120,7 @@ export function useUserAddresses() {
   });
 }
 
-export function useCreateAddress() {
+export function useCreateAddress(config) {
   const queryClient = useQueryClient();
   const toast = useContext(ToastContext);
 
@@ -135,6 +136,9 @@ export function useCreateAddress() {
     },
     onSuccess: () => {
       toast.success('Address created');
+      if (config?.onSuccess) {
+        config.onSuccess();
+      }
     },
     onError: (_, __, previousValue) => {
       queryClient.setQueryData(['user', 'addresses'], previousValue);
@@ -146,19 +150,24 @@ export function useCreateAddress() {
   });
 }
 
-export function useUpdateAddress() {
+export function useUpdateAddress(config) {
   const queryClient = useQueryClient();
   const toast = useContext(ToastContext);
 
-  return useMutation(({ id, values }) => api.users.update(id, values), {
-    onMutate: values => {
+  return useMutation(({ id, values }) => api.users.updateAddress(id, values), {
+    onMutate: ({ id, values }) => {
       queryClient.cancelQueries(['user', 'addresses']);
       const previousValue = queryClient.getQueryData(['user', 'addresses']);
-      queryClient.setQueryData(['user', 'addresses'], values);
+      queryClient.setQueryData(['user', 'addresses'], old =>
+        old.map(x => (x.id === Number(id) ? { ...x, ...values } : x))
+      );
       return previousValue;
     },
     onSuccess: () => {
       toast.success('Address updated');
+      if (config?.onSuccess) {
+        config.onSuccess();
+      }
     },
     onError: (_, __, previousValue) => {
       queryClient.setQueryData(['user', 'addresses'], previousValue);
@@ -176,22 +185,21 @@ export function useDeleteAddress() {
 
   return useMutation(id => api.users.deleteAddress(id), {
     onMutate: id => {
-      queryClient.cancelQueries('userAddresses');
-      const previousValue = queryClient.getQueryData('userAddresses');
+      queryClient.cancelQueries(['user', 'addresses']);
+      const previousValue = queryClient.getQueryData(['user', 'addresses']);
       const filtered = previousValue?.filter(x => x.id !== id);
-      const obj = { ...previousValue, data: filtered };
-      queryClient.setQueryData('userAddresses', obj);
+      queryClient.setQueryData(['user', 'addresses'], filtered);
       return previousValue;
     },
     onSuccess: () => {
       toast.success('Address deleted');
     },
     onError: (_, __, previousValue) => {
-      queryClient.setQueryData('userAddresses', previousValue);
+      queryClient.setQueryData(['user', 'addresses'], previousValue);
       toast.error('Error deleting the address');
     },
     onSettled: () => {
-      queryClient.invalidateQueries('userAddresses');
+      queryClient.invalidateQueries(['user', 'addresses']);
     },
   });
 }
@@ -320,11 +328,12 @@ export function useAddProductToWishlist() {
   });
 }
 
-export function useWishlist() {
+export function useWishlist(config) {
   const queryClient = useQueryClient();
 
   return useQuery(['user', 'wishlist'], () => api.users.wishlistGet(), {
     initialData: () => queryClient.getQueryData(['user', 'wishlist']),
+    ...config,
   });
 }
 

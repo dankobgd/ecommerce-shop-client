@@ -56,13 +56,16 @@ const ProductsTable = ({ className, ...rest }) => {
   const classes = useStyles();
   const [pageMeta, setPageMeta] = useState(getPersistedPagination('products'));
   const { data: products } = useProducts(pageMeta, { keepPreviousData: true });
-  const deleteProductMutation = useDeleteProduct();
-  const deleteProductsMutation = useDeleteProducts();
 
   const [deleteItem, setDeleteItem] = useState();
   const [selectedData, setSelectedData] = useState([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
+
+  const deleteProductMutation = useDeleteProduct();
+  const deleteProductsMutation = useDeleteProducts({
+    onSuccess: () => setSelectedData([]),
+  });
 
   const handleDialogOpen = () => {
     setDialogOpen(true);
@@ -266,9 +269,7 @@ const ProductsTable = ({ className, ...rest }) => {
         dialogOpen={bulkDeleteDialogOpen}
         onClick={() => {
           handleBulkDeleteDialogClose();
-          deleteProductsMutation.mutate(selectedData, {
-            onSuccess: () => setSelectedData([]),
-          });
+          deleteProductsMutation.mutate(selectedData);
         }}
       />
     </>

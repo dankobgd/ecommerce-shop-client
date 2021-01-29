@@ -82,7 +82,7 @@ function Toast({ type, message, removeToast, vertical = 'bottom', horizontal = '
   }, []);
 
   return (
-    <Snackbar anchorOrigin={{ vertical, horizontal }} open={open} autoHideDuration={5000} onClose={handleClose}>
+    <Snackbar anchorOrigin={{ vertical, horizontal }} open={open} autoHideDuration={3000} onClose={handleClose}>
       <SnackBarNotification onClose={handleClose} variant={type} message={message} />
     </Snackbar>
   );

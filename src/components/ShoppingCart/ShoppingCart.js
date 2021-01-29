@@ -9,10 +9,19 @@ import CloseIcon from '@material-ui/icons/Close';
 import DeleteIcon from '@material-ui/icons/Delete';
 import RemoveIcon from '@material-ui/icons/Remove';
 import { Link } from '@reach/router';
+import clsx from 'clsx';
 
 import { formatPriceForDisplay, formatPriceUnitSum } from '../../utils/priceFormat';
 import CustomTooltip from '../CustomTooltip/CustomTooltip';
-import { CartContext } from './CartContext';
+import {
+  addProduct,
+  CartContext,
+  clearItems,
+  clearProduct,
+  closeDrawer,
+  removeProduct,
+  toggleDrawer,
+} from './CartContext';
 
 const useStyles = makeStyles({
   cartContent: {
@@ -118,6 +127,22 @@ const useStyles = makeStyles({
     display: 'flex',
     justifyContent: 'center',
     flex: 1,
+    transition: 'all 0.3s',
+    height: '0px',
+
+    '&.active': {
+      height: '40px',
+    },
+  },
+  controlIcons: {
+    transition: 'all 0.3s',
+    transform: 'scaleY(0)',
+    opacity: 0,
+
+    '&.active': {
+      transform: 'scaleY(1)',
+      opacity: 1,
+    },
   },
   listItemName: {
     fontWeight: 'bold',
@@ -142,21 +167,12 @@ const useStyles = makeStyles({
 
 function ShoppingCart({ anchor = 'right' }) {
   const classes = useStyles();
-  const {
-    drawerOpen,
-
-    clearItems,
-    toggleDrawer,
-    closeDrawer,
-    subtotalPrice,
-    totalQuantity,
-    items,
-  } = useContext(CartContext);
+  const { cart, dispatch } = useContext(CartContext);
 
   return (
-    <Drawer anchor={anchor} open={drawerOpen} onClose={toggleDrawer}>
+    <Drawer anchor={anchor} open={cart.drawerOpen} onClose={() => dispatch(toggleDrawer())}>
       <div className={classes.cartContent}>
-        {items?.length > 0 ? (
+        {cart?.items?.length > 0 ? (
           <>
             <Typography variant='subtitle1' component='h2' className={classes.cartTitle}>
               Shopping Cart Items
@@ -164,12 +180,12 @@ function ShoppingCart({ anchor = 'right' }) {
 
             <Divider variant='middle' orientation='horizontal' className={classes.divider} />
 
-            <button type='button' className={classes.close} onClick={() => closeDrawer()}>
+            <button type='button' className={classes.close} onClick={() => dispatch(closeDrawer())}>
               <CloseIcon />
             </button>
 
             <div className={classes.list}>
-              {items.map(({ product, quantity }) => (
+              {cart?.items?.map(({ product, quantity }) => (
                 <CartListItem key={product.id} product={product} quantity={quantity} />
               ))}
             </div>
@@ -180,7 +196,7 @@ function ShoppingCart({ anchor = 'right' }) {
               variant='outlined'
               className={classes.clearCartBtn}
               endIcon={<ClearAllIcon />}
-              onClick={() => clearItems()}
+              onClick={() => dispatch(clearItems())}
             >
               Clear Cart
             </Button>
@@ -194,17 +210,17 @@ function ShoppingCart({ anchor = 'right' }) {
 
             <div className={classes.summary}>
               <Typography component='span' variant='subtitle2' color='textPrimary'>
-                Total Quantity: {totalQuantity}
+                Total Quantity: {cart?.totalQuantity}
               </Typography>
               <Typography component='span' variant='subtitle2' color='textPrimary'>
-                Subtotal Price: <strong>${formatPriceForDisplay(subtotalPrice)}</strong>
+                Subtotal Price: <strong>${formatPriceForDisplay(cart?.subtotalPrice)}</strong>
               </Typography>
             </div>
 
             <Link
               to='/checkout'
               style={{ textDecoration: 'none', display: 'flex', justifyContent: 'center', width: '100%' }}
-              onClick={toggleDrawer}
+              onClick={() => dispatch(toggleDrawer())}
             >
               <Button color='primary' variant='contained' fullWidth className={classes.checkoutBtn}>
                 Go To Checkout
@@ -213,7 +229,7 @@ function ShoppingCart({ anchor = 'right' }) {
           </>
         ) : (
           <>
-            <button type='button' className={classes.close} onClick={() => toggleDrawer()}>
+            <button type='button' className={classes.close} onClick={() => dispatch(toggleDrawer())}>
               <CloseIcon />
             </button>
             <Typography component='h3' variant='subtitle1' color='textPrimary'>
@@ -229,7 +245,7 @@ function ShoppingCart({ anchor = 'right' }) {
 function CartListItem({ product, quantity }) {
   const [isHover, setIsHover] = useState(false);
   const classes = useStyles({ isHover });
-  const { addProduct, removeProduct, clearProduct } = useContext(CartContext);
+  const { dispatch } = useContext(CartContext);
 
   const onMouseEnter = () => {
     setIsHover(true);
@@ -258,25 +274,26 @@ function CartListItem({ product, quantity }) {
                 <span className={classes.sumPart}>${formatPriceUnitSum(product.price, quantity)}</span>
               </Typography>
             </div>
-            {isHover && (
-              <div className={classes.controls}>
+
+            <div className={clsx(classes.controls, isHover && 'active')}>
+              <div className={clsx(classes.controlIcons, isHover && 'active')}>
                 <CustomTooltip title={<Typography color='inherit'>Increase Quantity</Typography>}>
-                  <IconButton onClick={() => addProduct(product)}>
-                    <AddIcon />
+                  <IconButton onClick={() => dispatch(addProduct(product))}>
+                    <AddIcon color='primary' />
                   </IconButton>
                 </CustomTooltip>
                 <CustomTooltip title={<Typography color='inherit'>Decrease Quantity</Typography>}>
-                  <IconButton onClick={() => removeProduct(product.id)}>
-                    <RemoveIcon />
+                  <IconButton onClick={() => dispatch(removeProduct(product.id))}>
+                    <RemoveIcon style={{ fill: 'orange' }} />
                   </IconButton>
                 </CustomTooltip>
                 <CustomTooltip title={<Typography color='inherit'>Remove Item</Typography>}>
-                  <IconButton onClick={() => clearProduct(product.id)}>
-                    <DeleteIcon />
+                  <IconButton onClick={() => dispatch(clearProduct(product.id))}>
+                    <DeleteIcon style={{ fill: 'red' }} />
                   </IconButton>
                 </CustomTooltip>
               </div>
-            )}
+            </div>
           </div>
         </div>
       </div>

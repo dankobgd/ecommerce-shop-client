@@ -26,7 +26,7 @@ function Home() {
       <Link style={{ display: 'flex', marginTop: '3rem' }} to='shop'>
         Shop Page
       </Link>
-      <Link style={{ display: 'flex' }} to='/checkout'>
+      <Link style={{ display: 'flex' }} to='/checkout' state={{ prevPath: window.location.pathname }}>
         Checkout Page
       </Link>
 

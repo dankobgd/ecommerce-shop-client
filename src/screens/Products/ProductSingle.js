@@ -34,7 +34,7 @@ import * as Yup from 'yup';
 import CustomTooltip from '../../components/CustomTooltip/CustomTooltip';
 import { FormSubmitButton, FormTextField, FormRating } from '../../components/Form';
 import ErrorMessage from '../../components/Message/ErrorMessage';
-import { CartContext } from '../../components/ShoppingCart/CartContext';
+import { addProduct, CartContext } from '../../components/ShoppingCart/CartContext';
 import DeleteDialog from '../../components/TableComponents/DeleteDialog';
 import { ToastContext } from '../../components/Toast/ToastContext';
 import {
@@ -53,6 +53,7 @@ import {
   useWishlist,
 } from '../../hooks/queries/userQueries';
 import { useFormServerErrors } from '../../hooks/useFormServerErrors';
+import { useIsAuthenticated } from '../../hooks/useIsAuthenticated';
 import { diff, isEmptyObject } from '../../utils/diff';
 import { formatPriceForDisplay } from '../../utils/priceFormat';
 import { rules } from '../../utils/validation';
@@ -225,7 +226,7 @@ const formOpts2 = {
 function ProductSingle({ productId }) {
   const classes = useStyles();
   const toast = useContext(ToastContext);
-  const cart = useContext(CartContext);
+  const { dispatch } = useContext(CartContext);
 
   const [userReview, setUserReview] = useState(null);
   const [deleteItem, setDeleteItem] = useState();
@@ -237,13 +238,14 @@ function ProductSingle({ productId }) {
   const [qty, setQty] = React.useState(1);
 
   const user = useUserFromCache();
+  const isAuthenticated = useIsAuthenticated();
   const { data: product } = useProduct(productId);
   const { data: productTags } = useProductTags(productId);
   const { data: productReviews } = useProductReviews(productId);
   const { data: productImages } = useProductImages(productId, {
     onSuccess: result => setSelectedImage(result[0].url || product?.imageUrl),
   });
-  const { data: userWishlist } = useWishlist();
+  const { data: userWishlist } = useWishlist({ enabled: isAuthenticated });
 
   const handleChange = event => {
     setQty(event.target.value);
@@ -423,7 +425,7 @@ function ProductSingle({ productId }) {
                   color='primary'
                   variant='contained'
                   onClick={() => {
-                    cart.addProduct(product, qty);
+                    dispatch(addProduct(product, qty));
                     toast.success('Product added to cart');
                   }}
                 >

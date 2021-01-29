@@ -15,6 +15,7 @@ function AuthRoute(props) {
     access = 'public',
     roleRedirectUrl = '/dashboard',
     redirectUrl = '/login',
+    location,
     ...rest
   } = props;
 
@@ -29,14 +30,15 @@ function AuthRoute(props) {
         if (user && !allowed.includes(user.role)) {
           return <Redirect to={roleRedirectUrl} noThrow />;
         }
+
         if (Layout) {
           return (
             <Layout>
-              <Component {...rest} />
+              <Component {...rest} location={location} />
             </Layout>
           );
         }
-        return <Component {...rest} />;
+        return <Component {...rest} location={location} />;
       }
       return <Redirect to={redirectUrl} noThrow />;
     }
@@ -53,11 +55,11 @@ function AuthRoute(props) {
       if (Layout) {
         return (
           <Layout>
-            <Component {...rest} />
+            <Component {...rest} location={location} />
           </Layout>
         );
       }
-      return <Component {...rest} />;
+      return <Component {...rest} location={location} />;
     }
   };
 
@@ -68,11 +70,11 @@ function AuthRoute(props) {
       if (Layout) {
         return (
           <Layout>
-            <Component {...rest} />
+            <Component {...rest} location={location} />
           </Layout>
         );
       }
-      return <Component {...rest} />;
+      return <Component {...rest} location={location} />;
     }
   };
 

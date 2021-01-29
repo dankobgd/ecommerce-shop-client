@@ -15,7 +15,7 @@ import CheckBoxOutlineBlankIcon from '@material-ui/icons/CheckBoxOutlineBlank';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 
 import { useCategories } from '../../../hooks/queries/categoryQueries';
-import { ShopContext } from '../ShopContext';
+import { setSpecificBoolFilter, setSpecificTextFilters, ShopContext } from '../ShopContext';
 
 const useStyles = makeStyles(() => ({
   expanded: {
@@ -35,12 +35,12 @@ const useStyles = makeStyles(() => ({
 
 function PropFilters() {
   const classes = useStyles();
-  const { mainFilters, specificFilters, setSpecificTextFilters, setSpecificBoolFilter } = useContext(ShopContext);
+  const { shop, dispatch } = useContext(ShopContext);
 
   const { data: allCategories } = useCategories();
 
   const chosenCategoriesProperties = allCategories?.data
-    ?.filter(x => mainFilters?.categories?.includes(x.slug))
+    ?.filter(x => shop?.mainFilters?.categories?.includes(x.slug))
     ?.sort((a, b) => a.importance - b.importance)
     ?.map(x => ({
       name: x.name,
@@ -49,14 +49,14 @@ function PropFilters() {
     }));
 
   const handleChangeBoolCheckbox = event => {
-    setSpecificBoolFilter(event.target.name);
+    dispatch(setSpecificBoolFilter(event.target.name));
   };
 
   const handleChangeArrayCheckbox = event => {
     const { name, value } = event.target;
-    const arr = specificFilters[name];
+    const arr = shop?.specificFilters[name];
     const items = arr?.includes(value) ? arr.filter(x => x !== value) : [...(arr ?? []), value];
-    setSpecificTextFilters({ name, items });
+    dispatch(setSpecificTextFilters({ name, items }));
   };
 
   const renderChoiceInputField = (category, property) => {
@@ -71,7 +71,7 @@ function PropFilters() {
                   checkedIcon={<CheckBoxIcon fontSize='small' />}
                   name={`${category.slug}_${property.name}`}
                   value={property.name}
-                  checked={(specificFilters && specificFilters[`${category.slug}_${property.name}`]) || false}
+                  checked={shop?.specificFilters?.[`${category.slug}_${property.name}`] || false}
                   onChange={handleChangeBoolCheckbox}
                 />
               }
@@ -91,9 +91,7 @@ function PropFilters() {
                     checkedIcon={<CheckBoxIcon fontSize='small' />}
                     name={`${category.slug}_${property.name}`}
                     value={choice.name}
-                    checked={
-                      specificFilters && specificFilters[`${category.slug}_${property.slug}`]?.includes(choice.name)
-                    }
+                    checked={shop?.specificFilters?.[`${category.slug}_${property.slug}`]?.includes(choice.name)}
                     onChange={handleChangeArrayCheckbox}
                   />
                 }
@@ -109,7 +107,7 @@ function PropFilters() {
   return (
     <div>
       {chosenCategoriesProperties?.map(category => (
-        <div key={category.slug} style={{ border: '1px solid lightblue', marginTop: '1rem' }}>
+        <div key={category.slug} style={{ marginTop: '1rem' }}>
           {category.properties.map(property => (
             <Accordion key={`${category.slug}_${property.label}`} classes={{ expanded: classes.expanded }}>
               <AccordionSummary

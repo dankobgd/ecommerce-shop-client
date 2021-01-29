@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useContext } from 'react';
 
 import { CircularProgress, makeStyles, Typography } from '@material-ui/core';
 
 import ProductCard, { SkeletonCard } from '../../../components/ProductCard/ProductCard';
+import { setHasSearched, setShouldFetchAllByFilter, ShopContext } from '../ShopContext';
 import ChipsSection from './ChipsSection';
 
 const useStyles = makeStyles(() => ({
@@ -36,22 +37,13 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
-function ProductsGrid({
-  products,
-  hasSearched,
-  setHasSearched,
-  setFilterQueryString,
-  setShouldFetchAllByFilter,
-  loadMoreRef,
-  isLoading,
-  isFetchingNextPage,
-  hasNextPage,
-}) {
+function ProductsGrid({ products, loadMoreRef, isLoading, isFetchingNextPage, hasNextPage }) {
   const classes = useStyles();
+  const { shop, dispatch } = useContext(ShopContext);
 
   React.useEffect(() => {
-    setShouldFetchAllByFilter(true);
-    setHasSearched(true);
+    dispatch(setShouldFetchAllByFilter(true));
+    dispatch(setHasSearched(true));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -59,11 +51,7 @@ function ProductsGrid({
     <div className={classes.outer}>
       <div className={classes.mainArea}>
         <div className={classes.chipsArea}>
-          <ChipsSection
-            setHasSearched={setHasSearched}
-            setFilterQueryString={setFilterQueryString}
-            setShouldFetchAllByFilter={setShouldFetchAllByFilter}
-          />
+          <ChipsSection />
         </div>
 
         {isLoading && (
@@ -96,7 +84,7 @@ function ProductsGrid({
           </div>
         )}
 
-        {!hasNextPage && products?.length > 0 && (
+        {!hasNextPage && products?.length > 20 && (
           <div
             style={{
               display: 'flex',
@@ -113,7 +101,7 @@ function ProductsGrid({
 
         <div ref={loadMoreRef} />
 
-        {products?.length === 0 && hasSearched && !isLoading && (
+        {products?.length === 0 && shop.hasSearched && !isLoading && (
           <div style={{ padding: '2rem' }}>
             <Typography variant='h4'>No products found matching the search criteria</Typography>
             <Typography variant='subtitle2' style={{ marginTop: '10px' }}>

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 
 const baseKey = 'ecommerce';
 
-export function usePersistedState(key, initialValue) {
+export default function useLocalStorageState(key, initialValue) {
   const readValue = () => {
     if (typeof window === 'undefined') {
       return initialValue;

@@ -3,7 +3,7 @@ import React, { useContext } from 'react';
 import { Badge, makeStyles, Popover, Typography } from '@material-ui/core';
 import ShoppingCartIcon from '@material-ui/icons/ShoppingCartOutlined';
 
-import { CartContext } from '../../../components/ShoppingCart/CartContext';
+import { CartContext, openDrawer } from '../../../components/ShoppingCart/CartContext';
 import ShoppingCart from '../../../components/ShoppingCart/ShoppingCart';
 import Search from './Search';
 
@@ -46,7 +46,7 @@ const useStyles = makeStyles(theme => ({
 
 function Header() {
   const classes = useStyles();
-  const { items, openDrawer, totalQuantity } = useContext(CartContext);
+  const { cart, dispatch } = useContext(CartContext);
 
   const [anchorEl, setAnchorEl] = React.useState(null);
 
@@ -57,10 +57,10 @@ function Header() {
   const id = anchorEl ? 'simple-popover' : undefined;
 
   const handleDrawer = event => {
-    if (!items?.length || items?.length === 0) {
+    if (!cart?.items?.length || cart?.items?.length === 0) {
       setAnchorEl(event.currentTarget);
-    } else if (items?.length > 0) {
-      openDrawer();
+    } else if (cart?.items?.length > 0) {
+      dispatch(openDrawer());
     }
   };
 
@@ -87,7 +87,7 @@ function Header() {
 
       <div className={classes.headerOuter}>
         <div className={classes.subHeader}>
-          <Badge badgeContent={totalQuantity} color='primary' onClick={handleDrawer}>
+          <Badge badgeContent={cart?.totalQuantity} color='primary' onClick={handleDrawer}>
             <ShoppingCartIcon className={classes.cartIcon} />
           </Badge>
         </div>

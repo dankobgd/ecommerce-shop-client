@@ -59,7 +59,7 @@ function AccountDetails({ className, ...rest }) {
       toast.info('No changes applied');
     }
     if (!isEmptyObject(changes)) {
-      editProfileMutation.mutate(values);
+      editProfileMutation.mutate(changes);
     }
   };
 

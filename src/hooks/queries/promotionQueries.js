@@ -15,6 +15,14 @@ export function usePromotion(promoCode, config) {
   });
 }
 
+export function usePromotionIsValid(promoCode, config) {
+  return useQuery(['promotions', promoCode, 'valid'], () => api.promotions.isValid(promoCode), config);
+}
+
+export function usePromotionIsUsed(promoCode, config) {
+  return useQuery(['promotions', promoCode, 'used'], () => api.promotions.isUsed(promoCode), config);
+}
+
 export function usePromotionStatus(promoCode, config) {
   return useQuery(['promotions', promoCode, 'status'], () => api.promotions.getStatus(promoCode), config);
 }
@@ -142,7 +150,7 @@ export function useDeletePromotion() {
   });
 }
 
-export function useDeletePromotions() {
+export function useDeletePromotions(config) {
   const queryClient = useQueryClient();
   const toast = useContext(ToastContext);
   const meta = getPersistedPagination('promotions');
@@ -165,6 +173,9 @@ export function useDeletePromotions() {
     },
     onSuccess: () => {
       toast.success('Promotions deleted');
+      if (config?.onSuccess) {
+        config.onSuccess();
+      }
     },
     onError: (_, __, previousValue) => {
       queryClient.setQueryData(['promotions', meta], previousValue);

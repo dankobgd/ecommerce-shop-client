@@ -3,7 +3,7 @@ import React, { useContext } from 'react';
 import { makeStyles } from '@material-ui/core';
 import { Link } from '@reach/router';
 
-import { ShopContext } from '../../Shop/ShopContext';
+import { clickMainFilterChoice, ShopContext } from '../../Shop/ShopContext';
 
 const useStyles = makeStyles(() => ({
   figure: {
@@ -84,10 +84,10 @@ const useStyles = makeStyles(() => ({
 
 function CategoryCard({ category }) {
   const classes = useStyles();
-  const { clickMainFilterChoice } = useContext(ShopContext);
+  const { dispatch } = useContext(ShopContext);
 
   const handleCategoryChoice = () => {
-    clickMainFilterChoice({ name: 'categories', value: category.slug });
+    dispatch(clickMainFilterChoice({ name: 'categories', value: category.slug }));
   };
 
   return (

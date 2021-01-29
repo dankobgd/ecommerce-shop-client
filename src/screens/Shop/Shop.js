@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext } from 'react';
 
 import { Container, makeStyles } from '@material-ui/core';
 
@@ -25,30 +25,30 @@ const useStyles = makeStyles(() => ({
 
 function Shop() {
   const classes = useStyles();
-  const { hasSearched, setHasSearched } = useContext(ShopContext);
-  const [filterQueryString, setFilterQueryString] = useState('page=1&per_page=20');
-  const [shouldFetchAllByFilter, setShouldFetchAllByFilter] = useState(false);
+  const { shop } = useContext(ShopContext);
   const loadMoreRef = React.useRef();
 
   const { data: brands } = useBrands();
   const { data: tags } = useTags();
   const { data: categories } = useCategories();
 
-  const qs = () => new URLSearchParams(filterQueryString).toString();
-  const { data, isFetchingNextPage, fetchNextPage, hasNextPage, isLoading, refetch } = useInfiniteProducts(qs(), {
-    enabled: false,
-  });
+  const { data, isFetchingNextPage, fetchNextPage, hasNextPage, isLoading, refetch } = useInfiniteProducts(
+    shop.filterQueryString,
+    {
+      enabled: false,
+    }
+  );
 
   React.useEffect(() => {
-    if (shouldFetchAllByFilter && hasSearched) {
+    if (shop.shouldFetchAllByFilter && shop.hasSearched) {
       refetch();
     }
-  }, [filterQueryString, hasSearched, refetch, shouldFetchAllByFilter]);
+  }, [shop.filterQueryString, shop.hasSearched, refetch, shop.shouldFetchAllByFilter]);
 
   useIntersectionObserver({
     target: loadMoreRef,
     onIntersect: fetchNextPage,
-    enabled: hasNextPage,
+    enabled: hasNextPage && !isFetchingNextPage,
   });
 
   const products = data?.pages?.flatMap(page => page.data) ?? [];
@@ -59,21 +59,11 @@ function Shop() {
 
       <Container className={classes.shop}>
         <section className={classes.filter}>
-          <Filter
-            tagsList={tags?.data ?? []}
-            brandsList={brands?.data ?? []}
-            categoriesList={categories?.data ?? []}
-            setFilterQueryString={setFilterQueryString}
-            setShouldFetchAllByFilter={setShouldFetchAllByFilter}
-          />
+          <Filter tagsList={tags?.data ?? []} brandsList={brands?.data ?? []} categoriesList={categories?.data ?? []} />
         </section>
         <section className={classes.main}>
           <ProductsGrid
             products={products}
-            hasSearched={hasSearched}
-            setFilterQueryString={setFilterQueryString}
-            setShouldFetchAllByFilter={setShouldFetchAllByFilter}
-            setHasSearched={setHasSearched}
             isLoading={isLoading}
             loadMoreRef={loadMoreRef}
             isFetchingNextPage={isFetchingNextPage}

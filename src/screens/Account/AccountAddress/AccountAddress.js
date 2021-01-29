@@ -23,7 +23,6 @@ import {
   useUserAddresses,
   useUserAddress,
   useCreateAddress,
-  useUserFromCache,
   useUpdateAddress,
 } from '../../../hooks/queries/userQueries';
 import { useFormServerErrors } from '../../../hooks/useFormServerErrors';
@@ -80,7 +79,7 @@ function AccountAddress() {
   const classes = useStyles();
   const toast = useContext(ToastContext);
   const [baseFormObj, setBaseFormObj] = React.useState({});
-  const user = useUserFromCache();
+  const [editAddress, setEditAddress] = React.useState(null);
 
   const methods1 = useForm(formOpts1);
   const methods2 = useForm(formOpts2);
@@ -97,10 +96,16 @@ function AccountAddress() {
   };
 
   const { data: userAddresses } = useUserAddresses();
-  const { data: address } = useUserAddress(1);
+  const { data: address } = useUserAddress(editAddress?.id, {
+    enabled: !!editAddress?.id,
+  });
 
-  const createAddressMutation = useCreateAddress();
-  const editAddressMutation = useUpdateAddress();
+  const createAddressMutation = useCreateAddress({
+    onSuccess: () => handleModalClose(),
+  });
+  const editAddressMutation = useUpdateAddress({
+    onSuccess: () => handleModalClose(),
+  });
 
   const onSubmitCreateAddress = values => {
     createAddressMutation.mutate(values);
@@ -108,13 +113,13 @@ function AccountAddress() {
 
   const onSubmitEditAddress = values => {
     const changes = diff(baseFormObj, values);
-    const payload = { id: address?.id, details: values };
 
     if (isEmptyObject(changes)) {
       toast.info('No changes applied');
     }
 
     if (!isEmptyObject(changes)) {
+      const payload = { id: address?.id, values: changes };
       editAddressMutation.mutate(payload);
     }
   };
@@ -143,7 +148,12 @@ function AccountAddress() {
           <div className={classes.root}>
             <AddressToolbar handleModalOpen={handleModalOpen} />
             <div className={classes.content}>
-              <AddressTable addresses={userAddresses} handleModalOpen={handleModalOpen} />
+              <AddressTable
+                addresses={userAddresses}
+                handleModalOpen={handleModalOpen}
+                setEditAddress={setEditAddress}
+                reset={reset}
+              />
             </div>
           </div>
         </CardContent>

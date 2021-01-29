@@ -15,7 +15,16 @@ import * as Yup from 'yup';
 import CustomTooltip from '../../components/CustomTooltip/CustomTooltip';
 import { FormSubmitButton, FormTextField } from '../../components/Form';
 import ErrorMessage from '../../components/Message/ErrorMessage';
-import { CartContext } from '../../components/ShoppingCart/CartContext';
+import {
+  addProduct,
+  CartContext,
+  clearItems,
+  clearProduct,
+  removeProduct,
+  setCartPromoCode,
+  setCartPromotion,
+  setIsPromoCodeError,
+} from '../../components/ShoppingCart/CartContext';
 import { usePromotion, usePromotionStatus } from '../../hooks/queries/promotionQueries';
 import { useFormServerErrors } from '../../hooks/useFormServerErrors';
 import { formatPriceForDisplay, formatPriceUnitSum } from '../../utils/priceFormat';
@@ -124,6 +133,28 @@ const useStyles = makeStyles({
     fontWeight: 600,
     fontSize: '16px',
   },
+
+  promoCodeSummary: {
+    display: 'flex',
+    width: '100%',
+    padding: '1rem 0 2rem 0',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+  },
+  promoCodeWrapper: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  promoCodeTitle: {
+    marginLeft: '1rem',
+  },
+  promoCodeName: {
+    marginLeft: '1rem',
+  },
+  promoCodeValue: {
+    marginLeft: '1rem',
+  },
 });
 
 const schema = Yup.object({
@@ -141,34 +172,34 @@ const formOpts = {
 
 function Checkout() {
   const classes = useStyles();
-  const {
-    subtotalPrice,
-    totalPrice,
-    totalQuantity,
-    items,
-    clearItems,
-    cartPromoCode,
-    setCartPromoCode,
-    cartPromotion,
-    setCartPromotion,
-  } = useContext(CartContext);
+  const { cart, dispatch } = useContext(CartContext);
   const [enteredPromoCode, setEnteredPromoCode] = useState('');
 
   const { isError, error, refetch: fetchStatus, remove: resetQuery } = usePromotionStatus(enteredPromoCode, {
     enabled: false,
     retry: false,
-    onSuccess: () => setCartPromoCode(enteredPromoCode),
+    onSuccess: () => {
+      dispatch(setCartPromoCode(enteredPromoCode));
+      dispatch(setIsPromoCodeError(false));
+    },
     onError: () => {
-      setCartPromoCode('');
-      setCartPromotion(null);
+      dispatch(setCartPromoCode(''));
+      dispatch(setCartPromotion(null));
+      dispatch(setIsPromoCodeError(true));
     },
   });
 
-  const { refetch: fetchPromotion } = usePromotion(cartPromoCode, {
+  const { refetch: fetchPromotion } = usePromotion(cart.promoCode, {
     enabled: false,
     retry: false,
-    onSuccess: result => setCartPromotion(result),
-    onError: () => setCartPromotion(null),
+    onSuccess: result => {
+      dispatch(setCartPromotion(result));
+      dispatch(setIsPromoCodeError(false));
+    },
+    onError: () => {
+      dispatch(setCartPromotion(null));
+      dispatch(setIsPromoCodeError(true));
+    },
   });
 
   const methods = useForm(formOpts);
@@ -179,30 +210,32 @@ function Checkout() {
   };
 
   const handleClearCart = () => {
-    clearItems();
-    setCartPromoCode('');
-    setCartPromotion(null);
+    dispatch(clearItems());
+    dispatch(setCartPromoCode(''));
+    dispatch(setIsPromoCodeError(false));
+    dispatch(setCartPromotion(null));
   };
 
   const handleClearPromoCode = () => {
     resetQuery();
     reset({ promoCode: '' });
-    setCartPromoCode('');
-    setCartPromotion(null);
+    dispatch(setCartPromoCode(''));
+    dispatch(setIsPromoCodeError(false));
+    dispatch(setCartPromotion(null));
     setEnteredPromoCode('');
   };
 
   useEffect(() => {
-    if (items?.length === 0) {
+    if (cart?.items?.length === 0) {
       navigate('/');
     }
-  }, [items.length]);
+  }, [cart.items.length]);
 
   useEffect(() => {
-    if (cartPromoCode) {
-      reset({ promoCode: cartPromoCode });
+    if (cart.promoCode) {
+      reset({ promoCode: cart.promoCode });
     }
-  }, [cartPromoCode, reset]);
+  }, [cart.promoCode, reset]);
 
   useEffect(() => {
     if (enteredPromoCode) {
@@ -211,10 +244,10 @@ function Checkout() {
   }, [enteredPromoCode, fetchStatus]);
 
   useEffect(() => {
-    if (cartPromoCode) {
+    if (cart.promoCode) {
       fetchPromotion();
     }
-  }, [cartPromoCode, fetchPromotion]);
+  }, [cart.promoCode, fetchPromotion]);
 
   useFormServerErrors(error, setError);
 
@@ -223,7 +256,7 @@ function Checkout() {
   return (
     <Container>
       <div className={classes.summaryContent}>
-        {items?.length > 0 && (
+        {cart?.items?.length > 0 && (
           <>
             <Typography variant='h2' component='h2' className={classes.summaryTitle}>
               Order Summary
@@ -232,7 +265,7 @@ function Checkout() {
             <Divider variant='middle' orientation='horizontal' className={classes.divider} />
 
             <div className={classes.list}>
-              {items.map(({ product, quantity }) => (
+              {cart?.items?.map(({ product, quantity }) => (
                 <CartListItem key={product.id} product={product} quantity={quantity} />
               ))}
             </div>
@@ -248,7 +281,7 @@ function Checkout() {
               Clear Cart
             </Button>
 
-            {cartPromoCode && cartPromotion && (
+            {cart?.promoCode && cart?.promotion && (
               <>
                 <Divider
                   variant='middle'
@@ -258,15 +291,34 @@ function Checkout() {
                 />
 
                 <div className={classes.promoCodeSummary}>
-                  <Typography component='span' variant='subtitle2' color='textPrimary' className={classes.promoCode}>
-                    Promo Code: {cartPromoCode}
-                  </Typography>
+                  <div className={classes.promoCodeWrapper}>
+                    <Typography
+                      component='p'
+                      variant='subtitle1'
+                      color='textPrimary'
+                      className={classes.promoCodeTitle}
+                    >
+                      Promo Code:
+                    </Typography>
 
-                  {cartPromotion.type === 'percentage' ? (
-                    <Chip label={`-${cartPromotion.amount}%`} />
-                  ) : (
-                    <Chip label={`-${formatPriceForDisplay(cartPromotion.amount)}$`} />
-                  )}
+                    <Typography component='p' variant='subtitle1' color='textPrimary' className={classes.promoCodeName}>
+                      <Chip label={<strong>{cart?.promoCode}</strong>} />
+                    </Typography>
+                  </div>
+
+                  <div className={classes.promoCodeValue}>
+                    {cart?.promotion?.type === 'percentage' ? (
+                      <Chip
+                        label={<strong> &minus; {cart?.promotion?.amount} %</strong>}
+                        style={{ background: 'green', color: '#fff' }}
+                      />
+                    ) : (
+                      <Chip
+                        label={<strong> &minus; {formatPriceForDisplay(cart?.promotion?.amount)} $</strong>}
+                        style={{ background: 'green', color: '#fff' }}
+                      />
+                    )}
+                  </div>
                 </div>
               </>
             )}
@@ -280,13 +332,13 @@ function Checkout() {
 
             <div className={classes.summary}>
               <Typography component='span' variant='subtitle2' color='textPrimary' className={classes.totalQty}>
-                Total Quantity: {totalQuantity}
+                Total Quantity: {cart?.totalQuantity}
               </Typography>
               <Typography component='span' variant='subtitle2' color='textPrimary' className={classes.subtotalPrice}>
-                Subtotal: <strong>${formatPriceForDisplay(subtotalPrice)}</strong>
+                Subtotal: <strong>${formatPriceForDisplay(cart?.subtotalPrice)}</strong>
               </Typography>
               <Typography component='span' variant='subtitle2' color='textPrimary' className={classes.totalPrice}>
-                Total Price: <strong>${formatPriceForDisplay(totalPrice)}</strong>
+                Total Price: <strong>${formatPriceForDisplay(cart?.totalPrice)}</strong>
               </Typography>
             </div>
           </>
@@ -303,7 +355,7 @@ function Checkout() {
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
               <FormTextField name='promoCode' />
 
-              {enteredPromoCode && (
+              {cart?.promoCode && cart?.promotion && (
                 <CustomTooltip title={<Typography color='inherit'>Clear Promo Code</Typography>}>
                   <IconButton onClick={handleClearPromoCode}>
                     <ClearIcon />
@@ -320,23 +372,19 @@ function Checkout() {
           </form>
         </FormProvider>
 
-        <Link to='order' className={classes.link}>
+        <Link to='order' className={classes.link} state={{ prevPath: window.location.pathname }}>
           <Button color='primary' variant='contained'>
             Proceed with checkout
           </Button>
         </Link>
       </div>
-
-      <pre>{JSON.stringify({ cartPromoCode }, null, 2)}</pre>
-      <pre>{JSON.stringify({ cartPromotion }, null, 2)}</pre>
-      <pre>{JSON.stringify({ enteredPromoCode }, null, 2)}</pre>
     </Container>
   );
 }
 
 function CartListItem({ product, quantity }) {
   const classes = useStyles();
-  const { addProduct, removeProduct, clearProduct } = useContext(CartContext);
+  const { dispatch } = useContext(CartContext);
 
   return (
     <div className={classes.listItem}>
@@ -366,18 +414,18 @@ function CartListItem({ product, quantity }) {
           </div>
           <div className={classes.controls}>
             <CustomTooltip title={<Typography color='inherit'>Increase Quantity</Typography>}>
-              <IconButton onClick={() => addProduct(product)}>
-                <AddIcon />
+              <IconButton onClick={() => dispatch(addProduct(product))}>
+                <AddIcon color='primary' />
               </IconButton>
             </CustomTooltip>
             <CustomTooltip title={<Typography color='inherit'>Decrease Quantity</Typography>}>
-              <IconButton onClick={() => removeProduct(product.id)}>
-                <RemoveIcon />
+              <IconButton onClick={() => dispatch(removeProduct(product.id))}>
+                <RemoveIcon style={{ fill: 'orange' }} />
               </IconButton>
             </CustomTooltip>
             <CustomTooltip title={<Typography color='inherit'>Remove Item</Typography>}>
-              <IconButton onClick={() => clearProduct(product.id)}>
-                <DeleteIcon />
+              <IconButton onClick={() => dispatch(clearProduct(product.id))}>
+                <DeleteIcon style={{ fill: 'red' }} />
               </IconButton>
             </CustomTooltip>
           </div>

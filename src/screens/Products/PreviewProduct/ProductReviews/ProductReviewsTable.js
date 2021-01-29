@@ -42,13 +42,16 @@ const useStyles = makeStyles(theme => ({
 
 const ProductReviewsTable = ({ reviews, product }) => {
   const classes = useStyles();
-  const deleteProductReviewMutation = useDeleteProductReview();
-  const deleteProductReviewsMutation = useDeleteProductReviews();
 
   const [deleteItem, setDeleteItem] = useState();
   const [selectedData, setSelectedData] = useState([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
+
+  const deleteProductReviewMutation = useDeleteProductReview();
+  const deleteProductReviewsMutation = useDeleteProductReviews({
+    onSuccess: () => setSelectedData([]),
+  });
 
   const handleDialogOpen = () => {
     setDialogOpen(true);
@@ -184,12 +187,7 @@ const ProductReviewsTable = ({ reviews, product }) => {
         dialogOpen={bulkDeleteDialogOpen}
         onClick={() => {
           handleBulkDeleteDialogClose();
-          deleteProductReviewsMutation.mutate(
-            { productId: product?.id?.toString(), ids: selectedData },
-            {
-              onSuccess: () => setSelectedData([]),
-            }
-          );
+          deleteProductReviewsMutation.mutate({ productId: product?.id?.toString(), ids: selectedData });
         }}
       />
     </>

@@ -15,7 +15,14 @@ import CheckBoxOutlineBlankIcon from '@material-ui/icons/CheckBoxOutlineBlank';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import _ from 'lodash';
 
-import { ShopContext } from '../ShopContext';
+import {
+  setFilterQueryString,
+  setHasSearched,
+  setMainFilters,
+  setShouldFetchAllByFilter,
+  ShopContext,
+  updateSpecificFilters,
+} from '../ShopContext';
 import PriceFilters from './PriceFilters';
 import PropFilters from './PropFilters';
 
@@ -40,39 +47,31 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
-function Filter({ tagsList, brandsList, categoriesList, setFilterQueryString, setShouldFetchAllByFilter }) {
+function Filter({ tagsList, brandsList, categoriesList }) {
   const classes = useStyles();
-  const {
-    mainFilters,
-    specificFilters,
-    priceFilters,
-    setMainFilters,
-    updateSpecificFilters,
-    setHasSearched,
-    clickedMainFilterChoice,
-  } = useContext(ShopContext);
+  const { shop, dispatch } = useContext(ShopContext);
 
   const handleChange = event => {
     const { name, value } = event.target;
-    const arr = mainFilters?.[name];
+    const arr = shop?.mainFilters?.[name];
     const items = arr?.includes(value) ? arr.filter(x => x !== value) : [...(arr ?? []), value];
-    setMainFilters({ name, items });
+    dispatch(setMainFilters({ name, items }));
   };
 
   useEffect(() => {
     const remainingProps = _.pickBy(
-      specificFilters,
-      (v, k) => mainFilters?.categories?.includes(k.split('_')[0]) && v.length > 0
+      shop.specificFilters,
+      (v, k) => shop?.mainFilters?.categories?.includes(k.split('_')[0]) && v.length > 0
     );
-    updateSpecificFilters(remainingProps);
+    dispatch(updateSpecificFilters(remainingProps));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mainFilters]);
+  }, [shop.mainFilters]);
 
   useEffect(() => {
     const filtersObject = {
-      ...mainFilters,
-      ...priceFilters,
-      ...specificFilters,
+      ...shop.mainFilters,
+      ...shop.priceFilters,
+      ...shop.specificFilters,
     };
 
     const valid = ['categories', 'tags', 'brands', 'priceMin', 'priceMax'];
@@ -126,15 +125,15 @@ function Filter({ tagsList, brandsList, categoriesList, setFilterQueryString, se
     });
 
     if (priceMin || priceMax || brands?.length > 0 || tags?.length > 0 || categories?.length > 0) {
-      setShouldFetchAllByFilter(true);
-      setHasSearched(true);
-      setFilterQueryString(params.toString());
+      dispatch(setShouldFetchAllByFilter(true));
+      dispatch(setHasSearched(true));
+      dispatch(setFilterQueryString(params.toString()));
     } else {
-      setShouldFetchAllByFilter(true);
-      setHasSearched(true);
-      setFilterQueryString('page=1&per_page=20');
+      dispatch(setShouldFetchAllByFilter(true));
+      dispatch(setHasSearched(true));
+      dispatch(setFilterQueryString(''));
     }
-  }, [mainFilters, priceFilters, setFilterQueryString, setHasSearched, setShouldFetchAllByFilter, specificFilters]);
+  }, [shop.mainFilters, shop.priceFilters, shop.specificFilters, dispatch]);
 
   const mainChoices = ['categories', 'tags', 'brands'];
   const mapping = { categories: categoriesList, brands: brandsList, tags: tagsList };
@@ -146,7 +145,7 @@ function Filter({ tagsList, brandsList, categoriesList, setFilterQueryString, se
           <Accordion
             key={opt}
             classes={{ expanded: classes.expanded }}
-            defaultExpanded={clickedMainFilterChoice && clickedMainFilterChoice === opt}
+            defaultExpanded={shop?.clickedMainFilterChoice === opt}
           >
             <AccordionSummary expandIcon={<ExpandMoreIcon />} aria-controls={`${opt}-filter`} id={`${opt}-filter`}>
               <Typography className={classes.heading}>{opt.charAt(0).toUpperCase() + opt.slice(1)}</Typography>
@@ -162,7 +161,7 @@ function Filter({ tagsList, brandsList, categoriesList, setFilterQueryString, se
                         checkedIcon={<CheckBoxIcon fontSize='small' />}
                         name={opt}
                         value={x.slug}
-                        checked={mainFilters && mainFilters[opt] && mainFilters[opt].includes(x.slug)}
+                        checked={shop.mainFilters && shop.mainFilters[opt] && shop.mainFilters[opt].includes(x.slug)}
                         onChange={handleChange}
                       />
                     }

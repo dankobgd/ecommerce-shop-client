@@ -131,7 +131,7 @@ export function useDeleteTag() {
   });
 }
 
-export function useDeleteTags() {
+export function useDeleteTags(config) {
   const queryClient = useQueryClient();
   const toast = useContext(ToastContext);
   const meta = getPersistedPagination('tags');
@@ -154,6 +154,9 @@ export function useDeleteTags() {
     },
     onSuccess: () => {
       toast.success('Tags deleted');
+      if (config?.onSuccess) {
+        config.onSuccess();
+      }
     },
     onError: (_, __, previousValue) => {
       queryClient.setQueryData(['tags', meta], previousValue);

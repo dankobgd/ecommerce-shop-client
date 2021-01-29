@@ -5,7 +5,7 @@ import { Link } from '@reach/router';
 import Slider from 'react-slick';
 
 import { useBrands } from '../../../hooks/queries/brandQueries';
-import { ShopContext } from '../../Shop/ShopContext';
+import { clickMainFilterChoice, ShopContext } from '../../Shop/ShopContext';
 
 const useStyles = makeStyles(() => ({
   gallery: {
@@ -88,10 +88,10 @@ function BrandsGrid() {
 
 function BrandSlide({ brand }) {
   const classes = useStyles();
-  const { clickMainFilterChoice } = useContext(ShopContext);
+  const { dispatch } = useContext(ShopContext);
 
   const handleBrandChoice = () => {
-    clickMainFilterChoice({ name: 'brands', value: brand.slug });
+    dispatch(clickMainFilterChoice({ name: 'brands', value: brand.slug }));
   };
 
   return (
