@@ -14,6 +14,7 @@ import StoreIcon from '@material-ui/icons/Store';
 import { makeStyles } from '@material-ui/styles';
 import clsx from 'clsx';
 
+import { useUserFromCache } from '../../../hooks/queries/userQueries';
 import Profile from './Profile/Profile';
 import SidebarNav from './SidebarNav/SidebarNav';
 
@@ -44,7 +45,9 @@ function Sidebar(props) {
   const { open, variant, onClose, className, ...rest } = props;
   const classes = useStyles();
 
-  const pages = [
+  const user = useUserFromCache();
+
+  const adminPages = [
     {
       title: 'Dashboard',
       href: '/dashboard',
@@ -96,6 +99,31 @@ function Sidebar(props) {
       icon: <LoyaltyIcon />,
     },
   ];
+
+  const userPages = [
+    {
+      title: 'Dashboard',
+      href: '/dashboard',
+      icon: <DashboardIcon />,
+    },
+    {
+      title: 'Account',
+      href: '/account',
+      icon: <AccountBoxIcon />,
+    },
+    {
+      title: 'Orders',
+      href: '/orders',
+      icon: <StoreIcon />,
+    },
+    {
+      title: 'Wishlist',
+      href: '/wishlist',
+      icon: <StarsIcon />,
+    },
+  ];
+
+  const pages = user?.role === 'admin' ? adminPages : userPages;
 
   return (
     <Drawer anchor='left' classes={{ paper: classes.drawer }} onClose={onClose} open={open} variant={variant}>

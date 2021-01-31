@@ -69,7 +69,7 @@ function EditTagForm({ tagId }) {
       toast.info('No changes applied');
     }
     if (!isEmptyObject(changes)) {
-      editTagMutation.mutate({ id: tag.id, values: changes });
+      editTagMutation.mutate(changes);
     }
   };
 

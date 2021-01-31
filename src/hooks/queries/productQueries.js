@@ -112,8 +112,8 @@ export function useUpdateProduct(productId) {
 
   const keys = queryClient.getQueryCache().findAll('products');
 
-  return useMutation(({ id, formData }) => api.products.update(id, formData), {
-    onMutate: data => {
+  return useMutation(formData => api.products.update(productId, formData), {
+    onMutate: formData => {
       queryClient.cancelQueries('products');
       const previousValue = queryClient.getQueryData(['products', productId]);
 
@@ -121,12 +121,12 @@ export function useUpdateProduct(productId) {
         if (matches(key)) {
           queryClient.setQueryData(key, old => ({
             ...old,
-            data: [...old.data.map(x => (x.id === Number(productId) ? { ...x, ...data.values } : x))],
+            data: [...old.data.map(x => (x.id === Number(productId) ? { ...x, ...formData } : x))],
           }));
         }
       });
 
-      queryClient.setQueryData(['products', productId], data.values);
+      queryClient.setQueryData(['products', productId], formData);
       return previousValue;
     },
     onSuccess: () => {
@@ -206,6 +206,42 @@ export function useDeleteProducts(config) {
     onError: (_, __, previousValue) => {
       queryClient.setQueryData(['products', meta], previousValue);
       toast.error('Error deleting products');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries('products');
+    },
+  });
+}
+
+export function useInsertPricing(productId) {
+  const queryClient = useQueryClient();
+  const toast = useContext(ToastContext);
+
+  const keys = queryClient.getQueryCache().findAll('products');
+
+  return useMutation(values => api.products.insertPricing(productId, values), {
+    onMutate: values => {
+      queryClient.cancelQueries('products');
+      const previousValue = queryClient.getQueryData(['products', productId]);
+
+      keys.forEach(key => {
+        if (matches(key)) {
+          queryClient.setQueryData(key, old => ({
+            ...old,
+            data: [...old.data.map(x => (x.id === Number(productId) ? { ...x, ...values } : x))],
+          }));
+        }
+      });
+
+      queryClient.setQueryData(['products', productId], values);
+      return previousValue;
+    },
+    onSuccess: () => {
+      toast.success('Pricing updated');
+    },
+    onError: (_, __, previousValue) => {
+      queryClient.setQueryData(['products', productId], previousValue);
+      toast.error('Form has errors, please check the details');
     },
     onSettled: () => {
       queryClient.invalidateQueries('products');

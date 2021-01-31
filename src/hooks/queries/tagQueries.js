@@ -67,8 +67,8 @@ export function useUpdateTag(tagId) {
 
   const keys = queryClient.getQueryCache().findAll('tags');
 
-  return useMutation(({ id, values }) => api.tags.update(id, values), {
-    onMutate: data => {
+  return useMutation(values => api.tags.update(tagId, values), {
+    onMutate: values => {
       queryClient.cancelQueries('tags');
       const previousValue = queryClient.getQueryData(['tags', tagId]);
 
@@ -76,12 +76,12 @@ export function useUpdateTag(tagId) {
         if (matches(key)) {
           queryClient.setQueryData(key, old => ({
             ...old,
-            data: [...old.data.map(x => (x.id === Number(tagId) ? { ...x, ...data.values } : x))],
+            data: [...old.data.map(x => (x.id === Number(tagId) ? { ...x, ...values } : x))],
           }));
         }
       });
 
-      queryClient.setQueryData(['tags', tagId], data.values);
+      queryClient.setQueryData(['tags', tagId], values);
       return previousValue;
     },
     onSuccess: () => {

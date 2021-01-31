@@ -88,7 +88,7 @@ function EditBrandForm({ brandId }) {
       toast.info('No changes applied');
     }
     if (!isEmptyObject(changes)) {
-      editBrandMutation.mutate({ id: brand.id, formData });
+      editBrandMutation.mutate(formData);
     }
   };
 

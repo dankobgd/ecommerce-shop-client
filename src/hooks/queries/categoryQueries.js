@@ -78,8 +78,8 @@ export function useUpdateCategory(categoryId) {
 
   const keys = queryClient.getQueryCache().findAll('categories');
 
-  return useMutation(({ id, formData }) => api.categories.update(id, formData), {
-    onMutate: data => {
+  return useMutation(formData => api.categories.update(categoryId, formData), {
+    onMutate: formData => {
       queryClient.cancelQueries('categories');
       const previousValue = queryClient.getQueryData(['categories', categoryId]);
 
@@ -87,12 +87,12 @@ export function useUpdateCategory(categoryId) {
         if (matches(key)) {
           queryClient.setQueryData(key, old => ({
             ...old,
-            data: [...old.data.map(x => (x.id === Number(categoryId) ? { ...x, ...data.values } : x))],
+            data: [...old.data.map(x => (x.id === Number(categoryId) ? { ...x, ...formData } : x))],
           }));
         }
       });
 
-      queryClient.setQueryData(['categories', categoryId], data.values);
+      queryClient.setQueryData(['categories', categoryId], formData);
       return previousValue;
     },
     onSuccess: () => {

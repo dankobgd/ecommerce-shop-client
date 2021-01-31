@@ -76,7 +76,7 @@ export const rules = {
 
   endDate: startRef =>
     Yup.date()
-      .min(Yup.ref(startRef), () => 'End date needs to be before start date')
+      .min(Yup.ref(startRef), () => 'End date needs to be after start date')
       .required()
       .nullable()
       .default(undefined),

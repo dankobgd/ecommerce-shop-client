@@ -67,8 +67,8 @@ export function useUpdateBrand(brandId) {
 
   const keys = queryClient.getQueryCache().findAll('brands');
 
-  return useMutation(({ id, formData }) => api.brands.update(id, formData), {
-    onMutate: data => {
+  return useMutation(formData => api.brands.update(brandId, formData), {
+    onMutate: formData => {
       queryClient.cancelQueries('brands');
       const previousValue = queryClient.getQueryData(['brands', brandId]);
 
@@ -76,12 +76,12 @@ export function useUpdateBrand(brandId) {
         if (matches(key)) {
           queryClient.setQueryData(key, old => ({
             ...old,
-            data: [...old.data.map(x => (x.id === Number(brandId) ? { ...x, ...data.values } : x))],
+            data: [...old.data.map(x => (x.id === Number(brandId) ? { ...x, ...formData } : x))],
           }));
         }
       });
 
-      queryClient.setQueryData(['brands', brandId], data.values);
+      queryClient.setQueryData(['brands', brandId], formData);
       return previousValue;
     },
     onSuccess: () => {

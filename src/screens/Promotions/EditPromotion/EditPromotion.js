@@ -146,7 +146,7 @@ function EditPromotionForm({ promoCode }) {
               isAllowed={values => isAllowedAmountValue(values, watch('type'))}
             />
             <FormTextField name='description' multiline fullWidth rows={5} />
-            <FormDateTimePicker name='startsAt' fullWidth minutesStep={1} disablePast />
+            <FormDateTimePicker name='startsAt' fullWidth minutesStep={1} />
             <FormDateTimePicker name='endsAt' fullWidth minutesStep={1} disablePast />
 
             <FormSubmitButton className={classes.submit} fullWidth loading={editPromotionMutation?.isLoading}>

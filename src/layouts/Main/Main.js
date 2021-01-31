@@ -4,7 +4,6 @@ import { useMediaQuery } from '@material-ui/core';
 import { makeStyles, useTheme } from '@material-ui/styles';
 import clsx from 'clsx';
 
-import Footer from './Footer/Footer';
 import Sidebar from './Sidebar/Sidebar';
 import Topbar from './Topbar/Topbar';
 
@@ -54,10 +53,7 @@ function Main(props) {
     >
       <Topbar onSidebarOpen={handleSidebarOpen} />
       <Sidebar onClose={handleSidebarClose} open={shouldOpenSidebar} variant={isDesktop ? 'persistent' : 'temporary'} />
-      <main className={classes.content}>
-        {children}
-        <Footer />
-      </main>
+      <main className={classes.content}>{children}</main>
     </div>
   );
 }

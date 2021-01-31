@@ -80,7 +80,7 @@ function EditCategoryForm({ categoryId }) {
 
   const { data: category } = useCategory(categoryId);
 
-  const editCategoryMutation = useUpdateCategory();
+  const editCategoryMutation = useUpdateCategory(categoryId);
 
   const onSubmit = values => {
     const changes = diff(baseFormObj, values);
@@ -116,7 +116,7 @@ function EditCategoryForm({ categoryId }) {
     }
 
     if (!isEmptyObject(changes)) {
-      editCategoryMutation.mutate({ id: category.id, formData });
+      editCategoryMutation.mutate(formData);
     }
   };
 

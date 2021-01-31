@@ -1,10 +1,12 @@
 import { useContext } from 'react';
 
 import { navigate } from '@reach/router';
+import { nanoid } from 'nanoid';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 
 import api from '../../api';
 import { ToastContext } from '../../components/Toast/ToastContext';
+import { getPersistedPagination, matches } from '../../utils/pagination';
 
 export function useMe() {
   const queryClient = useQueryClient();
@@ -20,6 +22,206 @@ export function useMe() {
 export function useUserFromCache() {
   const queryClient = useQueryClient();
   return queryClient.getQueryData('user');
+}
+
+export function useCreateUser() {
+  const queryClient = useQueryClient();
+  const toast = useContext(ToastContext);
+  const meta = getPersistedPagination('users');
+  const keys = queryClient.getQueryCache().findAll('users');
+
+  return useMutation(formData => api.users.create(formData), {
+    onMutate: formData => {
+      queryClient.cancelQueries('users');
+      const previousValue = queryClient.getQueryData('users', { active: true });
+
+      keys.forEach(key => {
+        if (matches(key)) {
+          queryClient.setQueryData(key, old => ({
+            ...old,
+            data: [...old.data, { id: nanoid(), ...formData }],
+          }));
+        }
+      });
+
+      return previousValue;
+    },
+    onSuccess: () => {
+      toast.success('User created');
+    },
+    onError: (_, __, previousValue) => {
+      queryClient.setQueryData(['users', meta], previousValue);
+      toast.error('Form has errors, please check the details');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries('users');
+    },
+  });
+}
+
+export function useUpdateUser(authUserId, userId) {
+  const queryClient = useQueryClient();
+  const toast = useContext(ToastContext);
+
+  const keys = queryClient.getQueryCache().findAll('users');
+
+  return useMutation(formData => api.users.update(userId, formData), {
+    onMutate: formData => {
+      queryClient.cancelQueries('users');
+      const previousValue = queryClient.getQueryData(['users', userId]);
+
+      keys.forEach(key => {
+        if (matches(key)) {
+          queryClient.setQueryData(key, old => ({
+            ...old,
+            data: [...old.data.map(x => (x.id === Number(userId) ? { ...x, ...formData } : x))],
+          }));
+        }
+      });
+
+      queryClient.setQueryData(['users', userId], formData);
+      return previousValue;
+    },
+    onSuccess: () => {
+      toast.success('User updated');
+    },
+    onError: (_, __, previousValue) => {
+      queryClient.setQueryData(['users', userId], previousValue);
+      toast.error('Form has errors, please check the details');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries('users');
+      if (Number(authUserId) === Number(userId)) {
+        queryClient.invalidateQueries('user');
+      }
+    },
+  });
+}
+
+export function useUpdateUserProfile(userId) {
+  const queryClient = useQueryClient();
+  const toast = useContext(ToastContext);
+
+  const keys = queryClient.getQueryCache().findAll('users');
+
+  return useMutation(({ id, values }) => api.users.updateProfile(id, values), {
+    onMutate: data => {
+      queryClient.cancelQueries('users');
+      const previousValue = queryClient.getQueryData(['users', userId]);
+
+      keys.forEach(key => {
+        if (matches(key)) {
+          queryClient.setQueryData(key, old => ({
+            ...old,
+            data: [...old.data.map(x => (x.id === Number(userId) ? { ...x, ...data.values } : x))],
+          }));
+        }
+      });
+
+      queryClient.setQueryData(['users', userId], data.values);
+      return previousValue;
+    },
+    onSuccess: () => {
+      toast.success('User updated');
+    },
+    onError: (_, __, previousValue) => {
+      queryClient.setQueryData(['users', userId], previousValue);
+      toast.error('Form has errors, please check the details');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries('users');
+    },
+  });
+}
+
+export function useUser(userId) {
+  const queryClient = useQueryClient();
+
+  return useQuery(['users', userId], () => api.users.get(userId), {
+    initialData: () => queryClient.getQueryData('users')?.data?.find(x => x.id === Number(userId)),
+  });
+}
+
+export function useUsers(query, config) {
+  const queryClient = useQueryClient();
+  const params = new URLSearchParams(query || '');
+  const key = query ? ['users', query] : ['users'];
+
+  return useQuery(key, () => api.users.getAll(params), {
+    initialData: () => queryClient.getQueryData(key),
+    ...config,
+  });
+}
+
+export function useDeleteUser() {
+  const queryClient = useQueryClient();
+  const toast = useContext(ToastContext);
+  const meta = getPersistedPagination('users');
+  const keys = queryClient.getQueryCache().findAll('users');
+
+  return useMutation(id => api.users.delete(id), {
+    onMutate: id => {
+      const previousValue = queryClient.getQueryData('users', { active: true });
+
+      keys.forEach(key => {
+        if (matches(key)) {
+          queryClient.cancelQueries(key);
+          const filtered = previousValue?.data?.filter(x => x.id !== id);
+          const obj = { ...previousValue, data: filtered };
+          queryClient.setQueryData(key, obj);
+        }
+      });
+
+      return previousValue;
+    },
+    onSuccess: () => {
+      toast.success('User deleted');
+    },
+    onError: (_, __, previousValue) => {
+      queryClient.setQueryData(['users', meta], previousValue);
+      toast.error('Error deleting the user');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries('users');
+    },
+  });
+}
+
+export function useDeleteUsers(config) {
+  const queryClient = useQueryClient();
+  const toast = useContext(ToastContext);
+  const meta = getPersistedPagination('users');
+  const keys = queryClient.getQueryCache().findAll('users');
+
+  return useMutation(ids => api.users.bulkDelete(ids), {
+    onMutate: ids => {
+      const previousValue = queryClient.getQueryData('users', { active: true });
+
+      keys.forEach(key => {
+        if (matches(key)) {
+          queryClient.cancelQueries(key);
+          const filtered = previousValue?.data?.filter(x => !ids.includes(x.id));
+          const obj = { ...previousValue, data: filtered };
+          queryClient.setQueryData(key, obj);
+        }
+      });
+
+      return previousValue;
+    },
+    onSuccess: () => {
+      toast.success('Users deleted');
+      if (config?.onSuccess) {
+        config.onSuccess();
+      }
+    },
+    onError: (_, __, previousValue) => {
+      queryClient.setQueryData(['users', meta], previousValue);
+      toast.error('Error deleting users');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries('users');
+    },
+  });
 }
 
 export function useLogin() {
@@ -38,6 +240,7 @@ export function useLogin() {
     onSettled: () => {
       queryClient.invalidateQueries('user');
     },
+    retry: false,
   });
 }
 
@@ -57,6 +260,7 @@ export function useSignup() {
     onSettled: () => {
       queryClient.invalidateQueries('user');
     },
+    retry: false,
   });
 }
 
@@ -261,7 +465,7 @@ export function useEditProfile() {
   const queryClient = useQueryClient();
   const toast = useContext(ToastContext);
 
-  return useMutation(values => api.users.update(values), {
+  return useMutation(values => api.users.updateProfile(values), {
     onMutate: values => {
       queryClient.cancelQueries('user');
       const previousValue = queryClient.getQueryData('user');

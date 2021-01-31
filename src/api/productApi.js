@@ -30,6 +30,9 @@ export default {
   async bulkDelete(data) {
     return apiClient.delete(`v1/products/bulk`, { data });
   },
+  async insertPricing(id, data) {
+    return apiClient.post(`v1/products/${id}/pricing`, { data });
+  },
 
   // product tags
   async createTag(productId, data) {

@@ -4,6 +4,15 @@ export default {
   async getCurrent() {
     return apiClient.get(`v1/users/me`);
   },
+  async get(userId) {
+    return apiClient.get(`v1/users/${userId}`);
+  },
+  async getAll(params) {
+    return apiClient.get(`v1/users`, { params });
+  },
+  async create(data) {
+    return apiClient.post(`v1/users/new`, { data });
+  },
   async signup(credentials) {
     return apiClient.post(`v1/users`, { data: credentials });
   },
@@ -22,8 +31,17 @@ export default {
   async changePassword(credentials) {
     return apiClient.put(`v1/users/password`, { data: credentials });
   },
-  async update(data) {
-    return apiClient.patch(`v1/users`, { data });
+  async update(userId, data) {
+    return apiClient.patch(`v1/users/${userId}`, { data, headers: { 'Content-Type': 'multipart/form-data' } });
+  },
+  async updateProfile(data) {
+    return apiClient.patch(`v1/users/profile`, { data });
+  },
+  async delete(id) {
+    return apiClient.delete(`v1/users/${id}`);
+  },
+  async bulkDelete(data) {
+    return apiClient.delete(`v1/users/bulk`, { data });
   },
   async uploadAvatar(data) {
     return apiClient.post(`v1/users/avatar`, { data, headers: { 'Content-Type': 'multipart/form-data' } });
