@@ -13,4 +13,7 @@ export default {
   async getAll(params) {
     return apiClient.get(`v1/orders`, { params });
   },
+  async getDetails(orderId) {
+    return apiClient.get(`v1/orders/${orderId}/details`);
+  },
 };

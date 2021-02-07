@@ -301,7 +301,12 @@ function Checkout() {
                       Promo Code:
                     </Typography>
 
-                    <Typography component='p' variant='subtitle1' color='textPrimary' className={classes.promoCodeName}>
+                    <Typography
+                      component='div'
+                      variant='subtitle1'
+                      color='textPrimary'
+                      className={classes.promoCodeName}
+                    >
                       <Chip label={<strong>{cart?.promoCode}</strong>} />
                     </Typography>
                   </div>

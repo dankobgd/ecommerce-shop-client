@@ -589,3 +589,15 @@ export function useClearWishlist() {
     },
   });
 }
+
+// orders
+export function useUserOrders(userId, query, config) {
+  const queryClient = useQueryClient();
+  const params = new URLSearchParams(query || '');
+  const key = query ? ['user', userId, 'orders', query] : ['user', userId, 'orders'];
+
+  return useQuery(key, () => api.users.getOrders(userId, params), {
+    initialData: () => queryClient.getQueryData(key),
+    ...config,
+  });
+}

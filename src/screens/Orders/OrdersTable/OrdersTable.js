@@ -11,6 +11,7 @@ import {
   TableHead,
   TableRow,
   TablePagination,
+  Chip,
 } from '@material-ui/core';
 import { makeStyles } from '@material-ui/styles';
 import clsx from 'clsx';
@@ -18,7 +19,9 @@ import { nanoid } from 'nanoid';
 
 import { PreviewButton } from '../../../components/TableComponents/TableButtons';
 import { useOrders } from '../../../hooks/queries/orderQueries';
+import { useUserFromCache, useUserOrders } from '../../../hooks/queries/userQueries';
 import { diff } from '../../../utils/diff';
+import { formatDate } from '../../../utils/formatDate';
 import { getPersistedPagination, paginationRanges, persistPagination } from '../../../utils/pagination';
 import { formatPriceForDisplay } from '../../../utils/priceFormat';
 
@@ -45,8 +48,19 @@ const useStyles = makeStyles(theme => ({
 
 const OrdersTable = ({ className, ...rest }) => {
   const classes = useStyles();
+  const user = useUserFromCache();
+
   const [pageMeta, setPageMeta] = useState(getPersistedPagination('orders'));
-  const { data: orders } = useOrders(pageMeta, { keepPreviousData: true });
+  const { data: allOrders } = useOrders(pageMeta, {
+    keepPreviousData: true,
+    enabled: user?.role === 'admin',
+  });
+  const { data: userOrders } = useUserOrders(user?.id, pageMeta, {
+    keepPreviousData: true,
+    enabled: user?.role === 'user',
+  });
+
+  const orders = user?.role === 'admin' ? allOrders : userOrders;
 
   const [selectedData, setSelectedData] = useState([]);
 
@@ -113,7 +127,11 @@ const OrdersTable = ({ className, ...rest }) => {
                 <TableCell>Subtotal</TableCell>
                 <TableCell>Total</TableCell>
                 <TableCell>Promo Code</TableCell>
-                <TableCell>ShippedAt</TableCell>
+                <TableCell>Promo Code Type</TableCell>
+                <TableCell>Promo Code Amount</TableCell>
+                <TableCell>Created At</TableCell>
+                <TableCell>Shipped At</TableCell>
+                <TableCell>Payment Method ID</TableCell>
                 <TableCell>Billing Line1 </TableCell>
                 <TableCell>Billing Line2 </TableCell>
                 <TableCell>Billing City </TableCell>
@@ -150,11 +168,44 @@ const OrdersTable = ({ className, ...rest }) => {
                     />
                   </TableCell>
                   <TableCell>{order.id}</TableCell>
-                  <TableCell>{order.status}</TableCell>
-                  <TableCell>${formatPriceForDisplay(order.subtotal)}</TableCell>
-                  <TableCell>${formatPriceForDisplay(order.total)}</TableCell>
-                  <TableCell>{order.promoCode}</TableCell>
-                  <TableCell>{order.shippedAt}</TableCell>
+                  <TableCell>
+                    <Chip
+                      label={order.status}
+                      color={order.status === 'success' ? 'primary' : undefined}
+                      style={{ color: '#fff', backgroundColor: order.status !== 'success' && 'darkred' }}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      label={`$${formatPriceForDisplay(order.subtotal)}`}
+                      style={{ color: '#fff', backgroundColor: 'green' }}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      label={`$${formatPriceForDisplay(order.total)}`}
+                      style={{ color: '#fff', backgroundColor: 'green' }}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Chip label={order.promoCode} />
+                  </TableCell>
+                  <TableCell>
+                    <Chip label={order.promoCodeType} />
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      label={
+                        order?.promoCodeType === 'percentage'
+                          ? `${order.promoCodeAmount}%`
+                          : `${formatPriceForDisplay(order.promoCodeAmount)}$`
+                      }
+                      style={{ color: '#fff', backgroundColor: 'goldenrod' }}
+                    />
+                  </TableCell>
+                  <TableCell>{formatDate(order.createdAt)}</TableCell>
+                  <TableCell>{formatDate(order.shippedAt)}</TableCell>
+                  <TableCell>{order.paymentMethodId}</TableCell>
                   <TableCell>{order.billingAddressLine1}</TableCell>
                   <TableCell>{order.billingAddressLine2}</TableCell>
                   <TableCell>{order.billingAddressCity}</TableCell>

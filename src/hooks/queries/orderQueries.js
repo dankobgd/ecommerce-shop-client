@@ -27,6 +27,14 @@ export function useOrders(query, config) {
   });
 }
 
+export function useOrderDetails(orderId) {
+  const queryClient = useQueryClient();
+
+  return useQuery(['orders', orderId, 'details'], () => api.orders.getDetails(orderId), {
+    initialData: () => queryClient.getQueryData(['orders', orderId, 'details']),
+  });
+}
+
 export function useCreateOrder(config) {
   const queryClient = useQueryClient();
   const toast = useContext(ToastContext);

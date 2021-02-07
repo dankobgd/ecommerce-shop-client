@@ -208,7 +208,7 @@ function OrderForm({ location }) {
 
   return (
     <FormProvider {...methods}>
-      <form onSubmit={methods.handleSubmit(onSubmit, onError)} noValidate>
+      <form onSubmit={methods.handleSubmit(onSubmit, onError)} noValidate style={{ margin: '1rem 0 1rem 0' }}>
         {createOrderMutation?.isLoading && <CircularProgress />}
         {createOrderMutation?.isError && <ErrorMessage message={createOrderMutation?.error?.message} />}
         {stripeError && <ErrorMessage message={stripeError?.message} />}
