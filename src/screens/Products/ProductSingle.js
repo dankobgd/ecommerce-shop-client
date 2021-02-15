@@ -32,6 +32,7 @@ import ReactImageMagnify from 'react-image-magnify';
 import * as Yup from 'yup';
 
 import CustomTooltip from '../../components/CustomTooltip/CustomTooltip';
+import { StandaloneDiscountBadge } from '../../components/DiscountBadge/DiscountBadge';
 import { FormSubmitButton, FormTextField, FormRating } from '../../components/Form';
 import ErrorMessage from '../../components/Message/ErrorMessage';
 import { addProduct, CartContext } from '../../components/ShoppingCart/CartContext';
@@ -94,6 +95,63 @@ const useStyles = makeStyles(() => ({
     alignItems: 'flex-start',
   },
 
+  ratingSection: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  ratingText: {
+    marginLeft: 10,
+  },
+  pricesSection: {
+    display: 'flex',
+    justifyContent: 'flex-start',
+    alignItems: 'first baseline',
+    width: '100%',
+    marginTop: '1rem',
+  },
+  pricesGroup: {
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  originalPriceWrapper: {
+    display: 'flex',
+  },
+  originalPriceText: {
+    color: 'rgba(0, 0, 0, 0.4)',
+    marginRight: 10,
+  },
+  originalPrice: {
+    position: 'relative',
+    color: 'rgba(0, 0, 0, 0.4)',
+
+    '&:before': {
+      position: 'absolute',
+      content: '""',
+      left: 0,
+      top: '50%',
+      right: 0,
+      borderTop: '2px solid',
+      borderColor: 'red',
+      transform: 'rotate(-7deg) scale(1.2)',
+    },
+  },
+  priceWrapper: {
+    display: 'flex',
+    marginTop: '1rem',
+  },
+  priceText: {
+    marginRight: 10,
+  },
+  price: {},
+
+  addToCartSection: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: '3rem',
+  },
+
   details: {
     margin: '3rem 0',
   },
@@ -152,26 +210,6 @@ const useStyles = makeStyles(() => ({
   wishlistAdd: {
     marginLeft: '1rem',
   },
-
-  originalPrice: {
-    marginTop: '1rem',
-    position: 'relative',
-    color: 'rgba(0, 0, 0, 0.4)',
-
-    '&:before': {
-      position: 'absolute',
-      content: '""',
-      left: 0,
-      top: '50%',
-      right: 0,
-      borderTop: '2px solid',
-      borderColor: 'red',
-      transform: 'rotate(-7deg) scale(1.2)',
-    },
-  },
-  currentPrice: {
-    marginTop: '1rem',
-  },
 }));
 
 const chipColors = [
@@ -223,6 +261,20 @@ const formOpts2 = {
   },
 };
 
+export function formatSaleEndDate(date) {
+  if (!date) return '';
+
+  const d = date instanceof Date ? date : new Date(date);
+
+  const dtf = new Intl.DateTimeFormat('sr-RS', {
+    day: 'numeric',
+    month: 'numeric',
+    year: 'numeric',
+  });
+
+  return dtf.format(d);
+}
+
 function ProductSingle({ productId }) {
   const classes = useStyles();
   const toast = useContext(ToastContext);
@@ -243,7 +295,7 @@ function ProductSingle({ productId }) {
   const { data: productTags } = useProductTags(productId);
   const { data: productReviews } = useProductReviews(productId);
   const { data: productImages } = useProductImages(productId, {
-    onSuccess: result => setSelectedImage(result[0].url || product?.imageUrl),
+    onSuccess: result => setSelectedImage(result?.[0]?.url || product?.imageUrl),
   });
   const { data: userWishlist } = useWishlist({ enabled: isAuthenticated });
 
@@ -382,19 +434,9 @@ function ProductSingle({ productId }) {
                 {product?.name}
               </Typography>
 
-              {hasDiscountPrice && (
-                <Typography variant='h4' className={classes.originalPrice}>
-                  ${product && formatPriceForDisplay(product.originalPrice)}
-                </Typography>
-              )}
-
-              <Typography variant='h3' className={classes.currentPrice}>
-                ${product && formatPriceForDisplay(product.price)}
-              </Typography>
-
-              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: '1rem' }}>
+              <div className={classes.ratingSection}>
                 <Rating name='rating' precision={0.5} value={averageRating || 0} readOnly />
-                <span style={{ marginLeft: '0.625rem' }}>
+                <span className={classes.ratingText}>
                   {productReviews?.length === 0 ? '(No reviews)' : `(${productReviews?.length} reviews)`}
                 </span>
 
@@ -419,7 +461,49 @@ function ProductSingle({ productId }) {
                 )}
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: '1rem' }}>
+              <div className={classes.pricesSection}>
+                <div className={classes.pricesGroup}>
+                  {hasDiscountPrice && (
+                    <div>
+                      <div className={classes.originalPriceWrapper}>
+                        <Typography variant='h4' className={classes.originalPriceText}>
+                          Old Price:
+                        </Typography>
+
+                        <Typography variant='h4'>
+                          <span className={classes.originalPrice}>
+                            ${product && formatPriceForDisplay(product.originalPrice)}
+                          </span>
+                        </Typography>
+                      </div>
+                    </div>
+                  )}
+                  <div>
+                    <div className={classes.priceWrapper}>
+                      <Typography variant='h4' className={classes.priceText}>
+                        {hasDiscountPrice ? `Discount Price:` : `Price:`}
+                      </Typography>
+
+                      <Typography variant='h3' className={classes.price}>
+                        ${product && formatPriceForDisplay(product.price)}
+                      </Typography>
+                    </div>
+
+                    {hasDiscountPrice && (
+                      <Typography
+                        variant='subtitle1'
+                        style={{ color: 'orange', marginTop: '2rem', fontSize: '1.2rem' }}
+                      >
+                        Sale ends at {formatSaleEndDate(product?.saleEnds)}
+                      </Typography>
+                    )}
+                  </div>
+                </div>
+
+                {hasDiscountPrice && <StandaloneDiscountBadge product={product} />}
+              </div>
+
+              <div className={classes.addToCartSection}>
                 <Button
                   startIcon={<AddShoppingCartIcon />}
                   color='primary'
@@ -458,7 +542,7 @@ function ProductSingle({ productId }) {
           <Typography variant='h4' className={classes.detailsTitle}>
             Details
           </Typography>
-          {product &&
+          {product?.properties &&
             Object.entries(product.properties).map(([key, val]) => (
               <Typography key={key} variant='body1' className={classes.detailsText}>
                 {key} - {val}

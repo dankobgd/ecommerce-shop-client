@@ -360,7 +360,7 @@ function Checkout() {
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
               <FormTextField name='promoCode' />
 
-              {cart?.promoCode && cart?.promotion && (
+              {((cart?.promoCode && cart?.promotion) || (!cart?.promotion && enteredPromoCode)) && (
                 <CustomTooltip title={<Typography color='inherit'>Clear Promo Code</Typography>}>
                   <IconButton onClick={handleClearPromoCode}>
                     <ClearIcon />

@@ -14,7 +14,7 @@ export function ToastProvider({ children }) {
     setToasts([...toasts, { id: nanoid(), type: 'info', message }]);
   };
   const warn = message => {
-    setToasts([...toasts, { id: nanoid(), type: 'warn', message }]);
+    setToasts([...toasts, { id: nanoid(), type: 'warning', message }]);
   };
   const error = message => {
     setToasts([...toasts, { id: nanoid(), type: 'error', message }]);

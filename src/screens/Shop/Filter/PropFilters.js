@@ -45,7 +45,7 @@ function PropFilters() {
     ?.map(x => ({
       name: x.name,
       slug: x.slug,
-      properties: x.properties.filter(p => !!p.filterable),
+      properties: x.properties?.filter(p => !!p.filterable) || null,
     }));
 
   const handleChangeBoolCheckbox = event => {
@@ -108,7 +108,7 @@ function PropFilters() {
     <div>
       {chosenCategoriesProperties?.map(category => (
         <div key={category.slug} style={{ marginTop: '1rem' }}>
-          {category.properties.map(property => (
+          {category?.properties?.map(property => (
             <Accordion key={`${category.slug}_${property.label}`} classes={{ expanded: classes.expanded }}>
               <AccordionSummary
                 expandIcon={<ExpandMoreIcon />}

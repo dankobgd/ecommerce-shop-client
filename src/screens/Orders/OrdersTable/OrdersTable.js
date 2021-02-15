@@ -187,21 +187,19 @@ const OrdersTable = ({ className, ...rest }) => {
                       style={{ color: '#fff', backgroundColor: 'green' }}
                     />
                   </TableCell>
+                  <TableCell>{order.promoCode && <Chip label={order.promoCode} />}</TableCell>
+                  <TableCell>{order.promoCodeType && <Chip label={order.promoCodeType} />}</TableCell>
                   <TableCell>
-                    <Chip label={order.promoCode} />
-                  </TableCell>
-                  <TableCell>
-                    <Chip label={order.promoCodeType} />
-                  </TableCell>
-                  <TableCell>
-                    <Chip
-                      label={
-                        order?.promoCodeType === 'percentage'
-                          ? `${order.promoCodeAmount}%`
-                          : `${formatPriceForDisplay(order.promoCodeAmount)}$`
-                      }
-                      style={{ color: '#fff', backgroundColor: 'goldenrod' }}
-                    />
+                    {order.promoCodeAmount && (
+                      <Chip
+                        label={
+                          order?.promoCodeType === 'percentage'
+                            ? `${order.promoCodeAmount}%`
+                            : `${formatPriceForDisplay(order.promoCodeAmount)}$`
+                        }
+                        style={{ color: '#fff', backgroundColor: 'goldenrod' }}
+                      />
+                    )}
                   </TableCell>
                   <TableCell>{formatDate(order.createdAt)}</TableCell>
                   <TableCell>{formatDate(order.shippedAt)}</TableCell>

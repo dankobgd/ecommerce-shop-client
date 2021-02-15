@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 
 import { CircularProgress, TextField } from '@material-ui/core';
 import { Autocomplete } from '@material-ui/lab';
+import { Link } from '@reach/router';
 import { debounce } from 'lodash';
 
 import { useSearchProducts } from '../../../hooks/queries/productQueries';
@@ -56,17 +57,27 @@ function Search() {
       getOptionLabel={getOptionLabel}
       getOptionSelected={getOptionSelected}
       renderOption={option => (
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%' }}>
-          <img
-            src={option?.imageUrl || ''}
-            alt={option?.name || ''}
-            style={{ width: 60, height: 60, objectFit: 'cover', marginRight: '1rem' }}
-          />
-          <span>{option?.name || ''}</span>
-          <span style={{ marginLeft: 'auto' }}>
-            {(option?.price && `$${formatPriceForDisplay(option.price)}`) || ''}
-          </span>
-        </div>
+        <Link
+          to={`/product/${option.id}/${option.slug}`}
+          style={{ color: 'initial', textDecoration: 'none', width: '100%' }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%' }}>
+            <img
+              src={option?.imageUrl || ''}
+              alt={option?.name || ''}
+              style={{ width: 60, height: 60, objectFit: 'cover', marginRight: '1rem' }}
+            />
+            <span>{option?.name || ''}</span>
+            <img
+              src={option?.brand?.logo || ''}
+              alt={option?.brand?.name || ''}
+              style={{ width: 34, height: 34, marginLeft: 10 }}
+            />
+            <span style={{ marginLeft: 'auto' }}>
+              {(option?.price && `$${formatPriceForDisplay(option.price)}`) || ''}
+            </span>
+          </div>
+        </Link>
       )}
       renderInput={params => (
         <TextField

@@ -13,6 +13,7 @@ import { useAddProductToWishlist, useDeleteProductFromWishlist, useWishlist } fr
 import { useIsAuthenticated } from '../../hooks/useIsAuthenticated';
 import { formatPriceForDisplay } from '../../utils/priceFormat';
 import CustomTooltip from '../CustomTooltip/CustomTooltip';
+import { CardDiscountBadge } from '../DiscountBadge/DiscountBadge';
 import { CartContext, addProduct } from '../ShoppingCart/CartContext';
 import { ToastContext } from '../Toast/ToastContext';
 
@@ -27,6 +28,7 @@ const useStyles = makeStyles(theme => ({
     margin: '0 1rem',
     borderRadius: '6px',
     boxShadow: theme.shadows[2],
+    position: 'relative',
   },
   cardMedia: {
     width: '100%',
@@ -62,6 +64,22 @@ const useStyles = makeStyles(theme => ({
     },
   },
   productPrice: {},
+  originalPrice: {
+    position: 'relative',
+    color: 'rgba(0, 0, 0, 0.4)',
+
+    '&:before': {
+      position: 'absolute',
+      content: '""',
+      left: 0,
+      top: '50%',
+      maxWidth: 34,
+      right: 0,
+      borderTop: '1px solid',
+      borderColor: 'red',
+      transform: 'rotate(-7deg) scale(1.2)',
+    },
+  },
   iconsWrap: {
     marginTop: '1rem',
     display: 'flex',
@@ -82,13 +100,41 @@ function ProductCard({ product }) {
 
   const isProductWishlisted = userWishlist?.some(x => x.id === Number(product?.id));
 
+  const hasDiscountPrice = product?.price < product?.originalPrice;
+
   const handleAddToCart = () => {
-    dispatch(addProduct(product));
-    toast.success('Product added to cart');
+    if (isAuthenticated) {
+      dispatch(addProduct(product));
+      toast.success('Product added to cart');
+    } else {
+      toast.info('You need to log in first');
+    }
+  };
+
+  const handleAddToWishlist = () => {
+    if (isAuthenticated) {
+      addToWishlistMutation.mutate({ productId: product?.id });
+    } else {
+      toast.info('You need to log in first');
+    }
+  };
+
+  const handleRemoveFromWishlist = () => {
+    if (isAuthenticated) {
+      removeFromWishlistMutation.mutate(product?.id);
+    } else {
+      toast.info('You need to log in first');
+    }
   };
 
   return (
     <div className={classes.cardOuter}>
+      {hasDiscountPrice && (
+        <Link to={`/product/${product.id}/${product.slug}`}>
+          <CardDiscountBadge product={product} />
+        </Link>
+      )}
+
       <div className={classes.brandWrapper}>
         <CustomTooltip title={<Typography color='inherit'>{product?.brand?.name}</Typography>}>
           <div className={classes.brandLogo}>
@@ -107,26 +153,33 @@ function ProductCard({ product }) {
             {product.name}
           </Typography>
         </Link>
-        <Typography variant='subtitle1' className={classes.productPrice}>
-          ${formatPriceForDisplay(product.price)}
-        </Typography>
+
+        <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', marginTop: 10 }}>
+          {hasDiscountPrice && (
+            <Typography variant='subtitle1' className={classes.originalPrice}>
+              ${product && formatPriceForDisplay(product.originalPrice)}
+            </Typography>
+          )}
+
+          <Typography
+            variant={hasDiscountPrice ? 'h4' : 'subtitle1'}
+            className={classes.productPrice}
+            style={{ marginLeft: hasDiscountPrice ? 10 : 0 }}
+          >
+            ${formatPriceForDisplay(product.price)}
+          </Typography>
+        </div>
 
         <div className={classes.iconsWrap}>
           {isProductWishlisted ? (
             <CustomTooltip title={<Typography color='inherit'>Remove from wishlist</Typography>}>
-              <IconButton
-                className={classes.wishlistRemove}
-                onClick={() => removeFromWishlistMutation.mutate(product?.id)}
-              >
+              <IconButton className={classes.wishlistRemove} onClick={handleRemoveFromWishlist}>
                 <FavoriteIcon style={{ color: 'red', fontSize: 32 }} />
               </IconButton>
             </CustomTooltip>
           ) : (
             <CustomTooltip title={<Typography color='inherit'>Add to wishlist</Typography>}>
-              <IconButton
-                className={classes.wishlistAdd}
-                onClick={() => addToWishlistMutation.mutate({ productId: product?.id })}
-              >
+              <IconButton className={classes.wishlistAdd} onClick={handleAddToWishlist}>
                 <FavoriteBorderIcon style={{ color: 'red', fontSize: 32 }} />
               </IconButton>
             </CustomTooltip>
