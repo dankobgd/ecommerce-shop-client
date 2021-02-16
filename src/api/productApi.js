@@ -24,6 +24,12 @@ export default {
   async getFeatured(params) {
     return apiClient.get(`v1/products/featured`, { params });
   },
+  async getMostSold(params) {
+    return apiClient.get(`v1/products/sold`, { params });
+  },
+  async getBestDeals(params) {
+    return apiClient.get(`v1/products/deals`, { params });
+  },
   async search(params) {
     return apiClient.get(`v1/products/search`, { params });
   },

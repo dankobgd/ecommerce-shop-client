@@ -71,6 +71,28 @@ export function useFeaturedProducts(query, config) {
   });
 }
 
+export function useMostSoldProducts(query, config) {
+  const queryClient = useQueryClient();
+  const params = new URLSearchParams(query || '');
+  const key = query ? ['products', query, 'sold'] : ['products', 'sold'];
+
+  return useQuery(key, () => api.products.getMostSold(params), {
+    initialData: () => queryClient.getQueryData(key),
+    ...config,
+  });
+}
+
+export function useBestDealsProducts(query, config) {
+  const queryClient = useQueryClient();
+  const params = new URLSearchParams(query || '');
+  const key = query ? ['products', query, 'deals'] : ['products', 'deals'];
+
+  return useQuery(key, () => api.products.getBestDeals(params), {
+    initialData: () => queryClient.getQueryData(key),
+    ...config,
+  });
+}
+
 export function useCreateProduct() {
   const queryClient = useQueryClient();
   const toast = useContext(ToastContext);

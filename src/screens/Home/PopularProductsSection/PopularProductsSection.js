@@ -6,7 +6,7 @@ import Paper from '@material-ui/core/Paper';
 import { makeStyles } from '@material-ui/core/styles';
 import { Link } from '@reach/router';
 
-import { useFeaturedProducts } from '../../../hooks/queries/productQueries';
+import { useFeaturedProducts, useMostSoldProducts, useBestDealsProducts } from '../../../hooks/queries/productQueries';
 import { formatPriceForDisplay } from '../../../utils/priceFormat';
 
 const useStyles = makeStyles(theme => ({
@@ -77,23 +77,9 @@ const useCardStyles = makeStyles(() => ({
 function PopularProductsSection() {
   const classes = useStyles();
 
-  // const { data: topFeatured } = useQuery('products', () => api.products.getFeatured(), {
-  //   initialData: () => queryClient.getQueryData('products'),
-  // });
-
-  // const { data: bestDeals } = useQuery('products', () => api.products.getFeatured(), {
-  //   initialData: () => queryClient.getQueryData('products'),
-  // });
-
-  // const { data: mostSold } = useQuery('products', () => api.products.getFeatured(), {
-  //   initialData: () => queryClient.getQueryData('products'),
-  // });
-
-  const { data: top } = useFeaturedProducts();
-
-  const topFeatured = top?.data?.slice(0, 3) ?? [];
-  const mostSold = topFeatured;
-  const bestDeals = topFeatured;
+  const { data: topFeatured } = useFeaturedProducts({ page: 1, per_page: 3 });
+  const { data: mostSold } = useMostSoldProducts({ page: 1, per_page: 3 });
+  const { data: bestDeals } = useBestDealsProducts({ page: 1, per_page: 3 });
 
   return (
     <div className={classes.root}>
@@ -104,7 +90,7 @@ function PopularProductsSection() {
               <Typography variant='subtitle1' className={classes.title}>
                 Top Featured
               </Typography>
-              {topFeatured?.map(product => (
+              {topFeatured?.data?.map(product => (
                 <ProductListCard key={product.sku} product={product} />
               ))}
             </div>
@@ -116,7 +102,7 @@ function PopularProductsSection() {
               <Typography variant='subtitle1' className={classes.title}>
                 Most Sold
               </Typography>
-              {mostSold?.map(product => (
+              {mostSold?.data?.map(product => (
                 <ProductListCard key={product.sku} product={product} />
               ))}
             </div>
@@ -128,7 +114,7 @@ function PopularProductsSection() {
               <Typography variant='subtitle1' className={classes.title}>
                 Best Deals
               </Typography>
-              {bestDeals?.map(product => (
+              {bestDeals?.data?.map(product => (
                 <ProductListCard key={product.sku} product={product} />
               ))}
             </div>
