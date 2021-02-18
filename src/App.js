@@ -11,6 +11,7 @@ import { ReactQueryDevtools } from 'react-query/devtools';
 
 import AppRoutes from './AppRoutes';
 import { CartProvider } from './components/ShoppingCart/CartContext';
+import ShoppingCart from './components/ShoppingCart/ShoppingCart';
 import { ToastProvider } from './components/Toast/ToastContext';
 import ToastList from './components/Toast/ToastList';
 import { ShopProvider } from './screens/Shop/ShopContext';
@@ -42,6 +43,7 @@ function App() {
             <MuiThemeProvider theme={theme}>
               <LocalizationProvider dateAdapter={DateFnsUtils}>
                 <DndProvider backend={HTML5Backend}>
+                  <ShoppingCart />
                   <AppRoutes />
                 </DndProvider>
               </LocalizationProvider>

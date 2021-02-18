@@ -1,13 +1,10 @@
-import React, { useContext } from 'react';
+import React from 'react';
 
-import { Badge, makeStyles, Popover, Typography } from '@material-ui/core';
-import ShoppingCartIcon from '@material-ui/icons/ShoppingCartOutlined';
+import { makeStyles } from '@material-ui/core';
 
-import { CartContext, openDrawer } from '../../../components/ShoppingCart/CartContext';
-import ShoppingCart from '../../../components/ShoppingCart/ShoppingCart';
 import Search from './Search';
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles(() => ({
   headerOuter: {
     width: '100%',
     display: 'flex',
@@ -38,66 +35,19 @@ const useStyles = makeStyles(theme => ({
     fontSize: 40,
     cursor: 'pointer',
   },
-
-  popoverText: {
-    padding: theme.spacing(2),
-  },
 }));
 
 function Header() {
   const classes = useStyles();
-  const { cart, dispatch } = useContext(CartContext);
-
-  const [anchorEl, setAnchorEl] = React.useState(null);
-
-  const handleClose = () => {
-    setAnchorEl(null);
-  };
-
-  const id = anchorEl ? 'simple-popover' : undefined;
-
-  const handleDrawer = event => {
-    if (!cart?.items?.length || cart?.items?.length === 0) {
-      setAnchorEl(event.currentTarget);
-    } else if (cart?.items?.length > 0) {
-      dispatch(openDrawer());
-    }
-  };
 
   return (
-    <>
-      <Popover
-        id={id}
-        open={!!anchorEl}
-        anchorEl={anchorEl}
-        onClose={handleClose}
-        anchorOrigin={{
-          vertical: 'bottom',
-          horizontal: 'center',
-        }}
-        transformOrigin={{
-          vertical: 'top',
-          horizontal: 'center',
-        }}
-      >
-        <Typography className={classes.popoverText}>Shopping cart is empty</Typography>
-      </Popover>
-
-      <ShoppingCart />
-
-      <div className={classes.headerOuter}>
-        <div className={classes.subHeader}>
-          <Badge badgeContent={cart?.totalQuantity} color='primary' onClick={handleDrawer}>
-            <ShoppingCartIcon className={classes.cartIcon} />
-          </Badge>
-        </div>
-        <div className={classes.searchOuter}>
-          <div className={classes.searchInner}>
-            <Search />
-          </div>
+    <div className={classes.headerOuter}>
+      <div className={classes.searchOuter}>
+        <div className={classes.searchInner}>
+          <Search />
         </div>
       </div>
-    </>
+    </div>
   );
 }
 

@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { Container, makeStyles } from '@material-ui/core';
+import { Container, makeStyles, Typography } from '@material-ui/core';
 import { Link } from '@reach/router';
 
 import ScrollTopButton from '../../components/ScrollTop/ScrollTopButton';
@@ -23,11 +23,8 @@ function Home() {
     <Container>
       <Header />
 
-      <Link style={{ display: 'flex', marginTop: '3rem' }} to='shop'>
-        Shop Page
-      </Link>
-      <Link style={{ display: 'flex' }} to='/checkout' state={{ prevPath: window.location.pathname }}>
-        Checkout Page
+      <Link style={{ display: 'flex', margin: '2rem 0' }} to='shop'>
+        <Typography variant='h3'>Visit Shop Page</Typography>
       </Link>
 
       <div>

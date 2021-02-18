@@ -545,7 +545,7 @@ function ProductSingle({ productId }) {
           {product?.properties &&
             Object.entries(product.properties).map(([key, val]) => (
               <Typography key={key} variant='body1' className={classes.detailsText}>
-                {key} - {val}
+                {key} - {typeof val === 'boolean' ? val?.toString() : val}
               </Typography>
             ))}
 
