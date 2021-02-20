@@ -26,10 +26,9 @@ const initialState = {
     priceMax: '',
   },
   specificFilters: {},
-  hasSearched: false,
-  clickedMainFilterChoice: null,
-  shouldFetchAllByFilter: false,
   filterQueryString: '',
+  clickedMainFilterChoice: null, // when clicked on homepage category/brand image
+  shouldRefetchProducts: false,
 };
 
 function reducer(state, action) {
@@ -124,22 +123,16 @@ function reducer(state, action) {
         priceValues: { ...initialState.priceValues },
       };
 
-    case 'SET_HAS_SEARCHED':
-      return {
-        ...state,
-        hasSearched: action.val,
-      };
-
-    case 'SET_SHOULD_FETCH_ALL_BY_FILTER':
-      return {
-        ...state,
-        shouldFetchAllByFilter: action.val,
-      };
-
     case 'SET_FILTER_QUERY_STRING':
       return {
         ...state,
         filterQueryString: action.qs,
+      };
+
+    case 'SET_SHOULD_REFETCH_PRODUCTS':
+      return {
+        ...state,
+        shouldRefetchProducts: action.val,
       };
 
     default:
@@ -150,7 +143,9 @@ function reducer(state, action) {
 export const ShopContext = createContext();
 
 export function ShopProvider({ children }) {
-  const [state, dispatch] = useLocalStorageReducer('shop', reducer, initialState);
+  const [state, dispatch] = useLocalStorageReducer('shop', reducer, initialState, null, {
+    blacklist: ['clickedMainFilterChoice', 'shouldRefetchProducts'],
+  });
 
   const hasFilters = state.filterQueryString !== '';
 
@@ -207,6 +202,5 @@ export const clearPriceMin = () => ({ type: 'CLEAR_PRICE_MIN' });
 export const clearPriceMax = () => ({ type: 'CLEAR_PRICE_MAX' });
 export const clearAllFilters = () => ({ type: 'CLEAR_ALL_FILTERS' });
 export const clickMainFilterChoice = ({ name, value }) => ({ type: 'CLICK_MAIN_FILTER_CHOICE', name, value });
-export const setHasSearched = val => ({ type: 'SET_HAS_SEARCHED', val });
-export const setShouldFetchAllByFilter = val => ({ type: 'SET_SHOULD_FETCH_ALL_BY_FILTER', val });
 export const setFilterQueryString = qs => ({ type: 'SET_FILTER_QUERY_STRING', qs });
+export const setShouldRefetchProducts = val => ({ type: 'SET_SHOULD_REFETCH_PRODUCTS', val });

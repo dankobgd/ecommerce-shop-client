@@ -14,12 +14,12 @@ import CheckBoxIcon from '@material-ui/icons/CheckBox';
 import CheckBoxOutlineBlankIcon from '@material-ui/icons/CheckBoxOutlineBlank';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import _ from 'lodash';
+import { useQueryClient } from 'react-query';
 
 import {
   setFilterQueryString,
-  setHasSearched,
   setMainFilters,
-  setShouldFetchAllByFilter,
+  setShouldRefetchProducts,
   ShopContext,
   updateSpecificFilters,
 } from '../ShopContext';
@@ -50,6 +50,8 @@ const useStyles = makeStyles(() => ({
 function Filter({ tagsList, brandsList, categoriesList }) {
   const classes = useStyles();
   const { shop, dispatch } = useContext(ShopContext);
+
+  const queryClient = useQueryClient();
 
   const handleChange = event => {
     const { name, value } = event.target;
@@ -125,14 +127,15 @@ function Filter({ tagsList, brandsList, categoriesList }) {
     });
 
     if (priceMin || priceMax || brands?.length > 0 || tags?.length > 0 || categories?.length > 0) {
-      dispatch(setShouldFetchAllByFilter(true));
-      dispatch(setHasSearched(true));
+      queryClient.removeQueries('infinite');
+      dispatch(setShouldRefetchProducts(true));
       dispatch(setFilterQueryString(params.toString()));
-    } else {
-      dispatch(setShouldFetchAllByFilter(true));
-      dispatch(setHasSearched(true));
+    } else if (shop.filterQueryString.length > 0) {
+      queryClient.removeQueries('infinite');
+      dispatch(setShouldRefetchProducts(true));
       dispatch(setFilterQueryString(''));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shop.mainFilters, shop.priceFilters, shop.specificFilters, dispatch]);
 
   const mainChoices = ['categories', 'tags', 'brands'];
@@ -172,6 +175,7 @@ function Filter({ tagsList, brandsList, categoriesList }) {
             </AccordionDetails>
           </Accordion>
         ))}
+
         <PriceFilters />
         <PropFilters />
       </form>

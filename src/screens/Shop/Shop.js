@@ -25,33 +25,42 @@ const useStyles = makeStyles(() => ({
 
 function Shop() {
   const classes = useStyles();
-  const { shop } = useContext(ShopContext);
+  const { shop, dispatch } = useContext(ShopContext);
   const loadMoreRef = React.useRef();
 
   const { data: brands } = useBrands();
   const { data: tags } = useTags();
   const { data: categories } = useCategories();
 
-  const { data, isFetchingNextPage, fetchNextPage, hasNextPage, isLoading, refetch } = useInfiniteProducts(
-    shop.filterQueryString,
-    {
-      enabled: false,
-    }
-  );
+  const {
+    data,
+    isFetchingNextPage,
+    fetchNextPage,
+    hasNextPage,
+    isLoading,
+    refetch,
+  } = useInfiniteProducts(shop.filterQueryString, { enabled: false });
 
   React.useEffect(() => {
-    if (shop.shouldFetchAllByFilter && shop.hasSearched) {
+    refetch();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  React.useEffect(() => {
+    if (shop.shouldRefetchProducts) {
       refetch();
     }
-  }, [shop.filterQueryString, shop.hasSearched, refetch, shop.shouldFetchAllByFilter]);
+  }, [shop.filterQueryString, refetch, dispatch, shop.shouldRefetchProducts]);
+
+  const products = data?.pages?.flatMap(page => page.data) ?? [];
+
+  const totalProducts = data?.pages?.[data?.pages?.length - 1]?.meta?.totalCount;
 
   useIntersectionObserver({
     target: loadMoreRef,
     onIntersect: fetchNextPage,
-    enabled: hasNextPage && !isFetchingNextPage,
+    enabled: !!(hasNextPage && !isFetchingNextPage && products?.length >= 20),
   });
-
-  const products = data?.pages?.flatMap(page => page.data) ?? [];
 
   return (
     <div>
@@ -68,6 +77,7 @@ function Shop() {
             loadMoreRef={loadMoreRef}
             isFetchingNextPage={isFetchingNextPage}
             hasNextPage={hasNextPage}
+            totalProducts={totalProducts}
           />
         </section>
       </Container>

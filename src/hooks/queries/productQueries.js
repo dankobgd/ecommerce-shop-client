@@ -28,9 +28,10 @@ export function useProducts(query, config) {
 
 export function useInfiniteProducts(query, config) {
   const params = new URLSearchParams(query || '');
+  const key = params.toString() ? ['infinite', 'products', params.toString()] : ['infinite', 'products'];
 
   return useInfiniteQuery(
-    ['products', params],
+    key,
     ({ pageParam }) => {
       if (!query || (query && !params.get('page'))) {
         params.set('page', 1);

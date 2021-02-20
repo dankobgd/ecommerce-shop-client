@@ -3,7 +3,7 @@ import React from 'react';
 export default function useIntersectionObserver({
   root,
   target,
-  onIntersect,
+  onIntersect = () => {},
   threshold = 1.0,
   rootMargin = '0px',
   enabled = true,

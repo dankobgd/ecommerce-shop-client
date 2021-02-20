@@ -23,7 +23,7 @@ function Home() {
     <Container>
       <Header />
 
-      <Link style={{ display: 'flex', margin: '2rem 0' }} to='shop'>
+      <Link style={{ display: 'flex', margin: '2rem 0', textDecoration: 'none' }} to='shop'>
         <Typography variant='h3'>Visit Shop Page</Typography>
       </Link>
 

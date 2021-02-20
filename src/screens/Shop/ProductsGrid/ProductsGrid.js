@@ -1,9 +1,8 @@
-import React, { useContext } from 'react';
+import React from 'react';
 
 import { CircularProgress, makeStyles, Typography } from '@material-ui/core';
 
 import ProductCard, { SkeletonCard } from '../../../components/ProductCard/ProductCard';
-import { setHasSearched, setShouldFetchAllByFilter, ShopContext } from '../ShopContext';
 import ChipsSection from './ChipsSection';
 
 const useStyles = makeStyles(() => ({
@@ -21,7 +20,7 @@ const useStyles = makeStyles(() => ({
     marginBottom: '1rem',
     padding: '0 1rem',
   },
-  productAre: {
+  productsArea: {
     display: 'grid',
     justifyItems: 'space-between',
     alignItems: 'flex-start',
@@ -37,21 +36,14 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
-function ProductsGrid({ products, loadMoreRef, isLoading, isFetchingNextPage, hasNextPage }) {
+function ProductsGrid({ products, totalProducts, loadMoreRef, isLoading, isFetchingNextPage, hasNextPage }) {
   const classes = useStyles();
-  const { shop, dispatch } = useContext(ShopContext);
-
-  React.useEffect(() => {
-    dispatch(setShouldFetchAllByFilter(true));
-    dispatch(setHasSearched(true));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   return (
     <div className={classes.outer}>
       <div className={classes.mainArea}>
         <div className={classes.chipsArea}>
-          <ChipsSection />
+          <ChipsSection totalProducts={totalProducts} />
         </div>
 
         {isLoading && (
@@ -70,7 +62,7 @@ function ProductsGrid({ products, loadMoreRef, isLoading, isFetchingNextPage, ha
           </div>
         )}
 
-        <div className={classes.productAre}>
+        <div className={classes.productsArea}>
           {products?.map(product => (
             <ProductCard key={product.sku} product={product} isLoading={isLoading} />
           ))}
@@ -99,9 +91,9 @@ function ProductsGrid({ products, loadMoreRef, isLoading, isFetchingNextPage, ha
           </div>
         )}
 
-        <div ref={loadMoreRef} />
+        <div ref={loadMoreRef} className='dummy' />
 
-        {products?.length === 0 && shop.hasSearched && !isLoading && (
+        {products?.length === 0 && !isLoading && (
           <div style={{ padding: '2rem' }}>
             <Typography variant='h4'>No products found matching the search criteria</Typography>
             <Typography variant='subtitle2' style={{ marginTop: '10px' }}>

@@ -28,5 +28,5 @@ export function calculatePercentage(original, discountPrice) {
   }
 
   const percentDif = ((original - discountPrice) / original) * 100;
-  return Math.trunc(Math.ceil(percentDif), 2);
+  return Math.trunc(Math.floor(percentDif), 2);
 }
