@@ -453,7 +453,13 @@ function ProductSingle({ productId }) {
                   <CustomTooltip title={<Typography color='inherit'>Add to wishlist</Typography>}>
                     <IconButton
                       className={classes.wishlistAdd}
-                      onClick={() => addToWishlistMutation.mutate({ productId: product?.id })}
+                      onClick={() => {
+                        if (isAuthenticated) {
+                          addToWishlistMutation.mutate({ productId: product?.id });
+                        } else {
+                          toast.info('You need to log in first');
+                        }
+                      }}
                     >
                       <FavoriteBorderIcon style={{ color: 'red', fontSize: 32 }} />
                     </IconButton>
