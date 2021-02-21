@@ -509,8 +509,12 @@ function ProductSingle({ productId }) {
                   color='primary'
                   variant='contained'
                   onClick={() => {
-                    dispatch(addProduct(product, qty));
-                    toast.success('Product added to cart');
+                    if (isAuthenticated) {
+                      dispatch(addProduct(product, qty));
+                      toast.success('Product added to cart');
+                    } else {
+                      toast.info('You need to log in first');
+                    }
                   }}
                 >
                   Add to cart
@@ -549,13 +553,15 @@ function ProductSingle({ productId }) {
               </Typography>
             ))}
 
-          {productTags?.map((tag, idx) => (
-            <Chip
-              key={nanoid()}
-              label={tag?.name}
-              style={{ backgroundColor: randomChipColors?.[idx] || '#333', color: '#fff' }}
-            />
-          ))}
+          <div style={{ marginTop: 10 }}>
+            {productTags?.map((tag, idx) => (
+              <Chip
+                key={nanoid()}
+                label={tag?.name}
+                style={{ backgroundColor: randomChipColors?.[idx] || '#333', color: '#fff', marginRight: 6 }}
+              />
+            ))}
+          </div>
         </div>
 
         <Grid container spacing={3}>
@@ -588,7 +594,7 @@ function ProductSingle({ productId }) {
         </Grid>
 
         <div className={classes.reviews}>
-          {!userReview && (
+          {!userReview && isAuthenticated && (
             <div style={{ marginBottom: '1rem' }}>
               <Button variant='outlined' color='primary' size='small' onClick={handleModalOpen}>
                 Post review
