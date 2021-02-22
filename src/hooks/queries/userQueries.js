@@ -5,6 +5,7 @@ import { nanoid } from 'nanoid';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 
 import api from '../../api';
+import { CartContext, resetAll } from '../../components/ShoppingCart/CartContext';
 import { ToastContext } from '../../components/Toast/ToastContext';
 import { getPersistedPagination, matches } from '../../utils/pagination';
 
@@ -267,6 +268,7 @@ export function useSignup() {
 export function useLogout() {
   const queryClient = useQueryClient();
   const toast = useContext(ToastContext);
+  const { dispatch } = useContext(CartContext);
 
   return useMutation(() => api.users.logout(), {
     onSuccess: () => {
@@ -274,6 +276,7 @@ export function useLogout() {
       localStorage.removeItem('ecommerce/authenticated');
       navigate('/');
       toast.success(`You logged out`);
+      dispatch(resetAll());
     },
     onSettled: () => {
       queryClient.invalidateQueries('user');
