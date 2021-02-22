@@ -41,7 +41,7 @@ export function useCreateOrder(config) {
   const meta = getPersistedPagination('orders');
   const keys = queryClient.getQueryCache().findAll('orders');
 
-  return useMutation(formData => api.orders.create(formData), {
+  return useMutation(data => api.orders.create(data), {
     onMutate: values => {
       queryClient.cancelQueries('orders');
       const previousValue = queryClient.getQueryData('orders', { active: true });

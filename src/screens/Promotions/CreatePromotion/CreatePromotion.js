@@ -18,6 +18,7 @@ import ErrorMessage from '../../../components/Message/ErrorMessage';
 import { ToastContext } from '../../../components/Toast/ToastContext';
 import { useCreatePromotion } from '../../../hooks/queries/promotionQueries';
 import { useFormServerErrors } from '../../../hooks/useFormServerErrors';
+import { priceToLowestCurrencyDenomination } from '../../../utils/priceFormat';
 import { rules } from '../../../utils/validation';
 
 const useStyles = makeStyles(theme => ({
@@ -42,10 +43,13 @@ const useStyles = makeStyles(theme => ({
 const schema = Yup.object({
   promoCode: Yup.string().required(),
   type: Yup.string().required(),
-  amount: rules.requiredPositiveNumber,
   description: Yup.string(),
   startsAt: rules.startDate,
   endsAt: rules.endDate('startsAt'),
+  amount: rules.requiredPositiveNumber.when('type', {
+    is: 'percentage',
+    then: Yup.number().max(100),
+  }),
 });
 
 const formOpts = {
@@ -72,6 +76,7 @@ function CreatePromotionForm() {
   const createPromotionMutation = useCreatePromotion();
 
   const onSubmit = async values => {
+    values.amount = values.type === 'percentage' ? values.amount : priceToLowestCurrencyDenomination(values.amount);
     createPromotionMutation.mutate(values);
   };
 
@@ -114,6 +119,7 @@ function CreatePromotionForm() {
               name='amount'
               fullWidth
               isAllowed={values => isAllowedAmountValue(values, watch('type'))}
+              prefix={watch('type') === 'percentage' ? '%' : '$'}
             />
             <FormTextField name='description' multiline fullWidth rows={5} />
 

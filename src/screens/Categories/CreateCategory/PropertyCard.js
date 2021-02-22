@@ -180,11 +180,8 @@ function PropertyCard({ card, idx, control, remove, moveCard, errors, getValues 
             <IconButton edge='start' color='inherit' onClick={handleCloseDialog} aria-label='close'>
               <CloseIcon />
             </IconButton>
-            <Typography variant='h6' className={classes.title}>
-              Sound
-            </Typography>
             <Button autoFocus color='inherit' onClick={handleCloseDialog}>
-              save
+              Save
             </Button>
           </Toolbar>
         </AppBar>

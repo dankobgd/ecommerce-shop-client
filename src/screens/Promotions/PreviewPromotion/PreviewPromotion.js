@@ -28,7 +28,7 @@ function PreviewPromotion({ promoCode }) {
           <PreviewItem title='Promo Code' value={promotion?.promoCode} />
           <PreviewItem title='Type' value={promotion?.type} />
 
-          {promotion.type === 'percentage' ? (
+          {promotion?.type === 'percentage' ? (
             <PreviewItem title='Amount' value={`${promotion?.amount}%`} />
           ) : (
             <PreviewItem title='Amount' value={`$${formatPriceForDisplay(promotion?.amount)}`} />

@@ -19,6 +19,7 @@ import { ToastContext } from '../../../components/Toast/ToastContext';
 import { usePromotion, useUpdatePromotion } from '../../../hooks/queries/promotionQueries';
 import { useFormServerErrors } from '../../../hooks/useFormServerErrors';
 import { diff, isEmptyObject } from '../../../utils/diff';
+import { formatPriceForDisplay, priceToLowestCurrencyDenomination } from '../../../utils/priceFormat';
 import { rules } from '../../../utils/validation';
 
 const useStyles = makeStyles(theme => ({
@@ -42,10 +43,13 @@ const useStyles = makeStyles(theme => ({
 
 const schema = Yup.object({
   type: Yup.string().required(),
-  amount: rules.requiredPositiveNumber,
   description: Yup.string(),
   startsAt: rules.startDate,
   endsAt: rules.endDate('startsAt'),
+  amount: rules.requiredPositiveNumber.when('type', {
+    is: 'percentage',
+    then: Yup.number().max(100),
+  }),
 });
 
 const formOpts = {
@@ -94,6 +98,10 @@ function EditPromotionForm({ promoCode }) {
       toast.info('No changes applied');
     }
     if (!isEmptyObject(changes)) {
+      if (changes?.amount) {
+        const type = changes?.type || baseFormObj.type;
+        changes.amount = type === 'percentage' ? changes.amount : priceToLowestCurrencyDenomination(changes.amount);
+      }
       editPromotionMutation.mutate({ code: promotion.promoCode, values: changes });
     }
   };
@@ -104,8 +112,13 @@ function EditPromotionForm({ promoCode }) {
 
   React.useEffect(() => {
     if (promotion) {
-      setBaseFormObj(promotion);
-      reset(promotion);
+      const obj = {
+        ...promotion,
+        amount: promotion.type === 'percentage' ? promotion.amount : formatPriceForDisplay(promotion.amount),
+      };
+
+      setBaseFormObj(obj);
+      reset(obj);
     }
   }, [promotion, reset]);
 
@@ -144,6 +157,7 @@ function EditPromotionForm({ promoCode }) {
               name='amount'
               fullWidth
               isAllowed={values => isAllowedAmountValue(values, watch('type'))}
+              prefix={watch('type') === 'percentage' ? '%' : '$'}
             />
             <FormTextField name='description' multiline fullWidth rows={5} />
             <FormDateTimePicker name='startsAt' fullWidth minutesStep={1} />
