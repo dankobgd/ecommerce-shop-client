@@ -4,6 +4,9 @@ export default {
   async create(data) {
     return apiClient.post(`v1/promotions`, { data });
   },
+  async count() {
+    return apiClient.get(`v1/promotions/count`);
+  },
   async get(promoCode) {
     return apiClient.get(`v1/promotions/${promoCode}`);
   },

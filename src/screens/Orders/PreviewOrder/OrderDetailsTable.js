@@ -165,7 +165,7 @@ const OrderDetailsTable = ({ details, order }) => {
           </a>
 
           <a
-            href={`${baseURL}v1/orders/${order.id}/details/pdf`}
+            href={`${baseURL}/api/v1/orders/${order.id}/details/pdf`}
             target='_blank'
             rel='noopener noreferrer'
             style={{ textDecoration: 'none', marginLeft: '1rem' }}

@@ -7,6 +7,10 @@ import api from '../../api';
 import { ToastContext } from '../../components/Toast/ToastContext';
 import { getPersistedPagination, matches } from '../../utils/pagination';
 
+export function useTagsCount() {
+  return useQuery(['tags', 'count'], () => api.tags.count());
+}
+
 export function useTag(tagId) {
   const queryClient = useQueryClient();
 

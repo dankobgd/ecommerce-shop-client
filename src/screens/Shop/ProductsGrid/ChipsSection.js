@@ -93,7 +93,7 @@ function ChipsSection({ totalProducts }) {
               fontWeight: 'bold',
               borderRadius: '4px',
             }}
-            label={`${totalProducts} results`}
+            label={totalProducts > 1 ? `${totalProducts} results` : `No results`}
           />
         )}
 

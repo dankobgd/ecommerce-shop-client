@@ -25,6 +25,10 @@ export function useUserFromCache() {
   return queryClient.getQueryData('user');
 }
 
+export function useUsersCount() {
+  return useQuery(['users', 'count'], () => api.users.count());
+}
+
 export function useCreateUser() {
   const queryClient = useQueryClient();
   const toast = useContext(ToastContext);

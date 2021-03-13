@@ -7,6 +7,9 @@ export default {
   async update(id, data) {
     return apiClient.patch(`v1/orders/${id}`, { data });
   },
+  async count() {
+    return apiClient.get(`v1/orders/count`);
+  },
   async get(id) {
     return apiClient.get(`v1/orders/${id}`);
   },

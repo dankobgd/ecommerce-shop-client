@@ -4,6 +4,9 @@ export default {
   async getCurrent() {
     return apiClient.get(`v1/users/me`);
   },
+  async count() {
+    return apiClient.get(`v1/users/count`);
+  },
   async get(userId) {
     return apiClient.get(`v1/users/${userId}`);
   },

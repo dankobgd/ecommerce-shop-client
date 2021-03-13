@@ -8,6 +8,10 @@ import api from '../../api';
 import { ToastContext } from '../../components/Toast/ToastContext';
 import { getPersistedPagination, matches } from '../../utils/pagination';
 
+export function useOrdersCount() {
+  return useQuery(['orders', 'count'], () => api.orders.count());
+}
+
 export function useOrder(orderId) {
   const queryClient = useQueryClient();
 

@@ -6,6 +6,10 @@ import api from '../../api';
 import { ToastContext } from '../../components/Toast/ToastContext';
 import { getPersistedPagination, matches } from '../../utils/pagination';
 
+export function usePromotionsCount() {
+  return useQuery(['promotions', 'count'], () => api.promotions.count());
+}
+
 export function usePromotion(promoCode, config) {
   const queryClient = useQueryClient();
 

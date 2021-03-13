@@ -7,6 +7,9 @@ export default {
   async update(id, data) {
     return apiClient.patch(`v1/tags/${id}`, { data });
   },
+  async count() {
+    return apiClient.get(`v1/tags/count`);
+  },
   async get(id) {
     return apiClient.get(`v1/tags/${id}`);
   },

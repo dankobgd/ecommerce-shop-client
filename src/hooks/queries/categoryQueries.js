@@ -7,6 +7,10 @@ import api from '../../api';
 import { ToastContext } from '../../components/Toast/ToastContext';
 import { getPersistedPagination, matches } from '../../utils/pagination';
 
+export function useCategoriesCount() {
+  return useQuery(['categories', 'count'], () => api.categories.count());
+}
+
 export function useCategory(categoryId) {
   const queryClient = useQueryClient();
 

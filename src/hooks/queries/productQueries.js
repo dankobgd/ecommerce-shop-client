@@ -7,6 +7,10 @@ import api from '../../api';
 import { ToastContext } from '../../components/Toast/ToastContext';
 import { getPersistedPagination, matches } from '../../utils/pagination';
 
+export function useProductsCount() {
+  return useQuery(['products', 'count'], () => api.products.count());
+}
+
 export function useProduct(productId) {
   const queryClient = useQueryClient();
 

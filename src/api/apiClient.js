@@ -3,10 +3,10 @@ import _ from 'lodash';
 
 import { transformKeysToCamelCase, transformKeysToSnakeCase } from '../utils/transformObjectKeys';
 
-export const baseURL = 'http://localhost:3001/api/';
+export const baseURL = process.env.BASE_URL;
 
 const client = axios.create({
-  baseURL,
+  baseURL: `${baseURL}/api`,
   headers: {
     'Content-Type': 'application/json; charset=UTF-8',
     Accept: 'application/json',
